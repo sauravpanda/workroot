@@ -125,6 +125,10 @@ pub fn run() {
             git::commit::git_commit,
             git::commit::git_push,
             git::commit::get_push_status,
+            github::pr::create_pull_request,
+            github::pr::get_pr_for_branch,
+            github::pr::get_pr_template,
+            github::pr::get_default_branch,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

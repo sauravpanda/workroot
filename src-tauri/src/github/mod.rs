@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod pr;
 pub mod repos;
 
 use serde::{Deserialize, Serialize};
