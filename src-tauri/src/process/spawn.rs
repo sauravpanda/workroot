@@ -6,7 +6,7 @@ use std::path::Path;
 use tauri::State;
 
 use super::detect;
-use super::logs;
+use super::lifecycle::{self, RestartPolicy};
 use super::port;
 
 #[derive(Debug, Serialize)]
@@ -28,6 +28,7 @@ pub async fn spawn_process(
     worktree_id: i64,
     profile_id: Option<i64>,
     command_override: Option<String>,
+    restart_policy: Option<RestartPolicy>,
 ) -> Result<ProcessStatus, String> {
     // Gather data from DB
     let (worktree, project, env_vars, used_ports) = {
@@ -132,8 +133,9 @@ pub async fn spawn_process(
         proc_id
     };
 
-    // Start log capture — reads stdout/stderr, stores in DB, emits events
-    logs::capture_output(app_handle, process_id, child);
+    // Start lifecycle monitor — captures logs, handles crash detection and auto-restart
+    let policy = restart_policy.unwrap_or(RestartPolicy::OnCrash);
+    lifecycle::monitor_process(app_handle, process_id, child, policy);
 
     Ok(ProcessStatus {
         id: process_id,

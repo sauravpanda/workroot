@@ -9,6 +9,7 @@ pub mod vault;
 use db::init_db;
 use github::auth;
 use github::{DeviceCodeResponse, GitHubUser};
+use process::lifecycle::ProcessRegistry;
 use tauri::Manager;
 
 #[tauri::command]
@@ -85,11 +86,13 @@ pub fn run() {
             process::logs::get_process_logs,
             process::logs::search_process_logs,
             process::logs::clear_process_logs,
+            process::lifecycle::cleanup_worktree_processes,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
             let db = init_db(&app_handle)?;
             app.manage(db);
+            app.manage(ProcessRegistry::new());
 
             tray::setup_tray(app)?;
 

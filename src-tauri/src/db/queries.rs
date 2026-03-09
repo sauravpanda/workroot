@@ -297,6 +297,26 @@ pub fn update_process_stopped(conn: &Connection, id: i64) -> Result<(), rusqlite
     Ok(())
 }
 
+pub fn update_process_status(
+    conn: &Connection,
+    id: i64,
+    status: &str,
+) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "UPDATE processes SET status = ?1 WHERE id = ?2",
+        params![status, id],
+    )?;
+    Ok(())
+}
+
+pub fn update_process_pid(conn: &Connection, id: i64, pid: i64) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "UPDATE processes SET pid = ?1 WHERE id = ?2",
+        params![pid, id],
+    )?;
+    Ok(())
+}
+
 pub fn list_processes(
     conn: &Connection,
     worktree_id: i64,

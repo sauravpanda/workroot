@@ -2,8 +2,6 @@ use crate::db::queries;
 use crate::db::AppDb;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
-use tokio::io::{AsyncBufReadExt, BufReader};
-use tokio::process::Child;
 
 /// Payload emitted to the frontend for each log line.
 #[derive(Debug, Clone, Serialize)]
@@ -14,50 +12,8 @@ pub struct LogLineEvent {
     pub timestamp: String,
 }
 
-/// Starts background tasks that read stdout/stderr from a child process,
-/// store each line in the database, and emit Tauri events for real-time streaming.
-pub fn capture_output(app_handle: AppHandle, process_id: i64, mut child: Child) {
-    let stdout = child.stdout.take();
-    let stderr = child.stderr.take();
-
-    // Spawn a task to wait for the child to exit
-    let app_exit = app_handle.clone();
-    tokio::spawn(async move {
-        let _ = child.wait().await;
-        // Mark process as stopped when it exits
-        let db = app_exit.state::<AppDb>();
-        if let Ok(conn) = db.0.lock() {
-            let _ = queries::update_process_stopped(&conn, process_id);
-        };
-    });
-
-    // Capture stdout
-    if let Some(out) = stdout {
-        let app = app_handle.clone();
-        tokio::spawn(async move {
-            let reader = BufReader::new(out);
-            let mut lines = reader.lines();
-            while let Ok(Some(line)) = lines.next_line().await {
-                store_and_emit(&app, process_id, "stdout", &line);
-            }
-        });
-    }
-
-    // Capture stderr
-    if let Some(err) = stderr {
-        let app = app_handle.clone();
-        tokio::spawn(async move {
-            let reader = BufReader::new(err);
-            let mut lines = reader.lines();
-            while let Ok(Some(line)) = lines.next_line().await {
-                store_and_emit(&app, process_id, "stderr", &line);
-            }
-        });
-    }
-}
-
 /// Store a log line in the database and emit a Tauri event.
-fn store_and_emit(app: &AppHandle, process_id: i64, stream: &str, content: &str) {
+pub fn store_and_emit(app: &AppHandle, process_id: i64, stream: &str, content: &str) {
     let timestamp = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
     // Insert into DB (best-effort — don't crash if DB is locked)
