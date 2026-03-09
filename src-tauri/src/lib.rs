@@ -111,13 +111,14 @@ pub fn run() {
             });
 
             // Start the MCP server on port 4444
+            let mcp_handle = app.handle().clone();
             let mcp_data_dir = app
                 .handle()
                 .path()
                 .app_data_dir()
                 .unwrap_or_else(|_| std::path::PathBuf::from("."));
             tokio::spawn(async move {
-                mcp::server::start_mcp_server(mcp_data_dir).await;
+                mcp::server::start_mcp_server(mcp_handle, mcp_data_dir).await;
             });
 
             tray::setup_tray(app)?;

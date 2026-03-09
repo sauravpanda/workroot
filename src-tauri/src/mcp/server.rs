@@ -1,4 +1,5 @@
 use super::auth;
+use super::tools;
 use axum::extract::Extension;
 use axum::middleware;
 use axum::routing::{get, post};
@@ -6,6 +7,7 @@ use axum::{Json, Router};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::sync::Arc;
+use tauri::AppHandle;
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
 /// MCP server version.
@@ -29,7 +31,6 @@ struct ToolDef {
 
 /// JSON-RPC 2.0 request.
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct JsonRpcRequest {
     jsonrpc: String,
     method: String,
@@ -54,7 +55,7 @@ struct JsonRpcError {
 }
 
 /// Starts the MCP server on localhost:4444.
-pub async fn start_mcp_server(app_data_dir: std::path::PathBuf) {
+pub async fn start_mcp_server(app_handle: AppHandle, app_data_dir: std::path::PathBuf) {
     let token = auth::generate_session_token();
 
     // Write token for MCP client discovery
@@ -63,6 +64,7 @@ pub async fn start_mcp_server(app_data_dir: std::path::PathBuf) {
     }
 
     let shared_token = Arc::new(token);
+    let shared_app = Arc::new(app_handle);
 
     // Routes that require auth
     let protected_routes = Router::new()
@@ -75,6 +77,7 @@ pub async fn start_mcp_server(app_data_dir: std::path::PathBuf) {
         .route("/health", get(handle_health))
         .merge(protected_routes)
         .layer(Extension(shared_token))
+        .layer(Extension(shared_app))
         .layer(
             CorsLayer::new()
                 .allow_origin(AllowOrigin::predicate(|origin, _| {
@@ -158,6 +161,18 @@ async fn handle_tools() -> Json<Vec<ToolDef>> {
             }),
         },
         ToolDef {
+            name: "get_env_var_value".into(),
+            description: "Get the decrypted value of a specific env var key".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" },
+                    "key": { "type": "string" }
+                },
+                "required": ["worktree_id", "key"]
+            }),
+        },
+        ToolDef {
             name: "get_recent_logs".into(),
             description: "Get recent log lines from a running process".into(),
             parameters: serde_json::json!({
@@ -197,8 +212,10 @@ async fn handle_tools() -> Json<Vec<ToolDef>> {
 }
 
 /// POST /mcp — JSON-RPC 2.0 tool invocation endpoint.
-/// Tool implementations will be added in PR-019/020.
-async fn handle_mcp(Json(req): Json<JsonRpcRequest>) -> Json<JsonRpcResponse> {
+async fn handle_mcp(
+    Extension(app): Extension<Arc<AppHandle>>,
+    Json(req): Json<JsonRpcRequest>,
+) -> Json<JsonRpcResponse> {
     if req.jsonrpc != "2.0" {
         return Json(JsonRpcResponse {
             jsonrpc: "2.0",
@@ -211,14 +228,25 @@ async fn handle_mcp(Json(req): Json<JsonRpcRequest>) -> Json<JsonRpcResponse> {
         });
     }
 
-    // For now, all methods return "not implemented" — PR-019/020 will add implementations
-    Json(JsonRpcResponse {
-        jsonrpc: "2.0",
-        result: None,
-        error: Some(JsonRpcError {
-            code: -32601,
-            message: format!("Method not found: {}", req.method),
+    match tools::dispatch(&app, &req.method, req.params) {
+        Ok(result) => Json(JsonRpcResponse {
+            jsonrpc: "2.0",
+            result: Some(result),
+            error: None,
+            id: req.id,
         }),
-        id: req.id,
-    })
+        Err(msg) => {
+            let code = if msg.contains("not found") {
+                -32601
+            } else {
+                -32000
+            };
+            Json(JsonRpcResponse {
+                jsonrpc: "2.0",
+                result: None,
+                error: Some(JsonRpcError { code, message: msg }),
+                id: req.id,
+            })
+        }
+    }
 }
