@@ -1,0 +1,550 @@
+use rusqlite::{params, Connection};
+use serde::Serialize;
+
+// ============================================================
+// Row structs
+// ============================================================
+
+#[derive(Debug, Serialize)]
+pub struct ProjectRow {
+    pub id: i64,
+    pub name: String,
+    pub github_url: Option<String>,
+    pub local_path: String,
+    pub framework: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct WorktreeRow {
+    pub id: i64,
+    pub project_id: i64,
+    pub branch_name: String,
+    pub path: String,
+    pub status: String,
+    pub port: Option<i64>,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct EnvProfileRow {
+    pub id: i64,
+    pub project_id: i64,
+    pub name: String,
+    pub is_active: bool,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct EnvVarRow {
+    pub id: i64,
+    pub profile_id: i64,
+    pub key: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ProcessRow {
+    pub id: i64,
+    pub worktree_id: i64,
+    pub pid: Option<i64>,
+    pub command: String,
+    pub status: String,
+    pub port: Option<i64>,
+    pub started_at: Option<String>,
+    pub stopped_at: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LogRow {
+    pub id: i64,
+    pub process_id: i64,
+    pub stream: String,
+    pub content: String,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ShellHistoryRow {
+    pub id: i64,
+    pub project_id: i64,
+    pub branch: Option<String>,
+    pub command: String,
+    pub exit_code: Option<i64>,
+    pub cwd: Option<String>,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct MemoryNoteRow {
+    pub id: i64,
+    pub worktree_id: i64,
+    pub content: String,
+    pub category: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct FileEventRow {
+    pub id: i64,
+    pub project_id: i64,
+    pub file_path: String,
+    pub event_type: String,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct NetworkTrafficRow {
+    pub id: i64,
+    pub process_id: i64,
+    pub method: String,
+    pub url: String,
+    pub status_code: Option<i64>,
+    pub request_body: Option<String>,
+    pub response_body: Option<String>,
+    pub timestamp: String,
+}
+
+// ============================================================
+// Projects
+// ============================================================
+
+pub fn insert_project(
+    conn: &Connection,
+    name: &str,
+    local_path: &str,
+    github_url: Option<&str>,
+    framework: Option<&str>,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO projects (name, local_path, github_url, framework) VALUES (?1, ?2, ?3, ?4)",
+        params![name, local_path, github_url, framework],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn get_project(conn: &Connection, id: i64) -> Result<Option<ProjectRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, name, github_url, local_path, framework, created_at, updated_at
+         FROM projects WHERE id = ?1",
+    )?;
+    let mut rows = stmt.query_map(params![id], |row| {
+        Ok(ProjectRow {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            github_url: row.get(2)?,
+            local_path: row.get(3)?,
+            framework: row.get(4)?,
+            created_at: row.get(5)?,
+            updated_at: row.get(6)?,
+        })
+    })?;
+    match rows.next() {
+        Some(row) => Ok(Some(row?)),
+        None => Ok(None),
+    }
+}
+
+pub fn list_projects(conn: &Connection) -> Result<Vec<ProjectRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, name, github_url, local_path, framework, created_at, updated_at
+         FROM projects ORDER BY created_at DESC",
+    )?;
+    let rows = stmt.query_map([], |row| {
+        Ok(ProjectRow {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            github_url: row.get(2)?,
+            local_path: row.get(3)?,
+            framework: row.get(4)?,
+            created_at: row.get(5)?,
+            updated_at: row.get(6)?,
+        })
+    })?;
+    rows.collect()
+}
+
+pub fn delete_project(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute("DELETE FROM projects WHERE id = ?1", params![id])?;
+    Ok(affected > 0)
+}
+
+// ============================================================
+// Worktrees
+// ============================================================
+
+pub fn insert_worktree(
+    conn: &Connection,
+    project_id: i64,
+    branch_name: &str,
+    path: &str,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO worktrees (project_id, branch_name, path) VALUES (?1, ?2, ?3)",
+        params![project_id, branch_name, path],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn list_worktrees(
+    conn: &Connection,
+    project_id: i64,
+) -> Result<Vec<WorktreeRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, project_id, branch_name, path, status, port, created_at
+         FROM worktrees WHERE project_id = ?1 ORDER BY created_at DESC",
+    )?;
+    let rows = stmt.query_map(params![project_id], |row| {
+        Ok(WorktreeRow {
+            id: row.get(0)?,
+            project_id: row.get(1)?,
+            branch_name: row.get(2)?,
+            path: row.get(3)?,
+            status: row.get(4)?,
+            port: row.get(5)?,
+            created_at: row.get(6)?,
+        })
+    })?;
+    rows.collect()
+}
+
+pub fn delete_worktree(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute("DELETE FROM worktrees WHERE id = ?1", params![id])?;
+    Ok(affected > 0)
+}
+
+// ============================================================
+// Processes
+// ============================================================
+
+pub fn insert_process(
+    conn: &Connection,
+    worktree_id: i64,
+    command: &str,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO processes (worktree_id, command) VALUES (?1, ?2)",
+        params![worktree_id, command],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn list_processes(
+    conn: &Connection,
+    worktree_id: i64,
+) -> Result<Vec<ProcessRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, worktree_id, pid, command, status, port, started_at, stopped_at
+         FROM processes WHERE worktree_id = ?1",
+    )?;
+    let rows = stmt.query_map(params![worktree_id], |row| {
+        Ok(ProcessRow {
+            id: row.get(0)?,
+            worktree_id: row.get(1)?,
+            pid: row.get(2)?,
+            command: row.get(3)?,
+            status: row.get(4)?,
+            port: row.get(5)?,
+            started_at: row.get(6)?,
+            stopped_at: row.get(7)?,
+        })
+    })?;
+    rows.collect()
+}
+
+// ============================================================
+// Logs
+// ============================================================
+
+pub fn insert_log(
+    conn: &Connection,
+    process_id: i64,
+    stream: &str,
+    content: &str,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO logs (process_id, stream, content) VALUES (?1, ?2, ?3)",
+        params![process_id, stream, content],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn get_logs(
+    conn: &Connection,
+    process_id: i64,
+    limit: i64,
+) -> Result<Vec<LogRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, process_id, stream, content, timestamp
+         FROM logs WHERE process_id = ?1 ORDER BY id DESC LIMIT ?2",
+    )?;
+    let rows = stmt.query_map(params![process_id, limit], |row| {
+        Ok(LogRow {
+            id: row.get(0)?,
+            process_id: row.get(1)?,
+            stream: row.get(2)?,
+            content: row.get(3)?,
+            timestamp: row.get(4)?,
+        })
+    })?;
+    rows.collect()
+}
+
+// ============================================================
+// Shell History
+// ============================================================
+
+pub fn insert_shell_history(
+    conn: &Connection,
+    project_id: i64,
+    command: &str,
+    exit_code: Option<i64>,
+    branch: Option<&str>,
+    cwd: Option<&str>,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO shell_history (project_id, command, exit_code, branch, cwd)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![project_id, command, exit_code, branch, cwd],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+// ============================================================
+// Memory Notes
+// ============================================================
+
+pub fn insert_memory_note(
+    conn: &Connection,
+    worktree_id: i64,
+    content: &str,
+    category: &str,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO memory_notes (worktree_id, content, category) VALUES (?1, ?2, ?3)",
+        params![worktree_id, content, category],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+// ============================================================
+// File Events
+// ============================================================
+
+pub fn insert_file_event(
+    conn: &Connection,
+    project_id: i64,
+    file_path: &str,
+    event_type: &str,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO file_events (project_id, file_path, event_type) VALUES (?1, ?2, ?3)",
+        params![project_id, file_path, event_type],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+// ============================================================
+// Network Traffic
+// ============================================================
+
+pub fn insert_network_traffic(
+    conn: &Connection,
+    process_id: i64,
+    method: &str,
+    url: &str,
+    status_code: Option<i64>,
+    request_body: Option<&str>,
+    response_body: Option<&str>,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO network_traffic (process_id, method, url, status_code, request_body, response_body)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        params![process_id, method, url, status_code, request_body, response_body],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+// ============================================================
+// Env Profiles
+// ============================================================
+
+pub fn insert_env_profile(
+    conn: &Connection,
+    project_id: i64,
+    name: &str,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO env_profiles (project_id, name) VALUES (?1, ?2)",
+        params![project_id, name],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn list_env_profiles(
+    conn: &Connection,
+    project_id: i64,
+) -> Result<Vec<EnvProfileRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, project_id, name, is_active, created_at
+         FROM env_profiles WHERE project_id = ?1 ORDER BY name",
+    )?;
+    let rows = stmt.query_map(params![project_id], |row| {
+        Ok(EnvProfileRow {
+            id: row.get(0)?,
+            project_id: row.get(1)?,
+            name: row.get(2)?,
+            is_active: row.get(3)?,
+            created_at: row.get(4)?,
+        })
+    })?;
+    rows.collect()
+}
+
+// ============================================================
+// Env Vars
+// ============================================================
+
+pub fn insert_env_var(
+    conn: &Connection,
+    profile_id: i64,
+    key: &str,
+    encrypted_value: Option<&str>,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO env_vars (profile_id, key, encrypted_value) VALUES (?1, ?2, ?3)",
+        params![profile_id, key, encrypted_value],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn list_env_var_keys(
+    conn: &Connection,
+    profile_id: i64,
+) -> Result<Vec<EnvVarRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, profile_id, key, created_at
+         FROM env_vars WHERE profile_id = ?1 ORDER BY key",
+    )?;
+    let rows = stmt.query_map(params![profile_id], |row| {
+        Ok(EnvVarRow {
+            id: row.get(0)?,
+            profile_id: row.get(1)?,
+            key: row.get(2)?,
+            created_at: row.get(3)?,
+        })
+    })?;
+    rows.collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::init_test_db;
+    use super::*;
+
+    #[test]
+    fn project_crud() {
+        let conn = init_test_db();
+
+        let id = insert_project(&conn, "my-app", "/home/user/my-app", None, Some("react")).unwrap();
+        assert!(id > 0);
+
+        let project = get_project(&conn, id).unwrap().unwrap();
+        assert_eq!(project.name, "my-app");
+        assert_eq!(project.local_path, "/home/user/my-app");
+        assert_eq!(project.framework.as_deref(), Some("react"));
+        assert!(project.github_url.is_none());
+
+        let projects = list_projects(&conn).unwrap();
+        assert_eq!(projects.len(), 1);
+
+        let deleted = delete_project(&conn, id).unwrap();
+        assert!(deleted);
+
+        let gone = get_project(&conn, id).unwrap();
+        assert!(gone.is_none());
+    }
+
+    #[test]
+    fn worktree_crud() {
+        let conn = init_test_db();
+        let pid = insert_project(&conn, "test", "/tmp/test", None, None).unwrap();
+
+        let wid = insert_worktree(&conn, pid, "feature-branch", "/tmp/test-feature").unwrap();
+        assert!(wid > 0);
+
+        let trees = list_worktrees(&conn, pid).unwrap();
+        assert_eq!(trees.len(), 1);
+        assert_eq!(trees[0].branch_name, "feature-branch");
+        assert_eq!(trees[0].status, "active");
+
+        let deleted = delete_worktree(&conn, wid).unwrap();
+        assert!(deleted);
+        assert!(list_worktrees(&conn, pid).unwrap().is_empty());
+    }
+
+    #[test]
+    fn cascade_delete_project_removes_worktrees() {
+        let conn = init_test_db();
+        let pid = insert_project(&conn, "test", "/tmp", None, None).unwrap();
+        insert_worktree(&conn, pid, "main", "/tmp/main").unwrap();
+        insert_worktree(&conn, pid, "dev", "/tmp/dev").unwrap();
+
+        delete_project(&conn, pid).unwrap();
+        assert!(list_worktrees(&conn, pid).unwrap().is_empty());
+    }
+
+    #[test]
+    fn log_insert_and_query() {
+        let conn = init_test_db();
+        let pid = insert_project(&conn, "test", "/tmp", None, None).unwrap();
+        let wid = insert_worktree(&conn, pid, "main", "/tmp").unwrap();
+        let proc_id = insert_process(&conn, wid, "npm start").unwrap();
+
+        insert_log(&conn, proc_id, "stdout", "Server started").unwrap();
+        insert_log(&conn, proc_id, "stderr", "Warning: deprecated").unwrap();
+
+        let logs = get_logs(&conn, proc_id, 10).unwrap();
+        assert_eq!(logs.len(), 2);
+        // DESC order — most recent first
+        assert_eq!(logs[0].content, "Warning: deprecated");
+        assert_eq!(logs[0].stream, "stderr");
+    }
+
+    #[test]
+    fn env_profile_and_vars() {
+        let conn = init_test_db();
+        let pid = insert_project(&conn, "test", "/tmp", None, None).unwrap();
+
+        let profile_id = insert_env_profile(&conn, pid, "development").unwrap();
+        insert_env_var(&conn, profile_id, "DATABASE_URL", Some("encrypted:abc")).unwrap();
+        insert_env_var(&conn, profile_id, "API_KEY", Some("encrypted:xyz")).unwrap();
+
+        let profiles = list_env_profiles(&conn, pid).unwrap();
+        assert_eq!(profiles.len(), 1);
+        assert_eq!(profiles[0].name, "development");
+
+        let keys = list_env_var_keys(&conn, profile_id).unwrap();
+        assert_eq!(keys.len(), 2);
+        // Ordered by key
+        assert_eq!(keys[0].key, "API_KEY");
+        assert_eq!(keys[1].key, "DATABASE_URL");
+    }
+
+    #[test]
+    fn memory_note_category_check() {
+        let conn = init_test_db();
+        let pid = insert_project(&conn, "test", "/tmp", None, None).unwrap();
+        let wid = insert_worktree(&conn, pid, "main", "/tmp").unwrap();
+
+        // Valid categories
+        insert_memory_note(&conn, wid, "Remember this", "note").unwrap();
+        insert_memory_note(&conn, wid, "Don't try X", "dead_end").unwrap();
+        insert_memory_note(&conn, wid, "Use approach Y", "decision").unwrap();
+
+        // Invalid category should fail
+        let result = insert_memory_note(&conn, wid, "bad", "invalid_category");
+        assert!(result.is_err());
+    }
+}

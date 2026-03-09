@@ -1,7 +1,10 @@
 use rusqlite::Connection;
 use std::fs;
+use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 use thiserror::Error;
+
+pub mod queries;
 
 #[derive(Debug, Error)]
 pub enum DbError {
@@ -21,9 +24,13 @@ impl From<DbError> for tauri::Error {
     }
 }
 
+/// Thread-safe wrapper around a SQLite connection for use as Tauri managed state.
+pub struct AppDb(pub Mutex<Connection>);
+
 /// Initializes the SQLite database in the app's data directory.
-/// Creates all required tables if they do not already exist.
-pub fn init_db(app: &AppHandle) -> Result<Connection, DbError> {
+/// Creates all required tables, indexes, and triggers if they do not already exist.
+/// Returns an `AppDb` suitable for registration as Tauri managed state.
+pub fn init_db(app: &AppHandle) -> Result<AppDb, DbError> {
     let app_data_dir = app
         .path()
         .app_data_dir()
@@ -37,101 +44,157 @@ pub fn init_db(app: &AppHandle) -> Result<Connection, DbError> {
     conn.execute_batch("PRAGMA journal_mode=WAL;")?;
     conn.execute_batch("PRAGMA foreign_keys=ON;")?;
 
-    create_tables(&conn)?;
+    run_migrations(&conn)?;
 
-    Ok(conn)
+    Ok(AppDb(Mutex::new(conn)))
 }
 
-fn create_tables(conn: &Connection) -> Result<(), rusqlite::Error> {
-    conn.execute_batch(
-        "
-        CREATE TABLE IF NOT EXISTS projects (
-            id              INTEGER PRIMARY KEY,
-            github_repo_id  TEXT,
-            name            TEXT NOT NULL,
-            clone_path      TEXT NOT NULL,
-            created_at      TEXT NOT NULL DEFAULT (datetime('now'))
-        );
+/// Applies the schema from schema.sql. All statements use IF NOT EXISTS,
+/// so this is safe to call on every startup.
+fn run_migrations(conn: &Connection) -> Result<(), rusqlite::Error> {
+    const SCHEMA: &str = include_str!("schema.sql");
+    conn.execute_batch(SCHEMA)
+}
 
-        CREATE TABLE IF NOT EXISTS worktrees (
-            id              INTEGER PRIMARY KEY,
-            project_id      INTEGER NOT NULL REFERENCES projects(id),
-            branch          TEXT NOT NULL,
-            path            TEXT NOT NULL,
-            is_active       INTEGER NOT NULL DEFAULT 0,
-            created_at      TEXT NOT NULL DEFAULT (datetime('now'))
-        );
+/// Creates an in-memory database with the full schema applied.
+/// Useful for testing without touching the filesystem.
+#[cfg(test)]
+pub fn init_test_db() -> Connection {
+    let conn = Connection::open_in_memory().expect("failed to open in-memory db");
+    conn.execute_batch("PRAGMA foreign_keys=ON;").unwrap();
+    run_migrations(&conn).unwrap();
+    conn
+}
 
-        CREATE TABLE IF NOT EXISTS env_profiles (
-            id              INTEGER PRIMARY KEY,
-            project_id      INTEGER NOT NULL REFERENCES projects(id),
-            name            TEXT NOT NULL,
-            created_at      TEXT NOT NULL DEFAULT (datetime('now'))
-        );
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-        CREATE TABLE IF NOT EXISTS env_vars (
-            id                  INTEGER PRIMARY KEY,
-            profile_id          INTEGER NOT NULL REFERENCES env_profiles(id),
-            key                 TEXT NOT NULL,
-            encrypted_value_ref TEXT
-        );
+    #[test]
+    fn schema_applies_cleanly() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch("PRAGMA foreign_keys=ON;").unwrap();
+        run_migrations(&conn).unwrap();
+    }
 
-        CREATE TABLE IF NOT EXISTS processes (
-            id              INTEGER PRIMARY KEY,
-            worktree_id     INTEGER NOT NULL REFERENCES worktrees(id),
-            pid             INTEGER,
-            port            INTEGER,
-            status          TEXT NOT NULL DEFAULT 'stopped',
-            start_command   TEXT NOT NULL,
-            started_at      TEXT
-        );
+    #[test]
+    fn schema_is_idempotent() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch("PRAGMA foreign_keys=ON;").unwrap();
+        run_migrations(&conn).unwrap();
+        run_migrations(&conn).unwrap();
+    }
 
-        CREATE TABLE IF NOT EXISTS log_entries (
-            id              INTEGER PRIMARY KEY,
-            process_id      INTEGER NOT NULL REFERENCES processes(id),
-            level           TEXT NOT NULL DEFAULT 'info',
-            message         TEXT NOT NULL,
-            timestamp       TEXT NOT NULL DEFAULT (datetime('now'))
-        );
+    #[test]
+    fn all_ten_tables_exist() {
+        let conn = init_test_db();
+        let expected = [
+            "projects",
+            "worktrees",
+            "env_profiles",
+            "env_vars",
+            "processes",
+            "logs",
+            "shell_history",
+            "memory_notes",
+            "file_events",
+            "network_traffic",
+        ];
+        for table in &expected {
+            let count: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?1",
+                    [table],
+                    |row| row.get(0),
+                )
+                .unwrap();
+            assert_eq!(count, 1, "table '{}' should exist", table);
+        }
+    }
 
-        CREATE TABLE IF NOT EXISTS memory_items (
-            id              INTEGER PRIMARY KEY,
-            worktree_id     INTEGER NOT NULL REFERENCES worktrees(id),
-            type            TEXT NOT NULL CHECK(type IN ('note','dead_end','decision')),
-            content         TEXT NOT NULL,
-            embedding       BLOB,
-            created_at      TEXT NOT NULL DEFAULT (datetime('now'))
-        );
+    #[test]
+    fn indexes_exist() {
+        let conn = init_test_db();
+        let expected_indexes = [
+            "idx_worktrees_project_id",
+            "idx_env_profiles_project_id",
+            "idx_env_vars_profile_id",
+            "idx_processes_worktree_id",
+            "idx_logs_process_id",
+            "idx_logs_timestamp",
+            "idx_shell_history_project_id",
+            "idx_shell_history_timestamp",
+            "idx_memory_notes_worktree_id",
+            "idx_file_events_project_id",
+            "idx_file_events_timestamp",
+            "idx_network_traffic_process_id",
+            "idx_network_traffic_timestamp",
+        ];
+        for idx in &expected_indexes {
+            let count: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name=?1",
+                    [idx],
+                    |row| row.get(0),
+                )
+                .unwrap();
+            assert_eq!(count, 1, "index '{}' should exist", idx);
+        }
+    }
 
-        CREATE TABLE IF NOT EXISTS shell_commands (
-            id              INTEGER PRIMARY KEY,
-            project_id      INTEGER NOT NULL REFERENCES projects(id),
-            command         TEXT NOT NULL,
-            exit_code       INTEGER,
-            branch          TEXT,
-            timestamp       TEXT NOT NULL DEFAULT (datetime('now'))
+    #[test]
+    fn foreign_keys_enforced() {
+        let conn = init_test_db();
+        let result = conn.execute(
+            "INSERT INTO worktrees (project_id, branch_name, path) VALUES (9999, 'main', '/tmp')",
+            [],
         );
+        assert!(result.is_err(), "FK violation should be rejected");
+    }
 
-        CREATE TABLE IF NOT EXISTS http_requests (
-            id              INTEGER PRIMARY KEY,
-            project_id      INTEGER NOT NULL REFERENCES projects(id),
-            method          TEXT NOT NULL,
-            path            TEXT NOT NULL,
-            status          INTEGER,
-            req_body        TEXT,
-            res_body        TEXT,
-            timestamp       TEXT NOT NULL DEFAULT (datetime('now'))
+    #[test]
+    fn logs_ring_buffer_trigger() {
+        let conn = init_test_db();
+
+        // Set up parent rows
+        conn.execute(
+            "INSERT INTO projects (id, name, local_path) VALUES (1, 'test', '/tmp')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO worktrees (id, project_id, branch_name, path) VALUES (1, 1, 'main', '/tmp')",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO processes (id, worktree_id, command) VALUES (1, 1, 'npm start')",
+            [],
+        )
+        .unwrap();
+
+        // Insert 50,010 log rows
+        let tx = conn.unchecked_transaction().unwrap();
+        for i in 0..50_010 {
+            tx.execute(
+                "INSERT INTO logs (process_id, stream, content) VALUES (1, 'stdout', ?1)",
+                [format!("line {}", i)],
+            )
+            .unwrap();
+        }
+        tx.commit().unwrap();
+
+        let count: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM logs WHERE process_id = 1",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert!(
+            count <= 50_000,
+            "ring buffer should cap logs at 50,000 but found {}",
+            count
         );
-
-        CREATE TABLE IF NOT EXISTS file_events (
-            id              INTEGER PRIMARY KEY,
-            project_id      INTEGER NOT NULL REFERENCES projects(id),
-            file_path       TEXT NOT NULL,
-            event_type      TEXT NOT NULL,
-            timestamp       TEXT NOT NULL DEFAULT (datetime('now'))
-        );
-        ",
-    )?;
-
-    Ok(())
+    }
 }

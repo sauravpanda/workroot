@@ -1,6 +1,7 @@
 pub mod db;
 
 use db::init_db;
+use tauri::Manager;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -13,7 +14,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![greet])
         .setup(|app| {
             let app_handle = app.handle().clone();
-            init_db(&app_handle)?;
+            let db = init_db(&app_handle)?;
+            app.manage(db);
             Ok(())
         })
         .run(tauri::generate_context!())
