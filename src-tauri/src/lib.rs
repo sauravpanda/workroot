@@ -3,6 +3,7 @@ pub mod db;
 pub mod git;
 pub mod github;
 pub mod mcp;
+pub mod memory;
 pub mod process;
 pub mod projects;
 pub mod proxy;
@@ -104,6 +105,11 @@ pub fn run() {
             shell::uninstall_shell_hook,
             shell::get_shell_history,
             shell::search_shell_history,
+            memory::add_memory_note,
+            memory::get_memory_notes,
+            memory::search_memory_notes,
+            memory::delete_memory_note,
+            memory::update_memory_note,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

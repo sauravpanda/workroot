@@ -516,6 +516,101 @@ pub fn insert_memory_note(
     Ok(conn.last_insert_rowid())
 }
 
+pub fn update_memory_note_embedding(
+    conn: &Connection,
+    id: i64,
+    embedding: &[u8],
+) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "UPDATE memory_notes SET embedding = ?1 WHERE id = ?2",
+        params![embedding, id],
+    )?;
+    Ok(())
+}
+
+pub fn update_memory_note_content(
+    conn: &Connection,
+    id: i64,
+    content: &str,
+) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "UPDATE memory_notes SET content = ?1 WHERE id = ?2",
+        params![content, id],
+    )?;
+    Ok(())
+}
+
+pub fn delete_memory_note(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute("DELETE FROM memory_notes WHERE id = ?1", params![id])?;
+    Ok(affected > 0)
+}
+
+pub fn list_memory_notes(
+    conn: &Connection,
+    worktree_id: i64,
+    category: Option<&str>,
+) -> Result<Vec<MemoryNoteRow>, rusqlite::Error> {
+    if let Some(cat) = category {
+        let mut stmt = conn.prepare(
+            "SELECT id, worktree_id, content, category, created_at
+             FROM memory_notes WHERE worktree_id = ?1 AND category = ?2
+             ORDER BY created_at DESC",
+        )?;
+        let rows = stmt.query_map(params![worktree_id, cat], |row| {
+            Ok(MemoryNoteRow {
+                id: row.get(0)?,
+                worktree_id: row.get(1)?,
+                content: row.get(2)?,
+                category: row.get(3)?,
+                created_at: row.get(4)?,
+            })
+        })?;
+        rows.collect()
+    } else {
+        let mut stmt = conn.prepare(
+            "SELECT id, worktree_id, content, category, created_at
+             FROM memory_notes WHERE worktree_id = ?1
+             ORDER BY created_at DESC",
+        )?;
+        let rows = stmt.query_map(params![worktree_id], |row| {
+            Ok(MemoryNoteRow {
+                id: row.get(0)?,
+                worktree_id: row.get(1)?,
+                content: row.get(2)?,
+                category: row.get(3)?,
+                created_at: row.get(4)?,
+            })
+        })?;
+        rows.collect()
+    }
+}
+
+/// Memory note with its raw embedding blob.
+pub type MemoryNoteWithEmbedding = (MemoryNoteRow, Option<Vec<u8>>);
+
+pub fn list_memory_notes_with_embeddings(
+    conn: &Connection,
+    worktree_id: i64,
+) -> Result<Vec<MemoryNoteWithEmbedding>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, worktree_id, content, category, created_at, embedding
+         FROM memory_notes WHERE worktree_id = ?1
+         ORDER BY created_at DESC",
+    )?;
+    let rows = stmt.query_map(params![worktree_id], |row| {
+        let note = MemoryNoteRow {
+            id: row.get(0)?,
+            worktree_id: row.get(1)?,
+            content: row.get(2)?,
+            category: row.get(3)?,
+            created_at: row.get(4)?,
+        };
+        let embedding: Option<Vec<u8>> = row.get(5)?;
+        Ok((note, embedding))
+    })?;
+    rows.collect()
+}
+
 // ============================================================
 // File Events
 // ============================================================
