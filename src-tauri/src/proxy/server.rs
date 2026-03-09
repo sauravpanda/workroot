@@ -50,8 +50,16 @@ pub async fn start_proxy(app_handle: AppHandle) {
                 async move { handle_request(req, &app_inner).await }
             });
 
-            if let Err(e) = http1::Builder::new().serve_connection(io, service).await {
-                eprintln!("Proxy connection error: {}", e);
+            if let Err(e) = http1::Builder::new()
+                .serve_connection(io, service)
+                .with_upgrades()
+                .await
+            {
+                // Connection reset errors are normal when clients disconnect
+                let msg = e.to_string();
+                if !msg.contains("connection reset") && !msg.contains("broken pipe") {
+                    eprintln!("Proxy connection error: {}", e);
+                }
             }
         });
     }
@@ -72,12 +80,146 @@ async fn handle_request(
         ));
     }
 
-    // Build the target URL
+    // Check for WebSocket upgrade
+    let is_upgrade = is_websocket_upgrade(&req);
+
+    if is_upgrade {
+        return handle_websocket_upgrade(req, target_port).await;
+    }
+
+    // Regular HTTP forwarding
+    forward_http_request(req, target_port).await
+}
+
+/// Detects WebSocket upgrade requests.
+fn is_websocket_upgrade(req: &Request<Incoming>) -> bool {
+    let has_upgrade_header = req
+        .headers()
+        .get(hyper::header::CONNECTION)
+        .and_then(|v| v.to_str().ok())
+        .map(|v| v.to_lowercase().contains("upgrade"))
+        .unwrap_or(false);
+
+    let is_websocket = req
+        .headers()
+        .get(hyper::header::UPGRADE)
+        .and_then(|v| v.to_str().ok())
+        .map(|v| v.eq_ignore_ascii_case("websocket"))
+        .unwrap_or(false);
+
+    has_upgrade_header && is_websocket
+}
+
+/// Handles WebSocket upgrade by establishing a TCP tunnel to the target.
+async fn handle_websocket_upgrade(
+    req: Request<Incoming>,
+    target_port: u16,
+) -> Result<Response<BoxBody>, hyper::Error> {
+    // Connect to target
+    let target_addr = format!("127.0.0.1:{}", target_port);
+    let target_stream = match tokio::net::TcpStream::connect(&target_addr).await {
+        Ok(s) => s,
+        Err(_) => {
+            return Ok(error_response(
+                StatusCode::BAD_GATEWAY,
+                &format!("Target server on port {} is not responding", target_port),
+            ));
+        }
+    };
+
+    // Build raw HTTP upgrade request to forward
+    let uri = req.uri();
+    let path = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
+    let mut raw_request = format!("GET {} HTTP/1.1\r\n", path);
+
+    for (name, value) in req.headers() {
+        if let Ok(v) = value.to_str() {
+            raw_request.push_str(&format!("{}: {}\r\n", name, v));
+        }
+    }
+    // Ensure Host header
+    if !req.headers().contains_key(hyper::header::HOST) {
+        raw_request.push_str(&format!("Host: 127.0.0.1:{}\r\n", target_port));
+    }
+    raw_request.push_str("\r\n");
+
+    // Send the upgrade request to target
+    use tokio::io::AsyncWriteExt;
+    let (mut target_read, mut target_write) = target_stream.into_split();
+    if target_write
+        .write_all(raw_request.as_bytes())
+        .await
+        .is_err()
+    {
+        return Ok(error_response(
+            StatusCode::BAD_GATEWAY,
+            "Failed to forward WebSocket upgrade",
+        ));
+    }
+
+    // Spawn hyper upgrade handler
+    tokio::spawn(async move {
+        // Wait for the hyper upgrade to complete
+        match hyper::upgrade::on(req).await {
+            Ok(upgraded) => {
+                let mut client_io = TokioIo::new(upgraded);
+
+                // Bidirectional copy between client and target
+                use tokio::io::AsyncReadExt;
+
+                let mut client_buf = vec![0u8; 8192];
+                let mut target_buf = vec![0u8; 8192];
+
+                loop {
+                    tokio::select! {
+                        result = client_io.read(&mut client_buf) => {
+                            match result {
+                                Ok(0) | Err(_) => break,
+                                Ok(n) => {
+                                    if target_write.write_all(&client_buf[..n]).await.is_err() {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        result = target_read.read(&mut target_buf) => {
+                            match result {
+                                Ok(0) | Err(_) => break,
+                                Ok(n) => {
+                                    use tokio::io::AsyncWriteExt as _;
+                                    if client_io.write_all(&target_buf[..n]).await.is_err() {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("WebSocket upgrade error: {}", e);
+            }
+        }
+    });
+
+    // Return 101 Switching Protocols to the client
+    Ok(Response::builder()
+        .status(StatusCode::SWITCHING_PROTOCOLS)
+        .header(hyper::header::CONNECTION, "Upgrade")
+        .header(hyper::header::UPGRADE, "websocket")
+        .body(http_body_util::Full::new(hyper::body::Bytes::new()))
+        .unwrap())
+}
+
+/// Forwards a regular HTTP request to the target port.
+async fn forward_http_request(
+    req: Request<Incoming>,
+    target_port: u16,
+) -> Result<Response<BoxBody>, hyper::Error> {
     let uri = req.uri();
     let path_and_query = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
     let target_uri = format!("http://127.0.0.1:{}{}", target_port, path_and_query);
 
-    // Build a reqwest request from the hyper request
     let method = req.method().clone();
     let mut headers = req.headers().clone();
 
@@ -105,7 +247,6 @@ async fn handle_request(
         &target_uri,
     );
 
-    // Copy headers (skip host — reqwest sets its own)
     for (name, value) in headers.iter() {
         if name != hyper::header::HOST {
             if let Ok(v) = value.to_str() {

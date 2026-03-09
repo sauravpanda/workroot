@@ -1,4 +1,5 @@
 pub mod server;
+pub mod switch;
 
 use std::sync::atomic::{AtomicU16, Ordering};
 use std::sync::Mutex;

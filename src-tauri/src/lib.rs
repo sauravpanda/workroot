@@ -92,6 +92,9 @@ pub fn run() {
             proxy::server::get_proxy_status,
             proxy::server::set_proxy_target,
             proxy::server::clear_proxy_target,
+            proxy::switch::set_active_project,
+            proxy::switch::get_active_project,
+            proxy::switch::clear_active_project,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
