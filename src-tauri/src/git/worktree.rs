@@ -1,0 +1,214 @@
+use super::WorktreeInfo;
+use crate::db::queries;
+use crate::db::AppDb;
+use git2::{Repository, StatusOptions, WorktreeAddOptions, WorktreePruneOptions};
+use std::path::Path;
+use tauri::State;
+
+/// Checks whether the working directory at `path` has uncommitted changes.
+fn check_is_dirty(path: &str) -> bool {
+    let repo = match Repository::open(path) {
+        Ok(r) => r,
+        Err(_) => return false,
+    };
+
+    let mut opts = StatusOptions::new();
+    opts.include_untracked(true)
+        .recurse_untracked_dirs(true)
+        .include_ignored(false);
+
+    let result = match repo.statuses(Some(&mut opts)) {
+        Ok(statuses) => !statuses.is_empty(),
+        Err(_) => false,
+    };
+    result
+}
+
+/// Creates a git worktree for the given project and branch.
+/// If `create_new_branch` is true, a new branch is created from HEAD first.
+/// Worktrees are placed in `<project_root>/.worktrees/<branch_name>/`.
+#[tauri::command]
+pub fn create_worktree(
+    db: State<'_, AppDb>,
+    project_id: i64,
+    branch_name: String,
+    create_new_branch: bool,
+) -> Result<WorktreeInfo, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    let project = queries::get_project(&conn, project_id)
+        .map_err(|e| format!("DB error: {}", e))?
+        .ok_or("Project not found")?;
+
+    // Check if worktree for this branch already exists in DB
+    let existing =
+        queries::list_worktrees(&conn, project_id).map_err(|e| format!("DB error: {}", e))?;
+    if existing.iter().any(|w| w.branch_name == branch_name) {
+        return Err(format!(
+            "Worktree for branch '{}' already exists",
+            branch_name
+        ));
+    }
+    drop(conn);
+
+    let repo = Repository::open(&project.local_path)
+        .map_err(|e| format!("Failed to open repository: {}", e))?;
+
+    let worktree_dir = Path::new(&project.local_path).join(".worktrees");
+    let worktree_path = worktree_dir.join(&branch_name);
+
+    if !worktree_dir.exists() {
+        std::fs::create_dir_all(&worktree_dir)
+            .map_err(|e| format!("Failed to create .worktrees directory: {}", e))?;
+    }
+
+    if worktree_path.exists() {
+        return Err(format!(
+            "Worktree path already exists: {}",
+            worktree_path.display()
+        ));
+    }
+
+    if create_new_branch {
+        let head = repo
+            .head()
+            .map_err(|e| format!("Failed to get HEAD: {}", e))?;
+        let head_commit = head
+            .peel_to_commit()
+            .map_err(|e| format!("Failed to get HEAD commit: {}", e))?;
+        let branch = repo
+            .branch(&branch_name, &head_commit, false)
+            .map_err(|e| format!("Failed to create branch '{}': {}", branch_name, e))?;
+
+        let reference = branch.into_reference();
+        let mut opts = WorktreeAddOptions::new();
+        opts.reference(Some(&reference));
+
+        repo.worktree(&branch_name, &worktree_path, Some(&opts))
+            .map_err(|e| format!("Failed to create worktree: {}", e))?;
+    } else {
+        let branch = repo
+            .find_branch(&branch_name, git2::BranchType::Local)
+            .map_err(|e| format!("Branch '{}' not found: {}", branch_name, e))?;
+
+        let reference = branch.into_reference();
+        let mut opts = WorktreeAddOptions::new();
+        opts.reference(Some(&reference));
+
+        repo.worktree(&branch_name, &worktree_path, Some(&opts))
+            .map_err(|e| format!("Failed to create worktree: {}", e))?;
+    }
+
+    let worktree_path_str = worktree_path.to_str().ok_or("Invalid path")?.to_string();
+
+    // Register in DB
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    let id = queries::insert_worktree(&conn, project_id, &branch_name, &worktree_path_str)
+        .map_err(|e| format!("Failed to register worktree: {}", e))?;
+
+    let row = queries::get_worktree(&conn, id)
+        .map_err(|e| format!("DB error: {}", e))?
+        .ok_or("Worktree not found after insert")?;
+
+    Ok(WorktreeInfo {
+        id: row.id,
+        project_id: row.project_id,
+        branch_name: row.branch_name,
+        path: row.path.clone(),
+        status: row.status,
+        is_dirty: check_is_dirty(&row.path),
+        port: row.port,
+        created_at: row.created_at,
+    })
+}
+
+/// Lists all worktrees for a project with their current dirty/clean status.
+#[tauri::command]
+pub fn list_project_worktrees(
+    db: State<'_, AppDb>,
+    project_id: i64,
+) -> Result<Vec<WorktreeInfo>, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    let rows =
+        queries::list_worktrees(&conn, project_id).map_err(|e| format!("DB error: {}", e))?;
+
+    Ok(rows
+        .into_iter()
+        .map(|row| {
+            let is_dirty = check_is_dirty(&row.path);
+            WorktreeInfo {
+                id: row.id,
+                project_id: row.project_id,
+                branch_name: row.branch_name,
+                path: row.path,
+                status: row.status,
+                is_dirty,
+                port: row.port,
+                created_at: row.created_at,
+            }
+        })
+        .collect())
+}
+
+/// Deletes a worktree: prunes from git, removes the directory, and deletes the DB record.
+#[tauri::command]
+pub fn delete_worktree(db: State<'_, AppDb>, worktree_id: i64) -> Result<bool, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    let row = queries::get_worktree(&conn, worktree_id)
+        .map_err(|e| format!("DB error: {}", e))?
+        .ok_or("Worktree not found")?;
+
+    let project = queries::get_project(&conn, row.project_id)
+        .map_err(|e| format!("DB error: {}", e))?
+        .ok_or("Project not found")?;
+    drop(conn);
+
+    // Try to prune the git worktree
+    let repo = Repository::open(&project.local_path)
+        .map_err(|e| format!("Failed to open repository: {}", e))?;
+
+    if let Ok(wt) = repo.find_worktree(&row.branch_name) {
+        let mut prune_opts = WorktreePruneOptions::new();
+        prune_opts.valid(true).working_tree(true);
+        let _ = wt.prune(Some(&mut prune_opts));
+    }
+
+    // Remove the worktree directory if it still exists
+    let wt_path = Path::new(&row.path);
+    if wt_path.exists() {
+        std::fs::remove_dir_all(wt_path)
+            .map_err(|e| format!("Failed to remove worktree directory: {}", e))?;
+    }
+
+    // Remove from DB
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    queries::delete_worktree(&conn, worktree_id).map_err(|e| format!("DB error: {}", e))
+}
+
+/// Gets the current status of a worktree (dirty/clean, exists on disk).
+#[tauri::command]
+pub fn get_worktree_status(db: State<'_, AppDb>, worktree_id: i64) -> Result<WorktreeInfo, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    let row = queries::get_worktree(&conn, worktree_id)
+        .map_err(|e| format!("DB error: {}", e))?
+        .ok_or("Worktree not found")?;
+
+    let is_dirty = check_is_dirty(&row.path);
+    let exists = Path::new(&row.path).exists();
+
+    let status = if !exists {
+        "missing".to_string()
+    } else {
+        row.status.clone()
+    };
+
+    Ok(WorktreeInfo {
+        id: row.id,
+        project_id: row.project_id,
+        branch_name: row.branch_name,
+        path: row.path,
+        status,
+        is_dirty,
+        port: row.port,
+        created_at: row.created_at,
+    })
+}

@@ -187,6 +187,28 @@ pub fn insert_worktree(
     Ok(conn.last_insert_rowid())
 }
 
+pub fn get_worktree(conn: &Connection, id: i64) -> Result<Option<WorktreeRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, project_id, branch_name, path, status, port, created_at
+         FROM worktrees WHERE id = ?1",
+    )?;
+    let mut rows = stmt.query_map(params![id], |row| {
+        Ok(WorktreeRow {
+            id: row.get(0)?,
+            project_id: row.get(1)?,
+            branch_name: row.get(2)?,
+            path: row.get(3)?,
+            status: row.get(4)?,
+            port: row.get(5)?,
+            created_at: row.get(6)?,
+        })
+    })?;
+    match rows.next() {
+        Some(row) => Ok(Some(row?)),
+        None => Ok(None),
+    }
+}
+
 pub fn list_worktrees(
     conn: &Connection,
     project_id: i64,

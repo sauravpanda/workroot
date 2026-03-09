@@ -1,4 +1,5 @@
 pub mod db;
+pub mod git;
 pub mod github;
 pub mod projects;
 pub mod tray;
@@ -57,6 +58,12 @@ pub fn run() {
             projects::list_github_repos,
             projects::clone_and_register,
             projects::register_local_project,
+            git::worktree::create_worktree,
+            git::worktree::list_project_worktrees,
+            git::worktree::delete_worktree,
+            git::worktree::get_worktree_status,
+            git::branch::list_branches,
+            git::branch::create_branch,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
