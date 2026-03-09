@@ -110,6 +110,9 @@ pub fn run() {
             memory::search_memory_notes,
             memory::delete_memory_note,
             memory::update_memory_note,
+            memory::add_dead_end,
+            memory::get_dead_ends,
+            memory::search_dead_ends,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

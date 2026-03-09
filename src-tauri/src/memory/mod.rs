@@ -1,3 +1,4 @@
+pub mod dead_ends;
 pub mod embeddings;
 
 use crate::db::queries;
@@ -139,4 +140,38 @@ pub fn update_memory_note(
         .map_err(|e| format!("DB embedding: {}", e))?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub fn add_dead_end(
+    app: tauri::AppHandle,
+    worktree_id: i64,
+    approach: String,
+    failure_reason: String,
+    error_message: Option<String>,
+) -> Result<i64, String> {
+    dead_ends::add_dead_end(
+        &app,
+        worktree_id,
+        &approach,
+        &failure_reason,
+        error_message.as_deref(),
+    )
+}
+
+#[tauri::command]
+pub fn get_dead_ends(
+    app: tauri::AppHandle,
+    worktree_id: i64,
+) -> Result<Vec<dead_ends::DeadEndEntry>, String> {
+    dead_ends::get_dead_ends(&app, worktree_id)
+}
+
+#[tauri::command]
+pub fn search_dead_ends(
+    app: tauri::AppHandle,
+    worktree_id: i64,
+    query: String,
+) -> Result<Vec<dead_ends::DeadEndEntry>, String> {
+    dead_ends::search_dead_ends(&app, worktree_id, &query)
 }
