@@ -1,5 +1,6 @@
 pub mod claudemd;
 pub mod db;
+pub mod dbconnect;
 pub mod git;
 pub mod github;
 pub mod mcp;
@@ -13,6 +14,7 @@ pub mod vault;
 
 use claudemd::watcher::ClaudeMdWatcher;
 use db::init_db;
+use dbconnect::schema::SchemaCache;
 use github::auth;
 use github::{DeviceCodeResponse, GitHubUser};
 use process::lifecycle::ProcessRegistry;
@@ -113,6 +115,9 @@ pub fn run() {
             memory::add_dead_end,
             memory::get_dead_ends,
             memory::search_dead_ends,
+            dbconnect::detect::detect_worktree_database,
+            dbconnect::schema::get_db_schema,
+            dbconnect::schema::refresh_db_schema,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
@@ -121,6 +126,7 @@ pub fn run() {
             app.manage(ProcessRegistry::new());
             app.manage(ProxyState::new());
             app.manage(ClaudeMdWatcher::new());
+            app.manage(SchemaCache::new());
 
             // Start CLAUDE.md watcher loop
             let watcher_handle = app.handle().clone();
