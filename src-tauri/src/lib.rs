@@ -73,6 +73,8 @@ pub fn run() {
             vault::vault_list_profiles,
             vault::vault_delete_profile,
             vault::vault_duplicate_profile,
+            vault::import::parse_env_file,
+            vault::import::import_env_vars,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
