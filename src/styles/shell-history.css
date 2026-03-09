@@ -1,0 +1,154 @@
+.shell-history {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: var(--font-mono, "SF Mono", "Cascadia Code", monospace);
+}
+
+.shell-history-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border, #333);
+  flex-shrink: 0;
+}
+
+.shell-history-search {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border, #444);
+  border-radius: 4px;
+  background: var(--bg-input, #1a1a2e);
+  color: var(--text, #e0e0e0);
+  font-size: 13px;
+  outline: none;
+}
+
+.shell-history-search:focus {
+  border-color: var(--accent, #7c5cbf);
+}
+
+.shell-history-filters {
+  display: flex;
+  gap: 2px;
+}
+
+.shell-history-filter {
+  padding: 4px 10px;
+  border: 1px solid var(--border, #444);
+  background: transparent;
+  color: var(--text-muted, #888);
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.shell-history-filter.active {
+  background: var(--accent, #7c5cbf);
+  color: #fff;
+  border-color: var(--accent, #7c5cbf);
+}
+
+.shell-history-count {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+  white-space: nowrap;
+}
+
+.shell-history-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.shell-history-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle, #2a2a3e);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.shell-history-entry:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.04));
+}
+
+.shell-history-entry-status {
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+  padding-top: 2px;
+}
+
+.status-ok {
+  color: #4ade80;
+  font-weight: bold;
+}
+
+.status-err {
+  color: #f87171;
+  font-weight: bold;
+}
+
+.status-unknown {
+  color: var(--text-muted, #888);
+}
+
+.shell-history-entry-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.shell-history-command {
+  display: block;
+  font-size: 13px;
+  color: var(--text, #e0e0e0);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.shell-history-meta {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-muted, #888);
+}
+
+.shell-history-branch {
+  color: var(--accent-light, #a78bfa);
+}
+
+.shell-history-exit {
+  color: #f87171;
+}
+
+.shell-history-copy {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #4ade80;
+  min-width: 48px;
+  text-align: right;
+}
+
+.shell-history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-muted, #888);
+}
+
+.shell-history-empty-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+.shell-history-empty-hint {
+  font-size: 12px;
+  opacity: 0.7;
+}
