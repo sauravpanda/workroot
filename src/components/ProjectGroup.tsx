@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ProjectInfo } from "../hooks/useProjects";
 import { useWorktrees } from "../hooks/useWorktrees";
+import { useUiStore } from "../stores/uiStore";
 import { WorktreeItem } from "./WorktreeItem";
 
 interface ProjectGroupProps {
@@ -12,6 +13,8 @@ export function ProjectGroup({
   project,
   defaultExpanded = false,
 }: ProjectGroupProps) {
+  const { selectedProjectId, setSelectedProjectId } = useUiStore();
+  const isSelected = selectedProjectId === project.id;
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showNewWorktree, setShowNewWorktree] = useState(false);
   const [newBranchName, setNewBranchName] = useState("");
@@ -27,7 +30,8 @@ export function ProjectGroup({
 
   const toggleExpanded = useCallback(() => {
     setExpanded((prev) => !prev);
-  }, []);
+    setSelectedProjectId(project.id);
+  }, [project.id, setSelectedProjectId]);
 
   const handleCreateWorktree = useCallback(
     async (e: React.FormEvent) => {
@@ -50,7 +54,7 @@ export function ProjectGroup({
   return (
     <div className="project-group">
       <div
-        className="project-header"
+        className={`project-header ${isSelected ? "project-selected" : ""}`}
         onClick={toggleExpanded}
         role="treeitem"
         aria-expanded={expanded}

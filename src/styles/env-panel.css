@@ -1,0 +1,361 @@
+/* ============================================================
+   Env Panel
+   ============================================================ */
+
+.env-panel {
+  text-align: left;
+  max-width: 640px;
+  margin: 1.5em auto 0;
+}
+
+.env-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75em;
+}
+
+.env-panel-title {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0;
+}
+
+.env-panel-error {
+  padding: 0.5em 0.75em;
+  font-size: 0.85em;
+  color: #ef4444;
+  background: #fef2f2;
+  border-radius: 6px;
+  margin-bottom: 0.75em;
+}
+
+.env-panel-empty {
+  padding: 1.5em;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.9em;
+}
+
+.env-panel-loading {
+  padding: 1em;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.85em;
+}
+
+/* ============================================================
+   Profile Selector
+   ============================================================ */
+
+.profile-selector {
+  margin-bottom: 1em;
+}
+
+.profile-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.profile-dropdown {
+  flex: 1;
+  padding: 0.45em 0.6em;
+  font-size: 0.9em;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f2937;
+  cursor: pointer;
+}
+
+.profile-new-btn,
+.profile-menu-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
+  font-weight: 600;
+  background: none;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  border-radius: 6px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.profile-new-btn:hover,
+.profile-menu-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.profile-menu-wrapper {
+  position: relative;
+}
+
+.profile-context-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+}
+
+.profile-create-form {
+  display: flex;
+  gap: 0.4em;
+  margin-top: 0.5em;
+}
+
+.profile-create-input {
+  flex: 1;
+  padding: 0.35em 0.6em;
+  font-size: 0.85em;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.profile-create-submit {
+  font-size: 0.8em;
+  padding: 0.3em 0.7em;
+  background-color: #24c8db;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.profile-create-cancel {
+  font-size: 0.8em;
+  padding: 0.3em 0.7em;
+  background: none;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* ============================================================
+   Env Var List
+   ============================================================ */
+
+.env-var-list {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.env-var-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em 0.75em;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.85em;
+}
+
+.env-var-row:last-child {
+  border-bottom: none;
+}
+
+.env-var-editing {
+  flex-wrap: wrap;
+  gap: 0.4em;
+  background-color: #fafafa;
+}
+
+.env-var-key {
+  font-weight: 600;
+  font-family: monospace;
+  min-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.env-var-value {
+  flex: 1;
+  min-width: 0;
+  font-family: monospace;
+  color: #6b7280;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.env-var-value:hover {
+  color: #374151;
+}
+
+.env-var-key-input,
+.env-var-value-input {
+  flex: 1;
+  min-width: 80px;
+  padding: 0.3em 0.5em;
+  font-size: 0.9em;
+  font-family: monospace;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+
+.env-var-key-input {
+  max-width: 160px;
+}
+
+.env-var-actions {
+  display: flex;
+  gap: 0.3em;
+  flex-shrink: 0;
+}
+
+.env-var-edit-btn,
+.env-var-delete-btn,
+.env-var-save-btn,
+.env-var-cancel-btn {
+  font-size: 0.8em;
+  padding: 0.2em 0.5em;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.env-var-edit-btn {
+  background: none;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+.env-var-delete-btn {
+  background: none;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+.env-var-save-btn {
+  background-color: #24c8db;
+  color: #fff;
+}
+
+.env-var-cancel-btn {
+  background: none;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+.env-var-add-form {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.5em 0.75em;
+  background-color: #fafafa;
+}
+
+.env-var-add-btn {
+  display: block;
+  width: 100%;
+  padding: 0.5em;
+  font-size: 0.8em;
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  text-align: center;
+  border-radius: 0;
+}
+
+.env-var-add-btn:hover {
+  background-color: #f3f4f6;
+  color: #24c8db;
+}
+
+/* ============================================================
+   Dark Mode
+   ============================================================ */
+
+@media (prefers-color-scheme: dark) {
+  .env-panel-error {
+    background: #3b1616;
+    color: #fca5a5;
+  }
+
+  .profile-dropdown {
+    background: #333;
+    border-color: #555;
+    color: #f6f6f6;
+  }
+
+  .profile-new-btn,
+  .profile-menu-btn {
+    border-color: #555;
+    color: #aaa;
+  }
+
+  .profile-new-btn:hover,
+  .profile-menu-btn:hover {
+    background-color: #3a3a3a;
+  }
+
+  .profile-create-input {
+    background: #333;
+    border-color: #555;
+    color: #f6f6f6;
+  }
+
+  .profile-create-cancel {
+    border-color: #555;
+    color: #aaa;
+  }
+
+  .env-var-list {
+    border-color: #444;
+  }
+
+  .env-var-row {
+    border-bottom-color: #333;
+  }
+
+  .env-var-editing {
+    background-color: #2a2a2a;
+  }
+
+  .env-var-value {
+    color: #9ca3af;
+  }
+
+  .env-var-value:hover {
+    color: #d1d5db;
+  }
+
+  .env-var-key-input,
+  .env-var-value-input {
+    background: #333;
+    border-color: #555;
+    color: #f6f6f6;
+  }
+
+  .env-var-edit-btn {
+    border-color: #555;
+    color: #aaa;
+  }
+
+  .env-var-delete-btn {
+    border-color: #7f1d1d;
+    color: #fca5a5;
+  }
+
+  .env-var-cancel-btn {
+    border-color: #555;
+    color: #aaa;
+  }
+
+  .env-var-add-form {
+    background-color: #2a2a2a;
+  }
+
+  .env-var-add-btn:hover {
+    background-color: #333;
+  }
+}
