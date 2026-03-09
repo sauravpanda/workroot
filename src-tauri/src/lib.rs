@@ -3,6 +3,7 @@ pub mod git;
 pub mod github;
 pub mod process;
 pub mod projects;
+pub mod proxy;
 pub mod tray;
 pub mod vault;
 
@@ -10,6 +11,7 @@ use db::init_db;
 use github::auth;
 use github::{DeviceCodeResponse, GitHubUser};
 use process::lifecycle::ProcessRegistry;
+use proxy::ProxyState;
 use tauri::Manager;
 
 #[tauri::command]
@@ -87,12 +89,22 @@ pub fn run() {
             process::logs::search_process_logs,
             process::logs::clear_process_logs,
             process::lifecycle::cleanup_worktree_processes,
+            proxy::server::get_proxy_status,
+            proxy::server::set_proxy_target,
+            proxy::server::clear_proxy_target,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
             let db = init_db(&app_handle)?;
             app.manage(db);
             app.manage(ProcessRegistry::new());
+            app.manage(ProxyState::new());
+
+            // Start the reverse proxy on port 3000
+            let proxy_handle = app.handle().clone();
+            tokio::spawn(async move {
+                proxy::server::start_proxy(proxy_handle).await;
+            });
 
             tray::setup_tray(app)?;
 
