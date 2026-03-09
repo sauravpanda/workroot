@@ -179,7 +179,9 @@ export function EnvShareButton({
   return (
     <div className="env-share">
       <div className="env-share-header">
-        <h4>{mode === "export" ? `Export "${profileName}"` : "Import Profile"}</h4>
+        <h4>
+          {mode === "export" ? `Export "${profileName}"` : "Import Profile"}
+        </h4>
         <button className="env-share-close" onClick={reset}>
           x
         </button>
@@ -210,11 +212,7 @@ export function EnvShareButton({
           type="submit"
           disabled={loading}
         >
-          {loading
-            ? "Working..."
-            : mode === "export"
-              ? "Export"
-              : "Import"}
+          {loading ? "Working..." : mode === "export" ? "Export" : "Import"}
         </button>
       </form>
     </div>

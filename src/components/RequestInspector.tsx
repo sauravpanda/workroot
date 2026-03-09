@@ -71,7 +71,9 @@ export function RequestInspector({ entry }: RequestInspectorProps) {
         <div className="inspector-method-status">
           <span className="inspector-method">{entry.method}</span>
           {entry.status_code && (
-            <span className={`inspector-status ${statusClass(entry.status_code)}`}>
+            <span
+              className={`inspector-status ${statusClass(entry.status_code)}`}
+            >
               {entry.status_code}
             </span>
           )}
@@ -104,9 +106,7 @@ export function RequestInspector({ entry }: RequestInspectorProps) {
             {entry.request_headers && (
               <>
                 <div className="inspector-section-title">Headers</div>
-                <div className="inspector-headers">
-                  {entry.request_headers}
-                </div>
+                <div className="inspector-headers">{entry.request_headers}</div>
               </>
             )}
             <div className="inspector-section-title">Body</div>

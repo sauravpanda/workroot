@@ -61,8 +61,7 @@ export function MemoryTab({ worktreeId }: MemoryTabProps) {
         });
         setNotes(results);
       } else {
-        const category =
-          categoryFilter !== "all" ? categoryFilter : null;
+        const category = categoryFilter !== "all" ? categoryFilter : null;
         const results = await invoke<MemoryEntry[]>("get_memory_notes", {
           worktreeId,
           category,

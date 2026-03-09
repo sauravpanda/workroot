@@ -53,18 +53,15 @@ export function ShellHistoryTab({ projectId, branch }: ShellHistoryTabProps) {
             projectId,
             query: searchQuery.trim(),
             limit: 500,
-          }
+          },
         );
         setEntries(results);
       } else {
-        const results = await invoke<ShellHistoryEntry[]>(
-          "get_shell_history",
-          {
-            projectId,
-            branch: branch || null,
-            limit: 500,
-          }
-        );
+        const results = await invoke<ShellHistoryEntry[]>("get_shell_history", {
+          projectId,
+          branch: branch || null,
+          limit: 500,
+        });
         setEntries(results);
       }
     } catch (err) {
@@ -88,7 +85,8 @@ export function ShellHistoryTab({ projectId, branch }: ShellHistoryTabProps) {
 
   const filteredEntries = entries.filter((entry) => {
     if (filter === "success") return entry.exit_code === 0;
-    if (filter === "failed") return entry.exit_code !== null && entry.exit_code !== 0;
+    if (filter === "failed")
+      return entry.exit_code !== null && entry.exit_code !== 0;
     return true;
   });
 
@@ -145,7 +143,8 @@ export function ShellHistoryTab({ projectId, branch }: ShellHistoryTabProps) {
           </button>
         </div>
         <span className="shell-history-count">
-          {filteredEntries.length} command{filteredEntries.length !== 1 ? "s" : ""}
+          {filteredEntries.length} command
+          {filteredEntries.length !== 1 ? "s" : ""}
         </span>
       </div>
 
@@ -173,10 +172,7 @@ export function ShellHistoryTab({ projectId, branch }: ShellHistoryTabProps) {
             <div className="shell-history-entry-content">
               <code className="shell-history-command">{entry.command}</code>
               <div className="shell-history-meta">
-                <span
-                  className="shell-history-time"
-                  title={entry.timestamp}
-                >
+                <span className="shell-history-time" title={entry.timestamp}>
                   {relativeTime(entry.timestamp)}
                 </span>
                 {entry.branch && (

@@ -24,9 +24,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         setAuthStatus("done");
         return;
       }
-      const flow = await invoke<{ verification_uri: string; user_code: string; device_code: string; interval: number }>(
-        "github_start_device_flow",
-      );
+      const flow = await invoke<{
+        verification_uri: string;
+        user_code: string;
+        device_code: string;
+        interval: number;
+      }>("github_start_device_flow");
       window.open(flow.verification_uri, "_blank");
       await invoke("github_poll_for_token", {
         deviceCode: flow.device_code,
@@ -86,9 +89,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               </button>
             )}
             {authStatus === "pending" && (
-              <p className="onboarding-status">
-                Waiting for authorization...
-              </p>
+              <p className="onboarding-status">Waiting for authorization...</p>
             )}
             {authStatus === "done" && (
               <p className="onboarding-success">Connected!</p>
@@ -120,9 +121,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               onChange={(e) => setProjectPath(e.target.value)}
               placeholder="/path/to/your/project"
             />
-            {projectError && (
-              <p className="onboarding-error">{projectError}</p>
-            )}
+            {projectError && <p className="onboarding-error">{projectError}</p>}
             <button
               className="onboarding-btn onboarding-primary"
               onClick={handleAddProject}

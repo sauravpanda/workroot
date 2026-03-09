@@ -27,7 +27,9 @@ export function DiffViewer({ diff }: DiffViewerProps) {
 
   if (diff.hunks.length === 0) {
     return (
-      <div className="diff-viewer-binary">No changes (file may be newly staged)</div>
+      <div className="diff-viewer-binary">
+        No changes (file may be newly staged)
+      </div>
     );
   }
 
@@ -49,9 +51,7 @@ export function DiffViewer({ diff }: DiffViewerProps) {
                 <div className="diff-line-number old">
                   {line.old_lineno ?? ""}
                 </div>
-                <div className="diff-line-number">
-                  {line.new_lineno ?? ""}
-                </div>
+                <div className="diff-line-number">{line.new_lineno ?? ""}</div>
                 <div className="diff-line-origin">{line.origin}</div>
                 <div className="diff-line-content">{line.content}</div>
               </div>

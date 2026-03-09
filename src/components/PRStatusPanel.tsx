@@ -36,7 +36,10 @@ interface PRStatusPanelProps {
   worktreeId: number;
 }
 
-function formatDuration(startedAt: string | null, completedAt: string | null): string {
+function formatDuration(
+  startedAt: string | null,
+  completedAt: string | null,
+): string {
   if (!startedAt || !completedAt) return "";
   const start = new Date(startedAt).getTime();
   const end = new Date(completedAt).getTime();
@@ -150,7 +153,9 @@ export function PRStatusPanel({ worktreeId }: PRStatusPanelProps) {
 
       <div className="pr-status-body">
         <div className="pr-status-badges">
-          <span className={`pr-status-badge ${status.draft ? "draft" : "open"}`}>
+          <span
+            className={`pr-status-badge ${status.draft ? "draft" : "open"}`}
+          >
             {status.draft ? "Draft" : "Open"}
           </span>
           {status.mergeable_state && (
@@ -163,14 +168,10 @@ export function PRStatusPanel({ worktreeId }: PRStatusPanelProps) {
         {(status.additions !== null || status.deletions !== null) && (
           <div className="pr-status-stats">
             {status.additions !== null && (
-              <span className="pr-status-stat-add">
-                +{status.additions}
-              </span>
+              <span className="pr-status-stat-add">+{status.additions}</span>
             )}
             {status.deletions !== null && (
-              <span className="pr-status-stat-del">
-                -{status.deletions}
-              </span>
+              <span className="pr-status-stat-del">-{status.deletions}</span>
             )}
             {status.changed_files !== null && (
               <span>
@@ -188,13 +189,11 @@ export function PRStatusPanel({ worktreeId }: PRStatusPanelProps) {
               const { icon, cls } = checkIcon(check);
               const duration = formatDuration(
                 check.started_at,
-                check.completed_at
+                check.completed_at,
               );
               return (
                 <div key={i} className="pr-status-check">
-                  <span className={`pr-status-check-icon ${cls}`}>
-                    {icon}
-                  </span>
+                  <span className={`pr-status-check-icon ${cls}`}>{icon}</span>
                   <span className="pr-status-check-name">
                     {check.html_url ? (
                       <a
@@ -209,9 +208,7 @@ export function PRStatusPanel({ worktreeId }: PRStatusPanelProps) {
                     )}
                   </span>
                   {duration && (
-                    <span className="pr-status-check-duration">
-                      {duration}
-                    </span>
+                    <span className="pr-status-check-duration">{duration}</span>
                   )}
                 </div>
               );

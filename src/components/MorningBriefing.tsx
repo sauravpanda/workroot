@@ -85,10 +85,7 @@ export function MorningBriefing({ projectId }: MorningBriefingProps) {
   if (collapsed) {
     return (
       <div className="briefing">
-        <button
-          className="briefing-toggle"
-          onClick={() => setCollapsed(false)}
-        >
+        <button className="briefing-toggle" onClick={() => setCollapsed(false)}>
           Morning Briefing
         </button>
       </div>

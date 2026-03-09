@@ -59,7 +59,7 @@ export function GitDiffView({ worktreeId }: GitDiffViewProps) {
         setDiffLoading(false);
       }
     },
-    [worktreeId]
+    [worktreeId],
   );
 
   const handleFileClick = (file: ChangedFile) => {

@@ -59,10 +59,9 @@ export function DbSchemaTab({ worktreeId }: DbSchemaTabProps) {
     setLoading(true);
     setError(null);
     try {
-      const config = await invoke<DbConfig | null>(
-        "detect_worktree_database",
-        { worktreeId }
-      );
+      const config = await invoke<DbConfig | null>("detect_worktree_database", {
+        worktreeId,
+      });
       setDbConfig(config);
 
       if (config) {
@@ -125,7 +124,7 @@ export function DbSchemaTab({ worktreeId }: DbSchemaTabProps) {
 
   const tables = schema?.tables || [];
   const filteredTables = tables.filter((t) =>
-    t.name.toLowerCase().includes(searchQuery.toLowerCase())
+    t.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
   const activeTable = tables.find((t) => t.name === selectedTable);
 
