@@ -1,4 +1,5 @@
 pub mod template;
+pub mod watcher;
 
 use crate::db::AppDb;
 use tauri::State;

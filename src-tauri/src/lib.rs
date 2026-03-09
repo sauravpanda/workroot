@@ -9,6 +9,7 @@ pub mod proxy;
 pub mod tray;
 pub mod vault;
 
+use claudemd::watcher::ClaudeMdWatcher;
 use db::init_db;
 use github::auth;
 use github::{DeviceCodeResponse, GitHubUser};
@@ -105,6 +106,11 @@ pub fn run() {
             app.manage(db);
             app.manage(ProcessRegistry::new());
             app.manage(ProxyState::new());
+            app.manage(ClaudeMdWatcher::new());
+
+            // Start CLAUDE.md watcher loop
+            let watcher_handle = app.handle().clone();
+            claudemd::watcher::start_watcher_loop(watcher_handle);
 
             // Start the reverse proxy on port 3000
             let proxy_handle = app.handle().clone();
