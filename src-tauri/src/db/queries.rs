@@ -358,6 +358,36 @@ pub fn get_logs(
     rows.collect()
 }
 
+pub fn search_logs(
+    conn: &Connection,
+    process_id: i64,
+    query: &str,
+) -> Result<Vec<LogRow>, rusqlite::Error> {
+    let pattern = format!("%{}%", query);
+    let mut stmt = conn.prepare(
+        "SELECT id, process_id, stream, content, timestamp
+         FROM logs WHERE process_id = ?1 AND content LIKE ?2 ORDER BY id ASC",
+    )?;
+    let rows = stmt.query_map(params![process_id, pattern], |row| {
+        Ok(LogRow {
+            id: row.get(0)?,
+            process_id: row.get(1)?,
+            stream: row.get(2)?,
+            content: row.get(3)?,
+            timestamp: row.get(4)?,
+        })
+    })?;
+    rows.collect()
+}
+
+pub fn clear_logs(conn: &Connection, process_id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute(
+        "DELETE FROM logs WHERE process_id = ?1",
+        params![process_id],
+    )?;
+    Ok(affected > 0)
+}
+
 // ============================================================
 // Shell History
 // ============================================================
@@ -666,6 +696,37 @@ mod tests {
         // Ordered by key
         assert_eq!(keys[0].key, "API_KEY");
         assert_eq!(keys[1].key, "DATABASE_URL");
+    }
+
+    #[test]
+    fn log_search_and_clear() {
+        let conn = init_test_db();
+        let pid = insert_project(&conn, "test", "/tmp", None, None).unwrap();
+        let wid = insert_worktree(&conn, pid, "main", "/tmp").unwrap();
+        let proc_id = insert_process(&conn, wid, "npm start").unwrap();
+
+        insert_log(&conn, proc_id, "stdout", "Server started on port 3000").unwrap();
+        insert_log(&conn, proc_id, "stdout", "Compiling...").unwrap();
+        insert_log(&conn, proc_id, "stderr", "Warning: deprecated API").unwrap();
+        insert_log(&conn, proc_id, "stdout", "Ready on port 3000").unwrap();
+
+        // Search for "port"
+        let results = search_logs(&conn, proc_id, "port").unwrap();
+        assert_eq!(results.len(), 2);
+        assert!(results[0].content.contains("port"));
+        assert!(results[1].content.contains("port"));
+
+        // Search for "Warning"
+        let results = search_logs(&conn, proc_id, "Warning").unwrap();
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].stream, "stderr");
+
+        // Clear logs
+        let cleared = clear_logs(&conn, proc_id).unwrap();
+        assert!(cleared);
+
+        let logs = get_logs(&conn, proc_id, 100).unwrap();
+        assert!(logs.is_empty());
     }
 
     #[test]

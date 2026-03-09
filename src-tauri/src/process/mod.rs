@@ -1,4 +1,5 @@
 pub mod detect;
+pub mod logs;
 pub mod port;
 pub mod spawn;
 

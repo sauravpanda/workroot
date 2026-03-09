@@ -6,6 +6,7 @@ use std::path::Path;
 use tauri::State;
 
 use super::detect;
+use super::logs;
 use super::port;
 
 #[derive(Debug, Serialize)]
@@ -22,6 +23,7 @@ pub struct ProcessStatus {
 /// Spawns a dev server process for a worktree.
 #[tauri::command]
 pub async fn spawn_process(
+    app_handle: tauri::AppHandle,
     db: State<'_, AppDb>,
     worktree_id: i64,
     profile_id: Option<i64>,
@@ -130,9 +132,8 @@ pub async fn spawn_process(
         proc_id
     };
 
-    // Detach — we don't await the child here.
-    // Process lifecycle management (PR-015) will handle monitoring.
-    std::mem::forget(child);
+    // Start log capture — reads stdout/stderr, stores in DB, emits events
+    logs::capture_output(app_handle, process_id, child);
 
     Ok(ProcessStatus {
         id: process_id,

@@ -82,6 +82,9 @@ pub fn run() {
             process::spawn::spawn_process,
             process::spawn::stop_process,
             process::spawn::get_process_status,
+            process::logs::get_process_logs,
+            process::logs::search_process_logs,
+            process::logs::clear_process_logs,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
