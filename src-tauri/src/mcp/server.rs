@@ -264,6 +264,64 @@ async fn handle_tools() -> Json<Vec<ToolDef>> {
                 "required": ["worktree_id", "query"]
             }),
         },
+        ToolDef {
+            name: "get_session_memory".into(),
+            description: "Get all memory notes for a worktree".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" }
+                },
+                "required": ["worktree_id"]
+            }),
+        },
+        ToolDef {
+            name: "search_memory".into(),
+            description: "Semantic search across memory notes for a worktree".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" },
+                    "query": { "type": "string" }
+                },
+                "required": ["worktree_id", "query"]
+            }),
+        },
+        ToolDef {
+            name: "add_memory".into(),
+            description: "Create a new memory note for a worktree".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" },
+                    "content": { "type": "string" },
+                    "category": { "type": "string", "enum": ["note", "decision", "dead_end"] }
+                },
+                "required": ["worktree_id", "content", "category"]
+            }),
+        },
+        ToolDef {
+            name: "get_decisions".into(),
+            description: "Get architectural/design decision notes for a worktree".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" }
+                },
+                "required": ["worktree_id"]
+            }),
+        },
+        ToolDef {
+            name: "get_dead_ends".into(),
+            description: "Get dead end entries (failed approaches) for a worktree".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" }
+                },
+                "required": ["worktree_id"]
+            }),
+        },
     ];
 
     Json(tools)

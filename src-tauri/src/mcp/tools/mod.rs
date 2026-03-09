@@ -1,5 +1,6 @@
 pub mod env;
 pub mod logs;
+pub mod memory;
 pub mod projects;
 pub mod proxy;
 pub mod shell;
@@ -67,6 +68,29 @@ pub fn dispatch(app: &AppHandle, method: &str, params: Option<Value>) -> Result<
             let worktree_id = extract_i64(&params, "worktree_id")?;
             let query = extract_string(&params, "query")?;
             shell::search_shell_history(app, worktree_id, &query)
+        }
+        "get_session_memory" => {
+            let worktree_id = extract_i64(&params, "worktree_id")?;
+            memory::get_session_memory(app, worktree_id)
+        }
+        "search_memory" => {
+            let worktree_id = extract_i64(&params, "worktree_id")?;
+            let query = extract_string(&params, "query")?;
+            memory::search_memory(app, worktree_id, &query)
+        }
+        "add_memory" => {
+            let worktree_id = extract_i64(&params, "worktree_id")?;
+            let content = extract_string(&params, "content")?;
+            let category = extract_string(&params, "category")?;
+            memory::add_memory(app, worktree_id, &content, &category)
+        }
+        "get_decisions" => {
+            let worktree_id = extract_i64(&params, "worktree_id")?;
+            memory::get_decisions(app, worktree_id)
+        }
+        "get_dead_ends" => {
+            let worktree_id = extract_i64(&params, "worktree_id")?;
+            memory::get_dead_ends(app, worktree_id)
         }
         _ => Err(format!("Method not found: {}", method)),
     }
