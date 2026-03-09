@@ -424,6 +424,28 @@ pub fn list_env_profiles(
     rows.collect()
 }
 
+pub fn delete_env_profile(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute("DELETE FROM env_profiles WHERE id = ?1", params![id])?;
+    Ok(affected > 0)
+}
+
+pub fn list_env_profiles_all(conn: &Connection) -> Result<Vec<EnvProfileRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, project_id, name, is_active, created_at
+         FROM env_profiles ORDER BY name",
+    )?;
+    let rows = stmt.query_map([], |row| {
+        Ok(EnvProfileRow {
+            id: row.get(0)?,
+            project_id: row.get(1)?,
+            name: row.get(2)?,
+            is_active: row.get(3)?,
+            created_at: row.get(4)?,
+        })
+    })?;
+    rows.collect()
+}
+
 // ============================================================
 // Env Vars
 // ============================================================
@@ -458,6 +480,53 @@ pub fn list_env_var_keys(
         })
     })?;
     rows.collect()
+}
+
+#[derive(Debug, Serialize)]
+pub struct EnvVarFullRow {
+    pub id: i64,
+    pub profile_id: i64,
+    pub key: String,
+    pub encrypted_value: Option<String>,
+    pub created_at: String,
+}
+
+pub fn list_env_vars_with_values(
+    conn: &Connection,
+    profile_id: i64,
+) -> Result<Vec<EnvVarFullRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, profile_id, key, encrypted_value, created_at
+         FROM env_vars WHERE profile_id = ?1 ORDER BY key",
+    )?;
+    let rows = stmt.query_map(params![profile_id], |row| {
+        Ok(EnvVarFullRow {
+            id: row.get(0)?,
+            profile_id: row.get(1)?,
+            key: row.get(2)?,
+            encrypted_value: row.get(3)?,
+            created_at: row.get(4)?,
+        })
+    })?;
+    rows.collect()
+}
+
+pub fn delete_env_var(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute("DELETE FROM env_vars WHERE id = ?1", params![id])?;
+    Ok(affected > 0)
+}
+
+pub fn update_env_var(
+    conn: &Connection,
+    id: i64,
+    key: &str,
+    encrypted_value: &str,
+) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "UPDATE env_vars SET key = ?1, encrypted_value = ?2 WHERE id = ?3",
+        params![key, encrypted_value, id],
+    )?;
+    Ok(())
 }
 
 #[cfg(test)]

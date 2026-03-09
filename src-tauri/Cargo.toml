@@ -18,3 +18,6 @@ reqwest = { version = "0.12", features = ["json"] }
 keyring = { version = "3", features = ["apple-native", "windows-native", "linux-native"] }
 tauri-plugin-dialog = "2"
 git2 = "0.20"
+aes-gcm = "0.10"
+base64 = "0.22"
+rand = "0.8"

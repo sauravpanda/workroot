@@ -3,6 +3,7 @@ pub mod git;
 pub mod github;
 pub mod projects;
 pub mod tray;
+pub mod vault;
 
 use db::init_db;
 use github::auth;
@@ -64,6 +65,14 @@ pub fn run() {
             git::worktree::get_worktree_status,
             git::branch::list_branches,
             git::branch::create_branch,
+            vault::vault_store_env_var,
+            vault::vault_update_env_var,
+            vault::vault_get_env_vars,
+            vault::vault_delete_env_var,
+            vault::vault_create_profile,
+            vault::vault_list_profiles,
+            vault::vault_delete_profile,
+            vault::vault_duplicate_profile,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
