@@ -102,6 +102,8 @@ pub fn run() {
             claudemd::generate_worktree_claude_md,
             shell::install_shell_hook,
             shell::uninstall_shell_hook,
+            shell::get_shell_history,
+            shell::search_shell_history,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

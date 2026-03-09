@@ -240,6 +240,30 @@ async fn handle_tools() -> Json<Vec<ToolDef>> {
                 "required": []
             }),
         },
+        ToolDef {
+            name: "get_shell_history".into(),
+            description: "Get recent shell commands for a worktree".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" },
+                    "limit": { "type": "integer", "default": 50 }
+                },
+                "required": ["worktree_id"]
+            }),
+        },
+        ToolDef {
+            name: "search_shell_history".into(),
+            description: "Search shell command history for a worktree".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" },
+                    "query": { "type": "string" }
+                },
+                "required": ["worktree_id", "query"]
+            }),
+        },
     ];
 
     Json(tools)

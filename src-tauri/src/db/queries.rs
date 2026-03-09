@@ -428,6 +428,77 @@ pub fn insert_shell_history(
     Ok(conn.last_insert_rowid())
 }
 
+pub fn get_shell_history(
+    conn: &Connection,
+    project_id: i64,
+    branch: Option<&str>,
+    limit: i64,
+) -> Result<Vec<ShellHistoryRow>, rusqlite::Error> {
+    if let Some(branch) = branch {
+        let mut stmt = conn.prepare(
+            "SELECT id, project_id, branch, command, exit_code, cwd, timestamp
+             FROM shell_history WHERE project_id = ?1 AND branch = ?2
+             ORDER BY id DESC LIMIT ?3",
+        )?;
+        let rows = stmt.query_map(params![project_id, branch, limit], |row| {
+            Ok(ShellHistoryRow {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                branch: row.get(2)?,
+                command: row.get(3)?,
+                exit_code: row.get(4)?,
+                cwd: row.get(5)?,
+                timestamp: row.get(6)?,
+            })
+        })?;
+        rows.collect()
+    } else {
+        let mut stmt = conn.prepare(
+            "SELECT id, project_id, branch, command, exit_code, cwd, timestamp
+             FROM shell_history WHERE project_id = ?1
+             ORDER BY id DESC LIMIT ?2",
+        )?;
+        let rows = stmt.query_map(params![project_id, limit], |row| {
+            Ok(ShellHistoryRow {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                branch: row.get(2)?,
+                command: row.get(3)?,
+                exit_code: row.get(4)?,
+                cwd: row.get(5)?,
+                timestamp: row.get(6)?,
+            })
+        })?;
+        rows.collect()
+    }
+}
+
+pub fn search_shell_history(
+    conn: &Connection,
+    project_id: i64,
+    query: &str,
+    limit: i64,
+) -> Result<Vec<ShellHistoryRow>, rusqlite::Error> {
+    let pattern = format!("%{}%", query);
+    let mut stmt = conn.prepare(
+        "SELECT id, project_id, branch, command, exit_code, cwd, timestamp
+         FROM shell_history WHERE project_id = ?1 AND command LIKE ?2
+         ORDER BY id DESC LIMIT ?3",
+    )?;
+    let rows = stmt.query_map(params![project_id, pattern, limit], |row| {
+        Ok(ShellHistoryRow {
+            id: row.get(0)?,
+            project_id: row.get(1)?,
+            branch: row.get(2)?,
+            command: row.get(3)?,
+            exit_code: row.get(4)?,
+            cwd: row.get(5)?,
+            timestamp: row.get(6)?,
+        })
+    })?;
+    rows.collect()
+}
+
 // ============================================================
 // Memory Notes
 // ============================================================
@@ -763,5 +834,55 @@ mod tests {
         // Invalid category should fail
         let result = insert_memory_note(&conn, wid, "bad", "invalid_category");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn shell_history_query_and_search() {
+        let conn = init_test_db();
+        let pid = insert_project(&conn, "test", "/tmp/test", None, None).unwrap();
+
+        insert_shell_history(
+            &conn,
+            pid,
+            "npm install",
+            Some(0),
+            Some("main"),
+            Some("/tmp/test"),
+        )
+        .unwrap();
+        insert_shell_history(
+            &conn,
+            pid,
+            "npm run build",
+            Some(1),
+            Some("main"),
+            Some("/tmp/test"),
+        )
+        .unwrap();
+        insert_shell_history(
+            &conn,
+            pid,
+            "git status",
+            Some(0),
+            Some("feature"),
+            Some("/tmp/test"),
+        )
+        .unwrap();
+
+        // Get all history for project
+        let all = get_shell_history(&conn, pid, None, 100).unwrap();
+        assert_eq!(all.len(), 3);
+
+        // Filter by branch
+        let main_only = get_shell_history(&conn, pid, Some("main"), 100).unwrap();
+        assert_eq!(main_only.len(), 2);
+
+        // Search
+        let results = search_shell_history(&conn, pid, "npm", 100).unwrap();
+        assert_eq!(results.len(), 2);
+
+        let results = search_shell_history(&conn, pid, "git", 100).unwrap();
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].command, "git status");
     }
 }

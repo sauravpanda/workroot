@@ -2,6 +2,7 @@ pub mod env;
 pub mod logs;
 pub mod projects;
 pub mod proxy;
+pub mod shell;
 
 use serde_json::Value;
 use tauri::AppHandle;
@@ -54,6 +55,19 @@ pub fn dispatch(app: &AppHandle, method: &str, params: Option<Value>) -> Result<
             proxy::switch_active_proxy(app, worktree_id)
         }
         "get_proxy_status" => proxy::get_proxy_status(app),
+        "get_shell_history" => {
+            let worktree_id = extract_i64(&params, "worktree_id")?;
+            let limit = params
+                .as_ref()
+                .and_then(|p| p.get("limit"))
+                .and_then(|v| v.as_i64());
+            shell::get_shell_history(app, worktree_id, limit)
+        }
+        "search_shell_history" => {
+            let worktree_id = extract_i64(&params, "worktree_id")?;
+            let query = extract_string(&params, "query")?;
+            shell::search_shell_history(app, worktree_id, &query)
+        }
         _ => Err(format!("Method not found: {}", method)),
     }
 }
