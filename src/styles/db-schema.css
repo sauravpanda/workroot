@@ -1,0 +1,247 @@
+.db-schema {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.db-schema-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border, #333);
+}
+
+.db-schema-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.db-schema-type {
+  background: #1e3a5f;
+  color: #60a5fa;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.db-schema-db {
+  color: var(--text-muted, #888);
+  font-size: 12px;
+}
+
+.db-schema-refresh {
+  padding: 4px 10px;
+  border: 1px solid var(--border, #444);
+  background: transparent;
+  color: var(--text-muted, #888);
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.db-schema-refresh:hover {
+  color: var(--text, #e0e0e0);
+}
+
+.db-schema-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.db-schema-sidebar {
+  width: 220px;
+  border-right: 1px solid var(--border, #333);
+  display: flex;
+  flex-direction: column;
+}
+
+.db-schema-search {
+  margin: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--border, #444);
+  border-radius: 3px;
+  background: var(--bg-input, #1a1a2e);
+  color: var(--text, #e0e0e0);
+  font-size: 12px;
+  outline: none;
+}
+
+.db-schema-table-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.db-schema-table-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  border-left: 2px solid transparent;
+}
+
+.db-schema-table-item:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.04));
+}
+
+.db-schema-table-item.active {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.06));
+  border-left-color: var(--accent, #7c5cbf);
+}
+
+.db-table-name {
+  color: var(--text, #e0e0e0);
+}
+
+.db-table-count {
+  color: var(--text-muted, #666);
+  font-size: 11px;
+}
+
+.db-schema-detail {
+  flex: 1;
+  padding: 12px 16px;
+  overflow-y: auto;
+}
+
+.db-detail-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: var(--text, #e0e0e0);
+}
+
+.db-detail-meta {
+  margin: 0 0 16px;
+  color: var(--text-muted, #888);
+  font-size: 12px;
+}
+
+.db-columns-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.db-columns-table th {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border, #333);
+  color: var(--text-muted, #888);
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.db-columns-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-subtle, #2a2a3e);
+  color: var(--text, #e0e0e0);
+}
+
+.db-pk-icon {
+  color: #f59e0b;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.db-col-type {
+  color: #60a5fa;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+}
+
+.db-col-default {
+  color: var(--text-muted, #888);
+  font-size: 12px;
+}
+
+.db-section-title {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  color: var(--text-muted, #888);
+}
+
+.db-fk-list,
+.db-index-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.db-fk-list li,
+.db-index-list li {
+  padding: 4px 0;
+  font-size: 13px;
+  color: var(--text, #e0e0e0);
+}
+
+.db-fk-link {
+  color: #a78bfa;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.db-fk-link:hover {
+  color: #c4b5fd;
+}
+
+.db-unique-badge {
+  background: #1e3a5f;
+  color: #60a5fa;
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-size: 10px;
+  margin-left: 6px;
+}
+
+.db-index-cols {
+  color: var(--text-muted, #888);
+  margin-left: 6px;
+  font-size: 12px;
+}
+
+.db-detail-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-muted, #888);
+  font-size: 13px;
+}
+
+.db-schema-loading,
+.db-schema-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-muted, #888);
+}
+
+.db-schema-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-muted, #888);
+}
+
+.db-schema-empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+  font-weight: 700;
+}
+
+.db-schema-empty-hint {
+  font-size: 12px;
+  opacity: 0.7;
+}
