@@ -1,5 +1,6 @@
 use super::auth;
 use super::tools;
+use crate::shell::{self, ShellCommand};
 use axum::extract::Extension;
 use axum::middleware;
 use axum::routing::{get, post};
@@ -75,6 +76,7 @@ pub async fn start_mcp_server(app_handle: AppHandle, app_data_dir: std::path::Pa
     // Public routes
     let app = Router::new()
         .route("/health", get(handle_health))
+        .route("/shell-hook", post(handle_shell_hook))
         .merge(protected_routes)
         .layer(Extension(shared_token))
         .layer(Extension(shared_app))
@@ -280,5 +282,16 @@ async fn handle_mcp(
                 id: req.id,
             })
         }
+    }
+}
+
+/// POST /shell-hook — receive shell command from hook scripts (public, no auth).
+async fn handle_shell_hook(
+    Extension(app): Extension<Arc<AppHandle>>,
+    Json(payload): Json<ShellCommand>,
+) -> Json<serde_json::Value> {
+    match shell::hook::receive_command(&app, payload) {
+        Ok(id) => Json(serde_json::json!({ "ok": true, "id": id })),
+        Err(e) => Json(serde_json::json!({ "ok": false, "error": e })),
     }
 }

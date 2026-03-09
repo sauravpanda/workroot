@@ -6,6 +6,7 @@ pub mod mcp;
 pub mod process;
 pub mod projects;
 pub mod proxy;
+pub mod shell;
 pub mod tray;
 pub mod vault;
 
@@ -99,6 +100,8 @@ pub fn run() {
             proxy::switch::get_active_project,
             proxy::switch::clear_active_project,
             claudemd::generate_worktree_claude_md,
+            shell::install_shell_hook,
+            shell::uninstall_shell_hook,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
