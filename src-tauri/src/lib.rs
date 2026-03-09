@@ -5,6 +5,7 @@ pub mod git;
 pub mod github;
 pub mod mcp;
 pub mod memory;
+pub mod network;
 pub mod process;
 pub mod projects;
 pub mod proxy;
@@ -130,6 +131,10 @@ pub fn run() {
             github::pr::get_pr_template,
             github::pr::get_default_branch,
             github::ci::get_pr_status,
+            network::get_network_traffic,
+            network::search_network_traffic,
+            network::get_failed_requests,
+            network::clear_network_traffic,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
@@ -148,6 +153,12 @@ pub fn run() {
             let proxy_handle = app.handle().clone();
             tokio::spawn(async move {
                 proxy::server::start_proxy(proxy_handle).await;
+            });
+
+            // Start the HTTP forward proxy on port 8888
+            let fwd_proxy_handle = app.handle().clone();
+            tokio::spawn(async move {
+                network::proxy::start_forward_proxy(fwd_proxy_handle).await;
             });
 
             // Start the MCP server on port 4444

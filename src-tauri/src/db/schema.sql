@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS log_entries;
 DROP TABLE IF EXISTS shell_commands;
 DROP TABLE IF EXISTS memory_items;
 DROP TABLE IF EXISTS http_requests;
+DROP TABLE IF EXISTS network_traffic;
 
 -- ============================================================
 -- Core Tables
@@ -94,14 +95,17 @@ CREATE TABLE IF NOT EXISTS file_events (
 );
 
 CREATE TABLE IF NOT EXISTS network_traffic (
-    id              INTEGER PRIMARY KEY,
-    process_id      INTEGER NOT NULL REFERENCES processes(id) ON DELETE CASCADE,
-    method          TEXT NOT NULL,
-    url             TEXT NOT NULL,
-    status_code     INTEGER,
-    request_body    TEXT,
-    response_body   TEXT,
-    timestamp       TEXT NOT NULL DEFAULT (datetime('now'))
+    id                INTEGER PRIMARY KEY,
+    process_id        INTEGER REFERENCES processes(id) ON DELETE CASCADE,
+    method            TEXT NOT NULL,
+    url               TEXT NOT NULL,
+    status_code       INTEGER,
+    request_headers   TEXT,
+    request_body      TEXT,
+    response_headers  TEXT,
+    response_body     TEXT,
+    duration_ms       INTEGER,
+    timestamp         TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 -- ============================================================
