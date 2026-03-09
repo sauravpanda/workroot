@@ -1,6 +1,7 @@
 pub mod db;
 pub mod git;
 pub mod github;
+pub mod mcp;
 pub mod process;
 pub mod projects;
 pub mod proxy;
@@ -107,6 +108,16 @@ pub fn run() {
             let proxy_handle = app.handle().clone();
             tokio::spawn(async move {
                 proxy::server::start_proxy(proxy_handle).await;
+            });
+
+            // Start the MCP server on port 4444
+            let mcp_data_dir = app
+                .handle()
+                .path()
+                .app_data_dir()
+                .unwrap_or_else(|_| std::path::PathBuf::from("."));
+            tokio::spawn(async move {
+                mcp::server::start_mcp_server(mcp_data_dir).await;
             });
 
             tray::setup_tray(app)?;
