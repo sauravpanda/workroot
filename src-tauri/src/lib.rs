@@ -1,4 +1,5 @@
 pub mod db;
+pub mod tray;
 
 use db::init_db;
 use tauri::Manager;
@@ -16,7 +17,17 @@ pub fn run() {
             let app_handle = app.handle().clone();
             let db = init_db(&app_handle)?;
             app.manage(db);
+
+            tray::setup_tray(app)?;
+
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            // Hide the window instead of closing the app so the tray keeps it alive
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let _ = window.hide();
+                api.prevent_close();
+            }
         })
         .run(tauri::generate_context!())
         .expect("error while running Workroot");
