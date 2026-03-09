@@ -1,5 +1,7 @@
 use super::auth;
 use super::tools;
+use crate::browser::{self, BrowserError, NetworkFailure};
+use crate::db::AppDb;
 use crate::shell::{self, ShellCommand};
 use axum::extract::Extension;
 use axum::middleware;
@@ -8,7 +10,7 @@ use axum::{Json, Router};
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::sync::Arc;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tower_http::cors::{AllowOrigin, CorsLayer};
 
 /// MCP server version.
@@ -77,6 +79,11 @@ pub async fn start_mcp_server(app_handle: AppHandle, app_data_dir: std::path::Pa
     let app = Router::new()
         .route("/health", get(handle_health))
         .route("/shell-hook", post(handle_shell_hook))
+        .route("/browser/error", post(handle_browser_error))
+        .route(
+            "/browser/network-failure",
+            post(handle_browser_network_failure),
+        )
         .merge(protected_routes)
         .layer(Extension(shared_token))
         .layer(Extension(shared_app))
@@ -443,6 +450,30 @@ async fn handle_shell_hook(
     Json(payload): Json<ShellCommand>,
 ) -> Json<serde_json::Value> {
     match shell::hook::receive_command(&app, payload) {
+        Ok(id) => Json(serde_json::json!({ "ok": true, "id": id })),
+        Err(e) => Json(serde_json::json!({ "ok": false, "error": e })),
+    }
+}
+
+/// POST /browser/error — receive browser error from Chrome extension (public).
+async fn handle_browser_error(
+    Extension(app): Extension<Arc<AppHandle>>,
+    Json(payload): Json<BrowserError>,
+) -> Json<serde_json::Value> {
+    let db = app.state::<AppDb>();
+    match browser::correlate::receive_error(&db, &payload) {
+        Ok(id) => Json(serde_json::json!({ "ok": true, "id": id })),
+        Err(e) => Json(serde_json::json!({ "ok": false, "error": e })),
+    }
+}
+
+/// POST /browser/network-failure — receive network failure from Chrome extension (public).
+async fn handle_browser_network_failure(
+    Extension(app): Extension<Arc<AppHandle>>,
+    Json(payload): Json<NetworkFailure>,
+) -> Json<serde_json::Value> {
+    let db = app.state::<AppDb>();
+    match browser::correlate::receive_network_failure(&db, &payload) {
         Ok(id) => Json(serde_json::json!({ "ok": true, "id": id })),
         Err(e) => Json(serde_json::json!({ "ok": false, "error": e })),
     }

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 12px;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-size: 13px;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f87171;
+    }
+    .status-dot.connected {
+      background: #4ade80;
+    }
+    .status-text {
+      color: #888;
+    }
+    h3 {
+      margin: 16px 0 8px;
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+    }
+    .log-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      padding: 6px 8px;
+      border-bottom: 1px solid #2a2a3e;
+      font-family: monospace;
+      font-size: 11px;
+    }
+    .log-entry.error {
+      color: #f87171;
+    }
+    .log-entry.network {
+      color: #f59e0b;
+    }
+    .empty {
+      color: #666;
+      font-style: italic;
+    }
+    button {
+      padding: 4px 12px;
+      border: 1px solid #444;
+      background: transparent;
+      color: #e0e0e0;
+      cursor: pointer;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+    button:hover {
+      background: rgba(255,255,255,0.06);
+    }
+  </style>
+</head>
+<body>
+  <div class="status">
+    <div class="status-dot" id="statusDot"></div>
+    <span class="status-text" id="statusText">Checking...</span>
+    <button id="refreshBtn">Refresh</button>
+  </div>
+
+  <h3>Recent Errors</h3>
+  <div class="log-list" id="errorLog">
+    <div class="empty">No errors captured</div>
+  </div>
+
+  <h3>Network Failures</h3>
+  <div class="log-list" id="networkLog">
+    <div class="empty">No failures captured</div>
+  </div>
+
+  <script src="panel.js"></script>
+</body>
+</html>

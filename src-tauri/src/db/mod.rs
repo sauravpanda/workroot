@@ -86,7 +86,7 @@ mod tests {
     }
 
     #[test]
-    fn all_ten_tables_exist() {
+    fn all_tables_exist() {
         let conn = init_test_db();
         let expected = [
             "projects",
@@ -99,6 +99,7 @@ mod tests {
             "memory_notes",
             "file_events",
             "network_traffic",
+            "browser_events",
         ];
         for table in &expected {
             let count: i64 = conn
@@ -129,6 +130,8 @@ mod tests {
             "idx_file_events_timestamp",
             "idx_network_traffic_process_id",
             "idx_network_traffic_timestamp",
+            "idx_browser_events_timestamp",
+            "idx_browser_events_type",
         ];
         for idx in &expected_indexes {
             let count: i64 = conn

@@ -1,3 +1,4 @@
+pub mod browser;
 pub mod claudemd;
 pub mod db;
 pub mod dbconnect;
@@ -135,6 +136,8 @@ pub fn run() {
             network::search_network_traffic,
             network::get_failed_requests,
             network::clear_network_traffic,
+            browser::correlate::get_browser_events,
+            browser::correlate::get_correlated_event,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

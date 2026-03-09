@@ -108,6 +108,16 @@ CREATE TABLE IF NOT EXISTS network_traffic (
     timestamp         TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS browser_events (
+    id          INTEGER PRIMARY KEY,
+    event_type  TEXT NOT NULL,
+    message     TEXT NOT NULL,
+    url         TEXT,
+    status_code INTEGER,
+    details     TEXT,
+    timestamp   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- ============================================================
 -- Indexes
 -- ============================================================
@@ -125,6 +135,8 @@ CREATE INDEX IF NOT EXISTS idx_file_events_project_id ON file_events(project_id)
 CREATE INDEX IF NOT EXISTS idx_file_events_timestamp ON file_events(timestamp);
 CREATE INDEX IF NOT EXISTS idx_network_traffic_process_id ON network_traffic(process_id);
 CREATE INDEX IF NOT EXISTS idx_network_traffic_timestamp ON network_traffic(timestamp);
+CREATE INDEX IF NOT EXISTS idx_browser_events_timestamp ON browser_events(timestamp);
+CREATE INDEX IF NOT EXISTS idx_browser_events_type ON browser_events(event_type);
 
 -- ============================================================
 -- Ring Buffer Trigger: keep at most 50,000 log rows per process
