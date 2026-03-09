@@ -1,0 +1,208 @@
+/* ==========================================================
+   Settings
+   ========================================================== */
+
+.settings-tab {
+  padding: 2em;
+  max-width: 560px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.settings-title {
+  font-size: 1.15em;
+  font-weight: 600;
+  margin: 0 0 1.5em;
+  letter-spacing: -0.01em;
+}
+
+.settings-loading {
+  color: var(--text-muted);
+  font-size: 0.8em;
+}
+
+/* ── Sections ── */
+
+.settings-section {
+  margin-bottom: 1.5em;
+}
+
+.settings-section-title {
+  font-size: 0.82em;
+  font-weight: 600;
+  margin: 0 0 0.35em;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.settings-section-desc {
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  margin: 0 0 0.6em;
+  line-height: 1.5;
+}
+
+.settings-steps {
+  font-size: 0.78em;
+  color: var(--text-secondary);
+  margin: 0 0 1em;
+  padding-left: 1.25em;
+  line-height: 1.8;
+}
+
+.settings-steps a {
+  color: var(--accent);
+}
+
+.settings-steps code {
+  font-family: var(--font-mono);
+  background: var(--bg-elevated);
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9em;
+}
+
+/* ── Fields ── */
+
+.settings-field {
+  margin-bottom: 1em;
+}
+
+.settings-label {
+  display: block;
+  font-size: 0.8em;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+  color: var(--text-primary);
+}
+
+.settings-input-row {
+  display: flex;
+  gap: 6px;
+}
+
+.settings-input {
+  flex: 1;
+  padding: 0.45em 0.65em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 0.8em;
+  font-family: var(--font-mono);
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.settings-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-muted);
+}
+
+.settings-input::placeholder {
+  color: var(--text-muted);
+}
+
+.settings-textarea {
+  width: 100%;
+  min-height: 72px;
+  padding: 0.45em 0.65em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 0.8em;
+  font-family: var(--font-mono);
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.settings-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-muted);
+}
+
+.settings-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.settings-save-btn {
+  padding: 0.45em 0.85em;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--bg-base);
+  font-size: 0.75em;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  min-width: 52px;
+  transition:
+    background-color 0.15s,
+    opacity 0.15s;
+}
+
+.settings-save-btn:hover {
+  background-color: var(--accent-hover);
+}
+
+.settings-save-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.settings-help {
+  font-size: 0.72em;
+  color: var(--text-muted);
+  margin: 0.3em 0 0;
+  line-height: 1.4;
+}
+
+/* ── Divider ── */
+
+.settings-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5em 0;
+}
+
+/* ── Port Table ── */
+
+.settings-info {
+  margin-top: 0;
+}
+
+.settings-port-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8em;
+  margin-top: 0.5em;
+}
+
+.settings-port-table th,
+.settings-port-table td {
+  text-align: left;
+  padding: 0.45em 0.65em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.settings-port-table th {
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.settings-port-table td {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}

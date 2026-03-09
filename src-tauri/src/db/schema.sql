@@ -118,6 +118,11 @@ CREATE TABLE IF NOT EXISTS browser_events (
     timestamp   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+    key         TEXT PRIMARY KEY,
+    value       TEXT NOT NULL
+);
+
 -- ============================================================
 -- Indexes
 -- ============================================================

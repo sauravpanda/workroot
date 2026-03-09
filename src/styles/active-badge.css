@@ -1,30 +1,30 @@
 .active-badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-family: "SF Mono", "Fira Code", monospace;
+  border-radius: var(--radius);
+  font-size: 0.78em;
+  font-family: var(--font-mono);
   user-select: none;
 }
 
 .active-badge.active {
-  background: rgba(76, 175, 80, 0.15);
-  border: 1px solid rgba(76, 175, 80, 0.3);
-  color: #81c784;
+  background: var(--accent-muted);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: var(--accent-hover);
 }
 
 .active-badge.idle {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #999;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
 }
 
 .active-badge.inactive {
-  background: rgba(244, 67, 54, 0.1);
-  border: 1px solid rgba(244, 67, 54, 0.2);
-  color: #e57373;
+  background: var(--danger-muted);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
 }
 
 .badge-dot {
@@ -35,16 +35,16 @@
 }
 
 .badge-dot.online {
-  background: #4caf50;
-  box-shadow: 0 0 4px rgba(76, 175, 80, 0.5);
+  background: var(--success);
+  box-shadow: 0 0 4px rgba(34, 197, 94, 0.4);
 }
 
 .badge-dot.idle {
-  background: #999;
+  background: var(--text-muted);
 }
 
 .badge-dot.offline {
-  background: #f44336;
+  background: var(--danger);
 }
 
 .badge-label {
@@ -55,15 +55,15 @@
 }
 
 .badge-port {
-  color: #666;
-  font-size: 11px;
+  color: var(--text-muted);
+  font-size: 0.9em;
 }
 
 .badge-clear {
   background: none;
   border: none;
-  color: #999;
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: 13px;
   cursor: pointer;
   padding: 0 2px;
   line-height: 1;
@@ -71,37 +71,5 @@
 }
 
 .badge-clear:hover {
-  color: #e57373;
-}
-
-@media (prefers-color-scheme: light) {
-  .active-badge.active {
-    background: rgba(76, 175, 80, 0.1);
-    border-color: rgba(76, 175, 80, 0.3);
-    color: #2e7d32;
-  }
-
-  .active-badge.idle {
-    background: rgba(0, 0, 0, 0.03);
-    border-color: rgba(0, 0, 0, 0.1);
-    color: #666;
-  }
-
-  .active-badge.inactive {
-    background: rgba(244, 67, 54, 0.05);
-    border-color: rgba(244, 67, 54, 0.2);
-    color: #d32f2f;
-  }
-
-  .badge-port {
-    color: #999;
-  }
-
-  .badge-clear {
-    color: #999;
-  }
-
-  .badge-clear:hover {
-    color: #d32f2f;
-  }
+  color: var(--danger);
 }

@@ -1,0 +1,160 @@
+/* ==========================================================
+   Terminal — Full-screen with tabs
+   ========================================================== */
+
+.terminal-fullscreen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: var(--bg-base);
+}
+
+/* ── Tab bar ── */
+
+.terminal-tab-bar {
+  display: flex;
+  align-items: stretch;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-left: 1px;
+}
+
+.terminal-tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.terminal-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 0.78em;
+  font-weight: 400;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-right: 1px solid var(--border-subtle);
+  white-space: nowrap;
+  user-select: none;
+  transition:
+    background-color 0.1s,
+    color 0.1s;
+  position: relative;
+}
+
+.terminal-tab:hover {
+  background-color: var(--bg-elevated);
+  color: var(--text-secondary);
+}
+
+.terminal-tab-active {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+}
+
+.terminal-tab-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--accent);
+}
+
+.terminal-tab-label {
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.terminal-tab-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.terminal-tab:hover .terminal-tab-close {
+  opacity: 1;
+}
+
+.terminal-tab-close:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.terminal-tab-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 400;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background-color 0.15s;
+}
+
+.terminal-tab-add:hover {
+  background-color: var(--bg-elevated);
+  color: var(--accent);
+}
+
+/* ── Tab content ── */
+
+.terminal-tab-content {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.terminal-instance {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  z-index: 0;
+}
+
+.terminal-instance-active {
+  visibility: visible;
+  z-index: 1;
+}
+
+.terminal-container {
+  flex: 1;
+  min-height: 0;
+  padding: 2px 4px;
+}
+
+.terminal-container .xterm {
+  height: 100%;
+}
+
+.terminal-container .xterm-viewport {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}

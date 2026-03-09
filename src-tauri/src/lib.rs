@@ -11,19 +11,20 @@ pub mod network;
 pub mod process;
 pub mod projects;
 pub mod proxy;
+pub mod settings;
 pub mod shell;
 pub mod tray;
 pub mod vault;
 
 use claudemd::watcher::ClaudeMdWatcher;
-use db::init_db;
+use db::{init_db, AppDb};
 use dbconnect::schema::SchemaCache;
 use filewatcher::tracker::FileWatcherRegistry;
 use github::auth;
 use github::{DeviceCodeResponse, GitHubUser};
 use process::lifecycle::ProcessRegistry;
 use proxy::ProxyState;
-use tauri::Manager;
+use tauri::{Manager, State};
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -31,13 +32,17 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-async fn github_start_device_flow() -> Result<DeviceCodeResponse, String> {
-    auth::start_device_flow().await
+async fn github_start_device_flow(db: State<'_, AppDb>) -> Result<DeviceCodeResponse, String> {
+    auth::start_device_flow(db).await
 }
 
 #[tauri::command]
-async fn github_poll_for_token(device_code: String, interval: u64) -> Result<String, String> {
-    let token = auth::poll_for_token(&device_code, interval).await?;
+async fn github_poll_for_token(
+    db: State<'_, AppDb>,
+    device_code: String,
+    interval: u64,
+) -> Result<String, String> {
+    let token = auth::poll_for_token(db, &device_code, interval).await?;
     auth::store_token(&token)?;
     Ok("authenticated".into())
 }
@@ -61,6 +66,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_pty::init())
         .invoke_handler(tauri::generate_handler![
             greet,
             github_start_device_flow,
@@ -143,6 +149,10 @@ pub fn run() {
             network::clear_network_traffic,
             browser::correlate::get_browser_events,
             browser::correlate::get_correlated_event,
+            settings::get_setting,
+            settings::set_setting,
+            settings::get_all_settings,
+            settings::delete_setting,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
@@ -160,13 +170,13 @@ pub fn run() {
 
             // Start the reverse proxy on port 3000
             let proxy_handle = app.handle().clone();
-            tokio::spawn(async move {
+            tauri::async_runtime::spawn(async move {
                 proxy::server::start_proxy(proxy_handle).await;
             });
 
             // Start the HTTP forward proxy on port 8888
             let fwd_proxy_handle = app.handle().clone();
-            tokio::spawn(async move {
+            tauri::async_runtime::spawn(async move {
                 network::proxy::start_forward_proxy(fwd_proxy_handle).await;
             });
 
@@ -177,7 +187,7 @@ pub fn run() {
                 .path()
                 .app_data_dir()
                 .unwrap_or_else(|_| std::path::PathBuf::from("."));
-            tokio::spawn(async move {
+            tauri::async_runtime::spawn(async move {
                 mcp::server::start_mcp_server(mcp_handle, mcp_data_dir).await;
             });
 

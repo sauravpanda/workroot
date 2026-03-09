@@ -108,7 +108,7 @@ fn should_write(conn: &rusqlite::Connection, worktree_id: i64, new_content: &str
 
 /// Sets up a background task that processes pending CLAUDE.md regenerations.
 pub fn start_watcher_loop(app_handle: AppHandle) {
-    tokio::spawn(async move {
+    tauri::async_runtime::spawn(async move {
         loop {
             tokio::time::sleep(Duration::from_secs(2)).await;
 

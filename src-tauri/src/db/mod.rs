@@ -100,6 +100,7 @@ mod tests {
             "file_events",
             "network_traffic",
             "browser_events",
+            "settings",
         ];
         for table in &expected {
             let count: i64 = conn

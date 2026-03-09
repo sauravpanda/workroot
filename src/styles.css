@@ -1,11 +1,51 @@
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
+/* ==========================================================
+   Design System — Workroot
+   ========================================================== */
 
-  color: #0f0f0f;
-  background-color: #f6f6f6;
+:root {
+  /* Background layers (darkest → lightest) */
+  --bg-base: #0c0c0e;
+  --bg-surface: #131316;
+  --bg-elevated: #1b1b1f;
+  --bg-hover: #242429;
+
+  /* Borders */
+  --border-subtle: #1f1f24;
+  --border: #2a2a30;
+  --border-strong: #3a3a42;
+
+  /* Text */
+  --text-primary: #ededef;
+  --text-secondary: #8e8e96;
+  --text-muted: #5c5c66;
+
+  /* Accent */
+  --accent: #10b981;
+  --accent-hover: #34d399;
+  --accent-muted: rgba(16, 185, 129, 0.12);
+  --accent-glow: rgba(16, 185, 129, 0.25);
+
+  /* Semantic */
+  --danger: #ef4444;
+  --danger-muted: rgba(239, 68, 68, 0.12);
+  --warning: #f59e0b;
+  --success: #22c55e;
+
+  /* Typography */
+  --font-sans: "Sora", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Menlo", "Monaco", monospace;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 10px;
+
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--text-primary);
+  background-color: var(--bg-base);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,6 +53,122 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-base);
+}
+
+/* ==========================================================
+   Base Elements
+   ========================================================== */
+
+h1 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 0 0 0.25em;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.15em;
+  font-weight: 600;
+  margin: 0 0 0.5em;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 0.9em;
+  font-weight: 600;
+  margin: 0 0 0.35em;
+}
+
+p {
+  color: var(--text-secondary);
+  margin: 0 0 1em;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--bg-elevated);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+input,
+textarea {
+  font-family: var(--font-sans);
+  font-size: 0.85em;
+  color: var(--text-primary);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5em 0.75em;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-muted);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+button {
+  font-family: var(--font-sans);
+  font-size: 0.8em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background-color: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.5em 1em;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    transform 0.1s;
+}
+
+button:hover {
+  background-color: var(--accent-hover);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==========================================================
+   Layout — see sidebar.css for .main-layout etc.
+   ========================================================== */
 
 .container {
   margin: 0;
@@ -22,43 +178,18 @@
   text-align: center;
 }
 
-h1 {
-  font-size: 2em;
-  margin-bottom: 0.25em;
-}
-
 .row {
   display: flex;
   justify-content: center;
   gap: 0.5em;
 }
 
-input {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 0.6em 1em;
-  font-size: 1em;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #fff;
-  background-color: #24c8db;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
+/* ==========================================================
+   Auth
+   ========================================================== */
 
 .auth-section {
-  margin-top: 2em;
+  margin-top: 1.5em;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -72,24 +203,25 @@ button:hover {
 }
 
 .auth-avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  border: 2px solid var(--border);
 }
 
 .auth-username {
   font-weight: 500;
+  font-size: 0.9em;
 }
 
 .auth-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+  font-size: 0.8em;
   font-weight: 500;
-  font-family: inherit;
+  padding: 0.5em 1.2em;
+  border-radius: var(--radius);
+  border: none;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: background-color 0.15s;
 }
 
 .auth-login {
@@ -97,44 +229,56 @@ button:hover {
   background-color: #24292f;
 }
 
+.auth-login:hover {
+  background-color: #2f353d;
+}
+
 .auth-logout {
-  color: #fff;
-  background-color: #6b7280;
+  color: var(--text-secondary);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+}
+
+.auth-logout:hover {
+  background-color: var(--bg-hover);
 }
 
 .auth-code {
   display: inline-block;
-  font-size: 1.5em;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  padding: 0.4em 0.8em;
-  background-color: #e5e7eb;
-  border-radius: 8px;
-  color: #111;
+  font-family: var(--font-mono);
+  font-size: 1.3em;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  padding: 0.5em 1em;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--accent);
 }
 
 .auth-instructions {
-  font-size: 0.95em;
-}
-
-.auth-instructions a {
-  color: #24c8db;
+  font-size: 0.85em;
+  color: var(--text-secondary);
 }
 
 .auth-waiting {
-  font-size: 0.85em;
-  opacity: 0.7;
+  font-size: 0.8em;
+  color: var(--text-muted);
 }
 
 .auth-error {
-  color: #ef4444;
-  font-size: 0.9em;
+  color: var(--danger);
+  font-size: 0.85em;
 }
 
+/* ==========================================================
+   Repo List
+   ========================================================== */
+
 .repo-list {
-  margin-top: 2em;
+  margin-top: 1.5em;
   width: 100%;
-  max-width: 640px;
+  max-width: 600px;
   margin-left: auto;
   margin-right: auto;
   text-align: left;
@@ -143,38 +287,43 @@ button:hover {
 .repo-tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--border);
   margin-bottom: 1em;
 }
 
 .repo-tab {
   background: none;
-  color: #666;
+  color: var(--text-muted);
   border: none;
   border-bottom: 2px solid transparent;
-  padding: 0.5em 1em;
-  font-size: 0.9em;
+  padding: 0.5em 0.75em;
+  font-size: 0.8em;
+  font-weight: 500;
   cursor: pointer;
   border-radius: 0;
+  transition: color 0.15s;
+}
+
+.repo-tab:hover {
+  color: var(--text-secondary);
+  background: none;
 }
 
 .repo-tab.active {
-  color: #0f0f0f;
-  border-bottom-color: #24c8db;
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
 }
 
 .repo-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75em;
+  gap: 0.5em;
 }
 
 .repo-action-btn {
   align-self: flex-start;
-  font-size: 0.85em;
+  font-size: 0.78em;
   padding: 0.4em 0.8em;
-  background-color: #24c8db;
-  color: #fff;
 }
 
 .repo-search {
@@ -188,37 +337,43 @@ button:hover {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5em;
+  gap: 0.35em;
 }
 
 .repo-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.6em 0.8em;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  padding: 0.6em 0.75em;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   gap: 0.75em;
+  background-color: var(--bg-surface);
+  transition: border-color 0.15s;
+}
+
+.repo-item:hover {
+  border-color: var(--border-strong);
 }
 
 .repo-item-info {
   display: flex;
   flex-direction: column;
-  gap: 0.2em;
+  gap: 0.15em;
   min-width: 0;
   flex: 1;
 }
 
 .repo-name {
-  font-weight: 600;
-  font-size: 0.95em;
+  font-weight: 500;
+  font-size: 0.85em;
 }
 
 .repo-meta {
   display: flex;
   gap: 0.5em;
-  font-size: 0.8em;
-  color: #888;
+  font-size: 0.75em;
+  color: var(--text-muted);
   flex-wrap: wrap;
 }
 
@@ -226,98 +381,65 @@ button:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 300px;
+  max-width: 260px;
 }
 
 .repo-lang {
-  background: #e5e7eb;
-  padding: 0.1em 0.4em;
-  border-radius: 4px;
+  font-family: var(--font-mono);
   font-size: 0.85em;
+  background: var(--bg-elevated);
+  padding: 0.1em 0.45em;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
 }
 
 .repo-path {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text-muted);
 }
 
 .repo-clone-btn {
-  font-size: 0.8em;
+  font-size: 0.75em;
   padding: 0.3em 0.7em;
   white-space: nowrap;
 }
 
 .repo-clone-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .repo-remove-btn {
-  font-size: 0.8em;
+  font-size: 0.75em;
   padding: 0.3em 0.7em;
-  background-color: #ef4444;
+  background-color: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
   white-space: nowrap;
 }
 
+.repo-remove-btn:hover {
+  background-color: var(--danger-muted);
+}
+
 .repo-registered {
-  font-size: 0.8em;
-  color: #22c55e;
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  color: var(--success);
   white-space: nowrap;
 }
 
 .repo-empty {
-  font-size: 0.9em;
-  color: #888;
+  font-size: 0.85em;
+  color: var(--text-muted);
   text-align: center;
-  padding: 1em;
+  padding: 1.5em;
 }
 
 .repo-loading {
-  font-size: 0.9em;
-  color: #888;
+  font-size: 0.85em;
+  color: var(--text-muted);
   text-align: center;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  input {
-    color: #f6f6f6;
-    background-color: #3f3f3f;
-    border-color: #555;
-  }
-
-  .auth-code {
-    background-color: #3f3f3f;
-    color: #f6f6f6;
-  }
-
-  .auth-login {
-    background-color: #f0f0f0;
-    color: #24292f;
-  }
-
-  .repo-tab {
-    color: #aaa;
-  }
-
-  .repo-tab.active {
-    color: #f6f6f6;
-  }
-
-  .repo-tabs {
-    border-bottom-color: #555;
-  }
-
-  .repo-item {
-    border-color: #555;
-  }
-
-  .repo-lang {
-    background: #3f3f3f;
-  }
 }

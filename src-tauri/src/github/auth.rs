@@ -1,23 +1,33 @@
 use super::{DeviceCodeResponse, GitHubUser};
+use crate::db::AppDb;
+use crate::settings;
 use keyring::Entry;
 use serde::Deserialize;
+use tauri::State;
 
 const KEYRING_SERVICE: &str = "com.workroot.app";
 const KEYRING_USER: &str = "github_token";
 
-// GitHub OAuth App Client ID for device flow (public client, no secret needed).
-// This should be replaced with a real GitHub OAuth App client ID.
-const GITHUB_CLIENT_ID: &str = "Ov23liWorkrootDevApp";
+/// Reads the GitHub Client ID from app settings.
+fn get_client_id(db: &AppDb) -> Result<String, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
+    settings::get_setting_value(&conn, "github_client_id")
+        .ok_or_else(|| "GitHub Client ID not configured. Go to Settings to set it up.".to_string())
+}
 
 /// Starts the GitHub OAuth device code flow.
 /// Returns a DeviceCodeResponse containing the user_code the user must enter
 /// at the verification_uri.
-pub async fn start_device_flow() -> Result<DeviceCodeResponse, String> {
+pub async fn start_device_flow(db: State<'_, AppDb>) -> Result<DeviceCodeResponse, String> {
+    let client_id = get_client_id(&db)?;
     let client = reqwest::Client::new();
     let resp = client
         .post("https://github.com/login/device/code")
         .header("Accept", "application/json")
-        .form(&[("client_id", GITHUB_CLIENT_ID), ("scope", "repo,user")])
+        .form(&[
+            ("client_id", client_id.as_str()),
+            ("scope", "repo,user,gist"),
+        ])
         .send()
         .await
         .map_err(|e| format!("Failed to start device flow: {}", e))?;
@@ -44,7 +54,12 @@ struct TokenPollResponse {
 
 /// Polls GitHub for the access token after the user has entered the device code.
 /// Returns the access token string on success.
-pub async fn poll_for_token(device_code: &str, interval: u64) -> Result<String, String> {
+pub async fn poll_for_token(
+    db: State<'_, AppDb>,
+    device_code: &str,
+    interval: u64,
+) -> Result<String, String> {
+    let client_id = get_client_id(&db)?;
     let client = reqwest::Client::new();
     let poll_interval = std::time::Duration::from_secs(interval.max(5));
     let max_attempts = 120; // ~10 minutes at 5s interval
@@ -56,7 +71,7 @@ pub async fn poll_for_token(device_code: &str, interval: u64) -> Result<String, 
             .post("https://github.com/login/oauth/access_token")
             .header("Accept", "application/json")
             .form(&[
-                ("client_id", GITHUB_CLIENT_ID),
+                ("client_id", client_id.as_str()),
                 ("device_code", device_code),
                 ("grant_type", "urn:ietf:params:oauth:grant-type:device_code"),
             ])

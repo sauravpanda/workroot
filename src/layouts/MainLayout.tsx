@@ -32,6 +32,13 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [selectedWorktreeId, setSelectedWorktreeId] = useState<number | null>(
     null,
   );
+  const [selectedWorktreePath, setSelectedWorktreePath] = useState<
+    string | null
+  >(null);
+  const [selectedWorktreeName, setSelectedWorktreeName] = useState<
+    string | null
+  >(null);
+  const [showSettings, setShowSettings] = useState(false);
   const dragging = useRef(false);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -78,6 +85,12 @@ export function MainLayout({ children }: MainLayoutProps) {
         setSelectedProjectId,
         selectedWorktreeId,
         setSelectedWorktreeId,
+        selectedWorktreePath,
+        setSelectedWorktreePath,
+        selectedWorktreeName,
+        setSelectedWorktreeName,
+        showSettings,
+        setShowSettings,
       }}
     >
       <div className="main-layout">

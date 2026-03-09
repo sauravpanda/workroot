@@ -1,6 +1,6 @@
-/* ============================================================
+/* ==========================================================
    Layout
-   ============================================================ */
+   ========================================================== */
 
 .main-layout {
   display: flex;
@@ -12,12 +12,12 @@
   flex-shrink: 0;
   height: 100%;
   overflow: hidden;
-  border-right: 1px solid #e5e7eb;
-  background-color: #fafafa;
+  border-right: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
 }
 
 .resize-handle {
-  width: 4px;
+  width: 3px;
   cursor: col-resize;
   flex-shrink: 0;
   background: transparent;
@@ -26,26 +26,35 @@
 
 .resize-handle:hover,
 .resize-handle:active {
-  background-color: #24c8db;
+  background-color: var(--accent);
 }
 
 .content-area {
   flex: 1;
   min-width: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--bg-base);
+}
+
+.content-scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
 .content-inner {
-  padding: 2em;
-  max-width: 720px;
+  padding: 2.5em 2em;
+  max-width: 640px;
   margin: 0 auto;
   text-align: center;
 }
 
-/* ============================================================
+/* ==========================================================
    Sidebar
-   ============================================================ */
+   ========================================================== */
 
 .sidebar {
   display: flex;
@@ -57,59 +66,85 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75em 1em;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 0.65em 0.85em;
+  border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
 }
 
 .sidebar-title {
   font-weight: 600;
-  font-size: 0.85em;
+  font-size: 0.8em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #6b7280;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+  user-select: none;
 }
 
-.sidebar-add-btn {
-  width: 26px;
-  height: 26px;
+.sidebar-title:hover {
+  color: var(--text-secondary);
+}
+
+.sidebar-header-actions {
+  display: flex;
+  gap: 3px;
+}
+
+.sidebar-add-btn,
+.sidebar-settings-btn {
+  width: 24px;
+  height: 24px;
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1em;
-  font-weight: 600;
+  font-size: 1em;
+  font-weight: 500;
   background: none;
-  border: 1px solid #d1d5db;
-  color: #6b7280;
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius);
   cursor: pointer;
   line-height: 1;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 
-.sidebar-add-btn:hover {
-  background-color: #24c8db;
-  color: #fff;
-  border-color: #24c8db;
+.sidebar-add-btn:hover,
+.sidebar-settings-btn:hover {
+  background-color: var(--accent-muted);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+.sidebar-settings-btn.active {
+  background-color: var(--accent);
+  color: var(--bg-base);
+  border-color: var(--accent);
 }
 
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
-  padding: 0.5em 0;
+  padding: 0.35em 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 .sidebar-error {
-  padding: 0.5em 1em;
-  font-size: 0.8em;
-  color: #ef4444;
+  padding: 0.5em 0.85em;
+  font-size: 0.75em;
+  color: var(--danger);
 }
 
 .sidebar-empty {
-  padding: 2em 1em;
+  padding: 2em 0.85em;
   text-align: center;
-  color: #9ca3af;
-  font-size: 0.85em;
+  color: var(--text-muted);
+  font-size: 0.8em;
 }
 
 .sidebar-empty p {
@@ -117,46 +152,42 @@
 }
 
 .sidebar-empty-btn {
-  font-size: 0.85em;
+  font-size: 0.78em;
   padding: 0.35em 0.8em;
-  background-color: #24c8db;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
 }
 
-/* ============================================================
+/* ==========================================================
    Project Group
-   ============================================================ */
+   ========================================================== */
 
 .project-group {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .project-header {
   display: flex;
   align-items: center;
-  gap: 0.4em;
-  padding: 0.5em 0.75em;
+  gap: 0.35em;
+  padding: 0.45em 0.65em;
   cursor: pointer;
   user-select: none;
-  font-size: 0.9em;
+  font-size: 0.85em;
   transition: background-color 0.1s;
+  border-radius: 0;
 }
 
 .project-header:hover {
-  background-color: #f0f0f0;
+  background-color: var(--bg-elevated);
 }
 
 .project-selected {
-  background-color: #e8f7f9;
+  background-color: var(--accent-muted);
 }
 
 .project-chevron {
   display: inline-block;
-  font-size: 0.7em;
-  color: #9ca3af;
+  font-size: 0.65em;
+  color: var(--text-muted);
   transition: transform 0.15s;
   width: 1em;
   text-align: center;
@@ -167,8 +198,8 @@
 }
 
 .project-name {
-  font-weight: 600;
-  font-size: 0.9em;
+  font-weight: 500;
+  font-size: 0.85em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -177,39 +208,40 @@
 }
 
 .project-framework {
-  font-size: 0.7em;
-  background: #e5e7eb;
+  font-family: var(--font-mono);
+  font-size: 0.65em;
+  background: var(--bg-elevated);
   padding: 0.1em 0.4em;
-  border-radius: 4px;
-  color: #6b7280;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
 .project-missing {
-  font-size: 0.7em;
-  color: #ef4444;
+  font-size: 0.65em;
+  color: var(--danger);
   flex-shrink: 0;
 }
 
 .project-children {
-  padding-left: 0.5em;
+  padding-left: 0.35em;
 }
 
 .project-error {
-  padding: 0.3em 0.75em;
-  font-size: 0.75em;
-  color: #ef4444;
+  padding: 0.3em 0.65em;
+  font-size: 0.7em;
+  color: var(--danger);
 }
 
 .project-empty {
-  padding: 0.3em 1.25em;
-  font-size: 0.8em;
-  color: #9ca3af;
+  padding: 0.3em 1em;
+  font-size: 0.75em;
+  color: var(--text-muted);
 }
 
-/* ============================================================
+/* ==========================================================
    Worktree Item
-   ============================================================ */
+   ========================================================== */
 
 .worktree-list {
   display: flex;
@@ -219,27 +251,27 @@
 .worktree-item {
   display: flex;
   align-items: center;
-  gap: 0.35em;
-  padding: 0.35em 0.75em 0.35em 1.25em;
+  gap: 0.3em;
+  padding: 0.3em 0.65em 0.3em 1.1em;
   cursor: pointer;
   user-select: none;
-  font-size: 0.85em;
-  border-radius: 4px;
-  margin: 0 0.25em;
+  font-size: 0.8em;
+  border-radius: var(--radius-sm);
+  margin: 1px 0.2em;
   transition: background-color 0.1s;
 }
 
 .worktree-item:hover {
-  background-color: #f0f0f0;
+  background-color: var(--bg-elevated);
 }
 
 .worktree-selected {
-  background-color: #e0f5f8 !important;
+  background-color: var(--accent-muted) !important;
 }
 
 .worktree-branch-icon {
-  font-size: 0.9em;
-  color: #9ca3af;
+  font-size: 0.85em;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -249,83 +281,93 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
 }
 
 .worktree-status-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .wt-status-active {
-  background-color: #22c55e;
+  background-color: var(--success);
+  box-shadow: 0 0 4px rgba(34, 197, 94, 0.4);
 }
 
 .wt-status-stopped {
-  background-color: #9ca3af;
+  background-color: var(--text-muted);
 }
 
 .wt-status-missing {
-  background-color: #ef4444;
+  background-color: var(--danger);
 }
 
 .worktree-dirty-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background-color: #f59e0b;
+  background-color: var(--warning);
   flex-shrink: 0;
 }
 
 .worktree-port {
+  font-family: var(--font-mono);
   font-size: 0.8em;
-  color: #6b7280;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
-/* ============================================================
+/* ==========================================================
    New Worktree Form
-   ============================================================ */
+   ========================================================== */
 
 .add-worktree-btn {
   display: block;
-  width: calc(100% - 1.5em);
-  margin: 0.25em 0.75em 0.5em;
-  padding: 0.25em;
-  font-size: 0.75em;
+  width: calc(100% - 1.2em);
+  margin: 0.2em 0.6em 0.4em;
+  padding: 0.2em;
+  font-size: 0.7em;
   background: none;
-  border: 1px dashed #d1d5db;
-  color: #9ca3af;
-  border-radius: 4px;
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: center;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .add-worktree-btn:hover {
-  border-color: #24c8db;
-  color: #24c8db;
+  border-color: var(--accent);
+  color: var(--accent);
+  background: none;
 }
 
 .new-worktree-form {
-  padding: 0.5em 0.75em;
+  padding: 0.4em 0.65em;
   display: flex;
   flex-direction: column;
-  gap: 0.35em;
+  gap: 0.3em;
 }
 
 .new-worktree-input {
-  font-size: 0.8em;
+  font-size: 0.78em;
   padding: 0.3em 0.5em;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
   width: 100%;
   box-sizing: border-box;
 }
 
 .new-worktree-checkbox {
-  font-size: 0.75em;
-  color: #6b7280;
+  font-size: 0.72em;
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   gap: 0.35em;
@@ -333,36 +375,36 @@
 
 .new-worktree-checkbox input {
   margin: 0;
+  accent-color: var(--accent);
 }
 
 .new-worktree-actions {
   display: flex;
-  gap: 0.35em;
+  gap: 0.3em;
 }
 
 .new-worktree-btn {
-  font-size: 0.75em;
+  font-size: 0.72em;
   padding: 0.25em 0.6em;
-  background-color: #24c8db;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
 .new-worktree-cancel {
-  font-size: 0.75em;
+  font-size: 0.72em;
   padding: 0.25em 0.6em;
   background: none;
-  border: 1px solid #d1d5db;
-  color: #6b7280;
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
-/* ============================================================
+.new-worktree-cancel:hover {
+  background-color: var(--bg-hover);
+}
+
+/* ==========================================================
    Context Menu
-   ============================================================ */
+   ========================================================== */
 
 .context-menu-backdrop {
   position: fixed;
@@ -373,141 +415,50 @@
 .context-menu {
   position: fixed;
   z-index: 1000;
-  background-color: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 0, 0, 0.1);
   padding: 0.25em 0;
-  min-width: 160px;
+  min-width: 150px;
+  backdrop-filter: blur(8px);
 }
 
 .context-menu-item {
   display: block;
   width: 100%;
-  padding: 0.45em 0.9em;
-  font-size: 0.85em;
+  padding: 0.4em 0.85em;
+  font-size: 0.8em;
   text-align: left;
   background: none;
   border: none;
   border-radius: 0;
-  color: #1f2937;
+  color: var(--text-primary);
   cursor: pointer;
+  transition: background-color 0.1s;
 }
 
 .context-menu-item:hover:not(:disabled) {
-  background-color: #f3f4f6;
+  background-color: var(--bg-hover);
 }
 
 .context-menu-item:disabled {
-  color: #c0c0c0;
+  color: var(--text-muted);
   cursor: default;
 }
 
 .context-menu-item.destructive {
-  color: #ef4444;
+  color: var(--danger);
+}
+
+.context-menu-item.destructive:hover:not(:disabled) {
+  background-color: var(--danger-muted);
 }
 
 .context-menu-separator {
   height: 1px;
-  background-color: #e5e7eb;
+  background-color: var(--border);
   margin: 0.2em 0;
-}
-
-/* ============================================================
-   Dark Mode
-   ============================================================ */
-
-@media (prefers-color-scheme: dark) {
-  .sidebar-panel {
-    background-color: #262626;
-    border-right-color: #3f3f3f;
-  }
-
-  .sidebar-header {
-    border-bottom-color: #3f3f3f;
-  }
-
-  .sidebar-add-btn {
-    border-color: #555;
-    color: #aaa;
-  }
-
-  .sidebar-add-btn:hover {
-    background-color: #24c8db;
-    color: #fff;
-    border-color: #24c8db;
-  }
-
-  .project-group {
-    border-bottom-color: #333;
-  }
-
-  .project-header:hover {
-    background-color: #333;
-  }
-
-  .project-selected {
-    background-color: #1a3a3f;
-  }
-
-  .project-framework {
-    background: #3f3f3f;
-    color: #aaa;
-  }
-
-  .worktree-item:hover {
-    background-color: #333;
-  }
-
-  .worktree-selected {
-    background-color: #1a3a3f !important;
-  }
-
-  .add-worktree-btn {
-    border-color: #555;
-    color: #666;
-  }
-
-  .add-worktree-btn:hover {
-    border-color: #24c8db;
-    color: #24c8db;
-  }
-
-  .new-worktree-input {
-    background-color: #333;
-    border-color: #555;
-    color: #f6f6f6;
-  }
-
-  .new-worktree-cancel {
-    border-color: #555;
-    color: #aaa;
-  }
-
-  .context-menu {
-    background-color: #2f2f2f;
-    border-color: #444;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  }
-
-  .context-menu-item {
-    color: #e5e7eb;
-  }
-
-  .context-menu-item:hover:not(:disabled) {
-    background-color: #3a3a3a;
-  }
-
-  .context-menu-item:disabled {
-    color: #555;
-  }
-
-  .context-menu-separator {
-    background-color: #444;
-  }
-
-  .resize-handle:hover,
-  .resize-handle:active {
-    background-color: #24c8db;
-  }
 }

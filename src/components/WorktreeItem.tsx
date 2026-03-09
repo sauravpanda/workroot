@@ -8,7 +8,13 @@ interface WorktreeItemProps {
 }
 
 export function WorktreeItem({ worktree, onDelete }: WorktreeItemProps) {
-  const { selectedWorktreeId, setSelectedWorktreeId } = useUiStore();
+  const {
+    selectedWorktreeId,
+    setSelectedWorktreeId,
+    setSelectedWorktreePath,
+    setSelectedWorktreeName,
+    setShowSettings,
+  } = useUiStore();
   const isSelected = selectedWorktreeId === worktree.id;
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -17,15 +23,35 @@ export function WorktreeItem({ worktree, onDelete }: WorktreeItemProps) {
 
   const handleClick = useCallback(() => {
     setSelectedWorktreeId(worktree.id);
-  }, [worktree.id, setSelectedWorktreeId]);
+    setSelectedWorktreePath(worktree.path);
+    setSelectedWorktreeName(worktree.branch_name);
+    setShowSettings(false);
+  }, [
+    worktree.id,
+    worktree.path,
+    worktree.branch_name,
+    setSelectedWorktreeId,
+    setSelectedWorktreePath,
+    setSelectedWorktreeName,
+    setShowSettings,
+  ]);
 
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
       setContextMenu({ x: e.clientX, y: e.clientY });
       setSelectedWorktreeId(worktree.id);
+      setSelectedWorktreePath(worktree.path);
+      setSelectedWorktreeName(worktree.branch_name);
     },
-    [worktree.id, setSelectedWorktreeId],
+    [
+      worktree.id,
+      worktree.path,
+      worktree.branch_name,
+      setSelectedWorktreeId,
+      setSelectedWorktreePath,
+      setSelectedWorktreeName,
+    ],
   );
 
   const closeContextMenu = useCallback(() => {
