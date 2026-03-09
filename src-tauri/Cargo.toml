@@ -19,5 +19,6 @@ keyring = { version = "3", features = ["apple-native", "windows-native", "linux-
 tauri-plugin-dialog = "2"
 git2 = "0.20"
 aes-gcm = "0.10"
+tempfile = "3"
 base64 = "0.22"
 rand = "0.8"

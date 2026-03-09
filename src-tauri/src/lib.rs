@@ -1,6 +1,7 @@
 pub mod db;
 pub mod git;
 pub mod github;
+pub mod process;
 pub mod projects;
 pub mod tray;
 pub mod vault;
@@ -75,6 +76,7 @@ pub fn run() {
             vault::vault_duplicate_profile,
             vault::import::parse_env_file,
             vault::import::import_env_vars,
+            process::detect::detect_project_framework,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
