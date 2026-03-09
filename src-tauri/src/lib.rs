@@ -1,3 +1,4 @@
+pub mod claudemd;
 pub mod db;
 pub mod git;
 pub mod github;
@@ -96,6 +97,7 @@ pub fn run() {
             proxy::switch::set_active_project,
             proxy::switch::get_active_project,
             proxy::switch::clear_active_project,
+            claudemd::generate_worktree_claude_md,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
