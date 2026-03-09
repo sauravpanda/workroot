@@ -27,6 +27,8 @@ http-body-util = "0.1"
 axum = "0.8"
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors"] }
+notify = "7"
+notify-debouncer-mini = "0.5"
 
 [target.'cfg(unix)'.dependencies]
 nix = { version = "0.29", features = ["signal", "process"] }

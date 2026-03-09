@@ -1,5 +1,6 @@
 pub mod crypto;
 pub mod import;
+pub mod share;
 pub mod synthesis;
 
 use crate::db::queries;

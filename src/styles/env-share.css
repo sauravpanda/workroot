@@ -1,0 +1,136 @@
+.env-share {
+  padding: 8px 0;
+}
+
+.env-share-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.env-share-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.env-share-btn:hover {
+  background: var(--bg-hover);
+}
+
+.env-share-export {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.env-share-submit {
+  width: 100%;
+  margin-top: 6px;
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.env-share-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.env-share-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.env-share-header h4 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.env-share-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.env-share-input {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.env-share-error {
+  color: var(--error);
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+.env-share-success {
+  color: var(--success, #4caf50);
+  font-size: 12px;
+  margin: 4px 0;
+}
+
+.env-share-link {
+  display: block;
+  font-size: 12px;
+  word-break: break-all;
+  margin: 4px 0;
+}
+
+.env-share-gist-id {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 2px 0 8px;
+}
+
+.env-share-loading,
+.env-share-empty {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 8px 0;
+}
+
+.env-share-gist-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.env-share-gist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.env-share-gist-item a {
+  color: var(--accent);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.env-share-gist-date {
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-left: 8px;
+  white-space: nowrap;
+}

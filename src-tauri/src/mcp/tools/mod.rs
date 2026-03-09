@@ -1,5 +1,6 @@
 pub mod db;
 pub mod env;
+pub mod files;
 pub mod logs;
 pub mod memory;
 pub mod network;
@@ -151,6 +152,27 @@ pub fn dispatch(app: &AppHandle, method: &str, params: Option<Value>) -> Result<
                 .and_then(|p| p.get("limit"))
                 .and_then(|v| v.as_i64());
             network::search_http_traffic(app, &url_pattern, limit)
+        }
+        "get_file_hotspots" => {
+            let project_id = extract_i64(&params, "project_id")?;
+            let period = params
+                .as_ref()
+                .and_then(|p| p.get("period"))
+                .and_then(|v| v.as_str());
+            files::get_file_hotspots(app, project_id, period)
+        }
+        "get_related_files" => {
+            let project_id = extract_i64(&params, "project_id")?;
+            let file_path = extract_string(&params, "file_path")?;
+            files::get_related_files(app, project_id, &file_path)
+        }
+        "get_recent_file_changes" => {
+            let project_id = extract_i64(&params, "project_id")?;
+            let limit = params
+                .as_ref()
+                .and_then(|p| p.get("limit"))
+                .and_then(|v| v.as_i64());
+            files::get_recent_file_changes(app, project_id, limit)
         }
         _ => Err(format!("Method not found: {}", method)),
     }

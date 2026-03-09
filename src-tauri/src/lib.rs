@@ -2,6 +2,7 @@ pub mod browser;
 pub mod claudemd;
 pub mod db;
 pub mod dbconnect;
+pub mod filewatcher;
 pub mod git;
 pub mod github;
 pub mod mcp;
@@ -17,6 +18,7 @@ pub mod vault;
 use claudemd::watcher::ClaudeMdWatcher;
 use db::init_db;
 use dbconnect::schema::SchemaCache;
+use filewatcher::tracker::FileWatcherRegistry;
 use github::auth;
 use github::{DeviceCodeResponse, GitHubUser};
 use process::lifecycle::ProcessRegistry;
@@ -91,6 +93,9 @@ pub fn run() {
             process::detect::detect_project_framework,
             vault::synthesis::synthesize_env_file,
             vault::synthesis::remove_env_file,
+            vault::share::export_profile_to_gist,
+            vault::share::import_profile_from_gist,
+            vault::share::list_shared_gists,
             process::spawn::spawn_process,
             process::spawn::stop_process,
             process::spawn::get_process_status,
@@ -147,6 +152,7 @@ pub fn run() {
             app.manage(ProxyState::new());
             app.manage(ClaudeMdWatcher::new());
             app.manage(SchemaCache::new());
+            app.manage(FileWatcherRegistry::new());
 
             // Start CLAUDE.md watcher loop
             let watcher_handle = app.handle().clone();
