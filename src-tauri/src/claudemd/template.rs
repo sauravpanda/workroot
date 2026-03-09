@@ -1,8 +1,12 @@
 use crate::db::queries;
+use crate::memory::dead_ends::DeadEnd;
 use crate::process::detect;
 use rusqlite::Connection;
 use std::fmt::Write;
 use std::path::Path;
+
+/// Maximum chars for the memory section to avoid CLAUDE.md bloat.
+const MEMORY_BUDGET: usize = 4000;
 
 /// Generates the full CLAUDE.md content for a worktree.
 pub fn generate_claude_md(conn: &Connection, worktree_id: i64) -> Result<String, String> {
@@ -129,7 +133,85 @@ pub fn generate_claude_md(conn: &Connection, worktree_id: i64) -> Result<String,
         writeln!(md).unwrap();
     }
 
+    // Memory sections
+    append_memory_sections(&mut md, conn, worktree_id);
+
     Ok(md)
+}
+
+/// Appends memory sections (decisions, dead ends, notes) to the CLAUDE.md content.
+fn append_memory_sections(md: &mut String, conn: &Connection, worktree_id: i64) {
+    let mut budget = MEMORY_BUDGET;
+
+    // Key Decisions
+    if let Ok(decisions) = queries::list_memory_notes(conn, worktree_id, Some("decision")) {
+        if !decisions.is_empty() {
+            writeln!(md, "## Key Decisions").unwrap();
+            writeln!(md).unwrap();
+            for note in decisions.iter().take(10) {
+                let truncated = truncate_content(&note.content, 200);
+                let line = format!("- **{}**: {}\n", note.created_at, truncated);
+                if line.len() > budget {
+                    break;
+                }
+                budget -= line.len();
+                write!(md, "{}", line).unwrap();
+            }
+            writeln!(md).unwrap();
+        }
+    }
+
+    // Dead Ends
+    if let Ok(dead_ends) = queries::list_memory_notes(conn, worktree_id, Some("dead_end")) {
+        if !dead_ends.is_empty() {
+            writeln!(md, "## Dead Ends (Do Not Retry)").unwrap();
+            writeln!(md).unwrap();
+            for note in dead_ends.iter().take(10) {
+                let de = DeadEnd::from_content(&note.content);
+                let line = format!(
+                    "- **{}**: {} — {}\n",
+                    note.created_at, de.approach, de.failure_reason
+                );
+                if line.len() > budget {
+                    break;
+                }
+                budget -= line.len();
+                write!(md, "{}", line).unwrap();
+            }
+            writeln!(md).unwrap();
+        }
+    }
+
+    // Session Notes (recent general notes)
+    if let Ok(notes) = queries::list_memory_notes(conn, worktree_id, Some("note")) {
+        if !notes.is_empty() {
+            writeln!(md, "## Session Notes").unwrap();
+            writeln!(md).unwrap();
+            for note in notes.iter().take(10) {
+                let truncated = truncate_content(&note.content, 200);
+                let line = format!("- {}\n", truncated);
+                if line.len() > budget {
+                    break;
+                }
+                budget -= line.len();
+                write!(md, "{}", line).unwrap();
+            }
+            writeln!(md).unwrap();
+        }
+    }
+}
+
+fn truncate_content(content: &str, max_len: usize) -> &str {
+    if content.len() <= max_len {
+        content
+    } else {
+        // Find a safe truncation point (avoid splitting UTF-8)
+        let mut end = max_len;
+        while end > 0 && !content.is_char_boundary(end) {
+            end -= 1;
+        }
+        &content[..end]
+    }
 }
 
 /// Writes the CLAUDE.md content to the worktree root and ensures it's gitignored.
@@ -240,5 +322,34 @@ mod tests {
         assert!(content.contains("Active Worktrees"));
         assert!(content.contains("`main` (current)"));
         assert!(content.contains("`feature-x`"));
+    }
+
+    #[test]
+    fn generate_with_memory_notes() {
+        let conn = init_test_db();
+
+        let pid = queries::insert_project(&conn, "app", "/tmp/app", None, None).unwrap();
+        let wid = queries::insert_worktree(&conn, pid, "main", "/tmp/app").unwrap();
+
+        queries::insert_memory_note(&conn, wid, "Use PostgreSQL for persistence", "decision")
+            .unwrap();
+        queries::insert_memory_note(&conn, wid, "Remember to check edge cases", "note").unwrap();
+
+        // Add a dead end as JSON
+        let de = serde_json::json!({
+            "approach": "SQLite for production",
+            "failure_reason": "Cannot handle concurrent writes",
+            "error_message": null
+        });
+        queries::insert_memory_note(&conn, wid, &de.to_string(), "dead_end").unwrap();
+
+        let content = generate_claude_md(&conn, wid).unwrap();
+
+        assert!(content.contains("Key Decisions"));
+        assert!(content.contains("Use PostgreSQL"));
+        assert!(content.contains("Dead Ends"));
+        assert!(content.contains("SQLite for production"));
+        assert!(content.contains("Session Notes"));
+        assert!(content.contains("edge cases"));
     }
 }
