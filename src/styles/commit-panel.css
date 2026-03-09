@@ -1,0 +1,143 @@
+.commit-panel {
+  border-top: 1px solid var(--border, #333);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-subtle, rgba(255, 255, 255, 0.02));
+}
+
+.commit-subject-wrapper {
+  position: relative;
+}
+
+.commit-subject {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border, #444);
+  border-radius: 3px;
+  background: var(--bg-input, #1a1a2e);
+  color: var(--text, #e0e0e0);
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.commit-subject:focus {
+  border-color: var(--accent, #7c5cbf);
+}
+
+.commit-char-count {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--text-muted, #666);
+}
+
+.commit-char-count.over {
+  color: #f59e0b;
+}
+
+.commit-body {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border, #444);
+  border-radius: 3px;
+  background: var(--bg-input, #1a1a2e);
+  color: var(--text, #e0e0e0);
+  font-size: 12px;
+  outline: none;
+  resize: vertical;
+  min-height: 40px;
+  font-family: var(--font-mono, monospace);
+  box-sizing: border-box;
+}
+
+.commit-body:focus {
+  border-color: var(--accent, #7c5cbf);
+}
+
+.commit-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.commit-staged-info {
+  font-size: 12px;
+  color: var(--text-muted, #888);
+}
+
+.commit-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.commit-btn {
+  padding: 5px 14px;
+  border: 1px solid var(--border, #444);
+  background: transparent;
+  color: var(--text, #e0e0e0);
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.commit-btn:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.06));
+}
+
+.commit-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.commit-btn.primary {
+  background: var(--accent, #7c5cbf);
+  border-color: var(--accent, #7c5cbf);
+  color: #fff;
+}
+
+.commit-btn.primary:hover {
+  opacity: 0.9;
+}
+
+.commit-btn.primary:disabled {
+  opacity: 0.4;
+}
+
+.commit-error {
+  padding: 6px 8px;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 3px;
+  color: #f87171;
+  font-size: 12px;
+}
+
+.commit-success {
+  padding: 6px 8px;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: 3px;
+  color: #4ade80;
+  font-size: 12px;
+}
+
+.push-status {
+  font-size: 11px;
+  color: var(--text-muted, #888);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.push-status .ahead {
+  color: #60a5fa;
+}
+
+.push-status .behind {
+  color: #f59e0b;
+}

@@ -1,4 +1,6 @@
 pub mod branch;
+pub mod commit;
+pub mod diff;
 pub mod worktree;
 
 use serde::Serialize;

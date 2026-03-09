@@ -290,7 +290,6 @@ pub fn refresh_db_schema(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
 
     #[test]
     fn introspect_sqlite_test_db() {

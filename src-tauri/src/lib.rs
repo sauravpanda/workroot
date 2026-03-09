@@ -118,6 +118,13 @@ pub fn run() {
             dbconnect::detect::detect_worktree_database,
             dbconnect::schema::get_db_schema,
             dbconnect::schema::refresh_db_schema,
+            git::diff::get_changed_files,
+            git::diff::get_file_diff,
+            git::diff::stage_files,
+            git::diff::unstage_files,
+            git::commit::git_commit,
+            git::commit::git_push,
+            git::commit::get_push_status,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
