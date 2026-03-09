@@ -1,5 +1,6 @@
 pub mod crypto;
 pub mod import;
+pub mod synthesis;
 
 use crate::db::queries;
 use crate::db::AppDb;

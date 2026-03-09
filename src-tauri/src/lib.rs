@@ -77,6 +77,8 @@ pub fn run() {
             vault::import::parse_env_file,
             vault::import::import_env_vars,
             process::detect::detect_project_framework,
+            vault::synthesis::synthesize_env_file,
+            vault::synthesis::remove_env_file,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
