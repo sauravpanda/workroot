@@ -198,8 +198,40 @@ async fn handle_tools() -> Json<Vec<ToolDef>> {
             }),
         },
         ToolDef {
-            name: "get_active_project".into(),
+            name: "get_error_logs".into(),
+            description: "Get stderr-only log lines from a process (error shortcut)".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "process_id": { "type": "integer" },
+                    "lines": { "type": "integer", "default": 50 }
+                },
+                "required": ["process_id"]
+            }),
+        },
+        ToolDef {
+            name: "get_active_proxy".into(),
             description: "Get the project currently routed through the :3000 proxy".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {},
+                "required": []
+            }),
+        },
+        ToolDef {
+            name: "switch_active_proxy".into(),
+            description: "Switch the :3000 proxy target to a different worktree".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" }
+                },
+                "required": ["worktree_id"]
+            }),
+        },
+        ToolDef {
+            name: "get_proxy_status".into(),
+            description: "Get proxy health status".into(),
             parameters: serde_json::json!({
                 "type": "object",
                 "properties": {},

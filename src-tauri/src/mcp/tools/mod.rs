@@ -1,5 +1,7 @@
 pub mod env;
+pub mod logs;
 pub mod projects;
+pub mod proxy;
 
 use serde_json::Value;
 use tauri::AppHandle;
@@ -21,6 +23,37 @@ pub fn dispatch(app: &AppHandle, method: &str, params: Option<Value>) -> Result<
             let key = extract_string(&params, "key")?;
             env::get_env_var_value(app, worktree_id, &key)
         }
+        "get_recent_logs" => {
+            let process_id = extract_i64(&params, "process_id")?;
+            let lines = params
+                .as_ref()
+                .and_then(|p| p.get("lines"))
+                .and_then(|v| v.as_i64());
+            let stream = params
+                .as_ref()
+                .and_then(|p| p.get("stream"))
+                .and_then(|v| v.as_str());
+            logs::get_recent_logs(app, process_id, lines, stream)
+        }
+        "search_logs" => {
+            let process_id = extract_i64(&params, "process_id")?;
+            let query = extract_string(&params, "query")?;
+            logs::search_logs(app, process_id, &query)
+        }
+        "get_error_logs" => {
+            let process_id = extract_i64(&params, "process_id")?;
+            let lines = params
+                .as_ref()
+                .and_then(|p| p.get("lines"))
+                .and_then(|v| v.as_i64());
+            logs::get_error_logs(app, process_id, lines)
+        }
+        "get_active_proxy" => proxy::get_active_proxy(app),
+        "switch_active_proxy" => {
+            let worktree_id = extract_i64(&params, "worktree_id")?;
+            proxy::switch_active_proxy(app, worktree_id)
+        }
+        "get_proxy_status" => proxy::get_proxy_status(app),
         _ => Err(format!("Method not found: {}", method)),
     }
 }
