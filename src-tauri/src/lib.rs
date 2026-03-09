@@ -1,5 +1,6 @@
 pub mod db;
 pub mod github;
+pub mod projects;
 pub mod tray;
 
 use db::init_db;
@@ -42,6 +43,7 @@ fn github_logout() -> Result<(), String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             greet,
             github_start_device_flow,
@@ -49,6 +51,12 @@ pub fn run() {
             github_get_user,
             github_check_auth,
             github_logout,
+            projects::register_project,
+            projects::list_projects,
+            projects::remove_project,
+            projects::list_github_repos,
+            projects::clone_and_register,
+            projects::register_local_project,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

@@ -1,0 +1,173 @@
+import { useState, useMemo } from "react";
+import { open } from "@tauri-apps/plugin-dialog";
+import { useProjects, type GitHubRepo } from "../hooks/useProjects";
+
+export function RepoList() {
+  const {
+    projects,
+    githubRepos,
+    isLoading,
+    error,
+    loadGithubRepos,
+    registerLocal,
+    cloneAndRegister,
+    removeProject,
+  } = useProjects();
+
+  const [search, setSearch] = useState("");
+  const [cloneDir, setCloneDir] = useState("");
+  const [cloningRepo, setCloningRepo] = useState<string | null>(null);
+  const [view, setView] = useState<"projects" | "github">("projects");
+
+  const registeredPaths = useMemo(
+    () => new Set(projects.map((p) => p.local_path)),
+    [projects],
+  );
+
+  const filteredRepos = useMemo(() => {
+    if (!search) return githubRepos;
+    const lower = search.toLowerCase();
+    return githubRepos.filter(
+      (r) =>
+        r.name.toLowerCase().includes(lower) ||
+        r.full_name.toLowerCase().includes(lower) ||
+        r.description?.toLowerCase().includes(lower),
+    );
+  }, [githubRepos, search]);
+
+  const handleAddLocal = async () => {
+    const selected = await open({ directory: true, multiple: false });
+    if (selected) {
+      await registerLocal(selected);
+    }
+  };
+
+  const handleClone = async (repo: GitHubRepo) => {
+    if (!cloneDir) {
+      const dir = await open({ directory: true, multiple: false });
+      if (!dir) return;
+      setCloneDir(dir);
+      setCloningRepo(repo.full_name);
+      await cloneAndRegister(repo.clone_url, repo.name, dir, repo.html_url);
+      setCloningRepo(null);
+    } else {
+      setCloningRepo(repo.full_name);
+      await cloneAndRegister(
+        repo.clone_url,
+        repo.name,
+        cloneDir,
+        repo.html_url,
+      );
+      setCloningRepo(null);
+    }
+  };
+
+  return (
+    <div className="repo-list">
+      <div className="repo-tabs">
+        <button
+          className={`repo-tab ${view === "projects" ? "active" : ""}`}
+          onClick={() => setView("projects")}
+        >
+          My Projects ({projects.length})
+        </button>
+        <button
+          className={`repo-tab ${view === "github" ? "active" : ""}`}
+          onClick={() => {
+            setView("github");
+            if (githubRepos.length === 0) loadGithubRepos();
+          }}
+        >
+          GitHub Repos
+        </button>
+      </div>
+
+      {error && <p className="auth-error">{error}</p>}
+
+      {view === "projects" && (
+        <div className="repo-section">
+          <button onClick={handleAddLocal} className="repo-action-btn">
+            + Add local folder
+          </button>
+          {projects.length === 0 ? (
+            <p className="repo-empty">
+              No projects registered yet. Add a local folder or clone from
+              GitHub.
+            </p>
+          ) : (
+            <ul className="repo-items">
+              {projects.map((p) => (
+                <li key={p.id} className="repo-item">
+                  <div className="repo-item-info">
+                    <span className="repo-name">{p.name}</span>
+                    <span className="repo-meta">
+                      {p.framework && (
+                        <span className="repo-lang">{p.framework}</span>
+                      )}
+                      <span className="repo-path">{p.local_path}</span>
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => removeProject(p.id)}
+                    className="repo-remove-btn"
+                    title="Remove project"
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {view === "github" && (
+        <div className="repo-section">
+          <input
+            type="text"
+            placeholder="Search repos..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="repo-search"
+          />
+          {isLoading && <p className="repo-loading">Loading repos...</p>}
+          {!isLoading && filteredRepos.length === 0 && (
+            <p className="repo-empty">
+              {githubRepos.length === 0
+                ? "Sign in with GitHub to see your repos."
+                : "No matching repos found."}
+            </p>
+          )}
+          <ul className="repo-items">
+            {filteredRepos.map((repo) => (
+              <li key={repo.id} className="repo-item">
+                <div className="repo-item-info">
+                  <span className="repo-name">{repo.name}</span>
+                  <span className="repo-meta">
+                    {repo.language && (
+                      <span className="repo-lang">{repo.language}</span>
+                    )}
+                    {repo.description && (
+                      <span className="repo-desc">{repo.description}</span>
+                    )}
+                  </span>
+                </div>
+                {registeredPaths.has(repo.name) ? (
+                  <span className="repo-registered">Registered</span>
+                ) : (
+                  <button
+                    onClick={() => handleClone(repo)}
+                    disabled={cloningRepo !== null}
+                    className="repo-clone-btn"
+                  >
+                    {cloningRepo === repo.full_name ? "Cloning..." : "Clone"}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
