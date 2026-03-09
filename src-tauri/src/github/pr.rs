@@ -73,8 +73,7 @@ pub async fn create_pull_request(
             .map_err(|e| format!("DB: {}", e))?
             .ok_or("Worktree not found")?;
 
-        let repo =
-            Repository::open(&worktree.path).map_err(|e| format!("Git: {}", e))?;
+        let repo = Repository::open(&worktree.path).map_err(|e| format!("Git: {}", e))?;
         let (owner, repo_name) = get_remote_info(&repo)?;
 
         let head_ref = repo.head().map_err(|e| format!("HEAD: {}", e))?;
@@ -86,8 +85,7 @@ pub async fn create_pull_request(
         (owner, repo_name, branch)
     };
 
-    let token = auth::get_token()?
-        .ok_or("Not authenticated. Please sign in with GitHub first.")?;
+    let token = auth::get_token()?.ok_or("Not authenticated. Please sign in with GitHub first.")?;
 
     let client = reqwest::Client::new();
     let resp = client
@@ -138,8 +136,7 @@ pub async fn get_pr_for_branch(
             .map_err(|e| format!("DB: {}", e))?
             .ok_or("Worktree not found")?;
 
-        let repo =
-            Repository::open(&worktree.path).map_err(|e| format!("Git: {}", e))?;
+        let repo = Repository::open(&worktree.path).map_err(|e| format!("Git: {}", e))?;
         let (owner, repo_name) = get_remote_info(&repo)?;
 
         let head_ref = repo.head().map_err(|e| format!("HEAD: {}", e))?;
@@ -151,8 +148,7 @@ pub async fn get_pr_for_branch(
         (owner, repo_name, branch)
     };
 
-    let token = auth::get_token()?
-        .ok_or("Not authenticated. Please sign in with GitHub first.")?;
+    let token = auth::get_token()?.ok_or("Not authenticated. Please sign in with GitHub first.")?;
 
     let client = reqwest::Client::new();
     let resp = client
@@ -163,7 +159,10 @@ pub async fn get_pr_for_branch(
         .header("Authorization", format!("Bearer {}", token))
         .header("User-Agent", "Workroot")
         .header("Accept", "application/vnd.github+json")
-        .query(&[("head", format!("{}:{}", owner, head)), ("state", "open".to_string())])
+        .query(&[
+            ("head", format!("{}:{}", owner, head)),
+            ("state", "open".to_string()),
+        ])
         .send()
         .await
         .map_err(|e| format!("Failed to fetch PRs: {}", e))?;
@@ -184,10 +183,7 @@ pub async fn get_pr_for_branch(
 
 /// Get PR template content if it exists in the project.
 #[tauri::command]
-pub fn get_pr_template(
-    db: State<'_, AppDb>,
-    worktree_id: i64,
-) -> Result<Option<String>, String> {
+pub fn get_pr_template(db: State<'_, AppDb>, worktree_id: i64) -> Result<Option<String>, String> {
     let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
     let worktree = queries::get_worktree(&conn, worktree_id)
         .map_err(|e| format!("DB: {}", e))?
@@ -218,10 +214,7 @@ pub fn get_pr_template(
 
 /// Get the default branch (main or master) for the repo.
 #[tauri::command]
-pub fn get_default_branch(
-    db: State<'_, AppDb>,
-    worktree_id: i64,
-) -> Result<String, String> {
+pub fn get_default_branch(db: State<'_, AppDb>, worktree_id: i64) -> Result<String, String> {
     let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
     let worktree = queries::get_worktree(&conn, worktree_id)
         .map_err(|e| format!("DB: {}", e))?
@@ -255,16 +248,14 @@ mod tests {
 
     #[test]
     fn parse_https_no_git_suffix() {
-        let (owner, repo) =
-            parse_github_remote("https://github.com/owner/repo").unwrap();
+        let (owner, repo) = parse_github_remote("https://github.com/owner/repo").unwrap();
         assert_eq!(owner, "owner");
         assert_eq!(repo, "repo");
     }
 
     #[test]
     fn parse_ssh_remote() {
-        let (owner, repo) =
-            parse_github_remote("git@github.com:owner/repo.git").unwrap();
+        let (owner, repo) = parse_github_remote("git@github.com:owner/repo.git").unwrap();
         assert_eq!(owner, "owner");
         assert_eq!(repo, "repo");
     }

@@ -129,6 +129,7 @@ pub fn run() {
             github::pr::get_pr_for_branch,
             github::pr::get_pr_template,
             github::pr::get_default_branch,
+            github::ci::get_pr_status,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
