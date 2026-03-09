@@ -79,6 +79,9 @@ pub fn run() {
             process::detect::detect_project_framework,
             vault::synthesis::synthesize_env_file,
             vault::synthesis::remove_env_file,
+            process::spawn::spawn_process,
+            process::spawn::stop_process,
+            process::spawn::get_process_status,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

@@ -252,6 +252,51 @@ pub fn insert_process(
     Ok(conn.last_insert_rowid())
 }
 
+pub fn get_process(conn: &Connection, id: i64) -> Result<Option<ProcessRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, worktree_id, pid, command, status, port, started_at, stopped_at
+         FROM processes WHERE id = ?1",
+    )?;
+    let mut rows = stmt.query_map(params![id], |row| {
+        Ok(ProcessRow {
+            id: row.get(0)?,
+            worktree_id: row.get(1)?,
+            pid: row.get(2)?,
+            command: row.get(3)?,
+            status: row.get(4)?,
+            port: row.get(5)?,
+            started_at: row.get(6)?,
+            stopped_at: row.get(7)?,
+        })
+    })?;
+    match rows.next() {
+        Some(row) => Ok(Some(row?)),
+        None => Ok(None),
+    }
+}
+
+pub fn update_process_started(
+    conn: &Connection,
+    id: i64,
+    pid: Option<i64>,
+    port: i64,
+) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "UPDATE processes SET pid = ?1, port = ?2, status = 'running', started_at = datetime('now')
+         WHERE id = ?3",
+        params![pid, port, id],
+    )?;
+    Ok(())
+}
+
+pub fn update_process_stopped(conn: &Connection, id: i64) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "UPDATE processes SET status = 'stopped', stopped_at = datetime('now') WHERE id = ?1",
+        params![id],
+    )?;
+    Ok(())
+}
+
 pub fn list_processes(
     conn: &Connection,
     worktree_id: i64,

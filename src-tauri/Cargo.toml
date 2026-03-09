@@ -20,5 +20,9 @@ tauri-plugin-dialog = "2"
 git2 = "0.20"
 aes-gcm = "0.10"
 tempfile = "3"
+chrono = "0.4"
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.29", features = ["signal", "process"] }
 base64 = "0.22"
 rand = "0.8"
