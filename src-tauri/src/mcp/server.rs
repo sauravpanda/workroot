@@ -322,6 +322,40 @@ async fn handle_tools() -> Json<Vec<ToolDef>> {
                 "required": ["worktree_id"]
             }),
         },
+        ToolDef {
+            name: "get_db_schema".into(),
+            description: "Get database schema overview (tables, columns, row counts)".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" }
+                },
+                "required": ["worktree_id"]
+            }),
+        },
+        ToolDef {
+            name: "get_table_details".into(),
+            description: "Get detailed column/constraint info for a specific database table".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" },
+                    "table_name": { "type": "string" }
+                },
+                "required": ["worktree_id", "table_name"]
+            }),
+        },
+        ToolDef {
+            name: "get_db_relationships".into(),
+            description: "Get foreign key relationships across all database tables".into(),
+            parameters: serde_json::json!({
+                "type": "object",
+                "properties": {
+                    "worktree_id": { "type": "integer" }
+                },
+                "required": ["worktree_id"]
+            }),
+        },
     ];
 
     Json(tools)
