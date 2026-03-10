@@ -1,0 +1,221 @@
+/* Blame View - Full-width modal overlay */
+
+.blame-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.blame-modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 95vw;
+  max-width: 1400px;
+  height: 85vh;
+  background: var(--bg-primary, #1e1e2e);
+  border: 1px solid var(--border-color, #313244);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family:
+    "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", Consolas,
+    monospace;
+}
+
+/* Header */
+.blame-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--bg-secondary, #181825);
+  border-bottom: 1px solid var(--border-color, #313244);
+  flex-shrink: 0;
+}
+
+.blame-file-path {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #cdd6f4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.blame-line-count {
+  font-size: 12px;
+  color: var(--text-secondary, #a6adc8);
+  flex-shrink: 0;
+}
+
+.blame-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-secondary, #a6adc8);
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.blame-close-btn:hover {
+  background: var(--bg-hover, #313244);
+  color: var(--text-primary, #cdd6f4);
+}
+
+/* Body */
+.blame-body {
+  flex: 1;
+  overflow: auto;
+}
+
+.blame-loading,
+.blame-error,
+.blame-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 14px;
+  color: var(--text-secondary, #a6adc8);
+}
+
+.blame-error {
+  color: var(--text-error, #f38ba8);
+}
+
+/* Table */
+.blame-table {
+  display: flex;
+  flex-direction: column;
+  min-width: fit-content;
+}
+
+.blame-row {
+  display: flex;
+  align-items: stretch;
+  min-height: 20px;
+  line-height: 20px;
+}
+
+.blame-row-alt {
+  background: var(--bg-tertiary, rgba(49, 50, 68, 0.3));
+}
+
+.blame-row:hover {
+  background: var(--bg-hover, rgba(69, 71, 90, 0.4));
+}
+
+/* Gutter - blame info */
+.blame-gutter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 200px;
+  min-width: 200px;
+  padding: 0 10px;
+  border-right: 1px solid var(--border-color, #313244);
+  font-size: 11px;
+  color: var(--text-secondary, #a6adc8);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.blame-author {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.blame-date {
+  flex-shrink: 0;
+  color: var(--text-tertiary, #6c7086);
+  font-size: 10px;
+}
+
+.blame-gutter-empty {
+  width: 100%;
+}
+
+/* Line numbers */
+.blame-line-number {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 50px;
+  min-width: 50px;
+  padding: 0 8px;
+  font-size: 12px;
+  color: var(--text-tertiary, #6c7086);
+  user-select: none;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-color, #313244);
+}
+
+/* Content */
+.blame-content {
+  flex: 1;
+  padding: 0 12px;
+  overflow: hidden;
+}
+
+.blame-content pre {
+  margin: 0;
+  font-size: 12px;
+  line-height: 20px;
+  color: var(--text-primary, #cdd6f4);
+  white-space: pre;
+  font-family: inherit;
+}
+
+/* Tooltip */
+.blame-tooltip {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  max-width: 500px;
+  padding: 10px 14px;
+  background: var(--bg-secondary, #181825);
+  border: 1px solid var(--border-color, #313244);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.blame-tooltip-hash {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-accent, #89b4fa);
+  margin-bottom: 4px;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+}
+
+.blame-tooltip-summary {
+  font-size: 13px;
+  color: var(--text-primary, #cdd6f4);
+  margin-bottom: 6px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.blame-tooltip-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-secondary, #a6adc8);
+}

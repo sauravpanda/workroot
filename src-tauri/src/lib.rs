@@ -167,6 +167,7 @@ pub fn run() {
             bookmarks::list_bookmarks,
             bookmarks::update_bookmark,
             bookmarks::delete_bookmark,
+            git::blame::blame_file,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
