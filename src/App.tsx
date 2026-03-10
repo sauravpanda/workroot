@@ -14,9 +14,11 @@ import { TaskRunner } from "./components/TaskRunner";
 import { AppThemePicker } from "./components/AppThemePicker";
 import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
 import { ThemeEditor } from "./components/ThemeEditor";
+import { CustomCSSEditor } from "./components/CustomCSSEditor";
 import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
 import { getAppThemeById } from "./themes/builtin";
 import { applyTheme, loadSavedThemeId } from "./themes/engine";
+import { loadCustomCSS } from "./themes/customCSS";
 import { useUiStore } from "./stores/uiStore";
 import {
   useCommandRegistry,
@@ -62,11 +64,12 @@ function AppContent() {
   const [appThemePickerOpen, setAppThemePickerOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [themeEditorOpen, setThemeEditorOpen] = useState(false);
+  const [cssEditorOpen, setCssEditorOpen] = useState(false);
   const [appThemeId, setAppThemeId] = useState("midnight");
   const [terminalThemeId, setTerminalThemeId] = useState(DEFAULT_THEME_ID);
   const { register, execute, search } = useCommandRegistry();
 
-  // Load saved app theme and terminal theme
+  // Load saved app theme, terminal theme, and custom CSS
   useEffect(() => {
     loadSavedThemeId().then((id) => {
       setAppThemeId(id);
@@ -78,6 +81,7 @@ function AppContent() {
       },
       () => {},
     );
+    loadCustomCSS();
   }, []);
 
   // Fetch projects and worktrees for quick switcher commands
@@ -201,6 +205,13 @@ function AppContent() {
         category: "Appearance",
         icon: "\uD83C\uDFA8",
         action: () => setThemeEditorOpen(true),
+      },
+      {
+        id: "css:editor",
+        label: "Custom CSS",
+        category: "Appearance",
+        icon: "{ }",
+        action: () => setCssEditorOpen(true),
       },
       {
         id: "theme:terminal",
@@ -392,6 +403,9 @@ function AppContent() {
             setAppThemeId(theme.id);
           }}
         />
+      )}
+      {cssEditorOpen && (
+        <CustomCSSEditor onClose={() => setCssEditorOpen(false)} />
       )}
       {shortcutsOpen && (
         <KeyboardShortcuts onClose={() => setShortcutsOpen(false)} />
