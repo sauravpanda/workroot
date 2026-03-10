@@ -17,6 +17,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ["\u2318", "B"], description: "Command bookmarks" },
       { keys: ["\u2318", "T"], description: "Terminal theme selector" },
       { keys: ["\u2318", "R"], description: "Task runner" },
+      { keys: ["\u2318", "G"], description: "Toggle GitHub sidebar" },
       { keys: ["\u2318", "?"], description: "Keyboard shortcuts" },
     ],
   },

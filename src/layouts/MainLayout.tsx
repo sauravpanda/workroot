@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Sidebar } from "../components/Sidebar";
+import { GitHubSidebar } from "../components/GitHubSidebar";
 import { UiContext } from "../stores/uiStore";
 
 const SIDEBAR_MIN = 200;
@@ -39,6 +40,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     string | null
   >(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showRightSidebar, setShowRightSidebar] = useState(true);
   const dragging = useRef(false);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -91,6 +93,8 @@ export function MainLayout({ children }: MainLayoutProps) {
         setSelectedWorktreeName,
         showSettings,
         setShowSettings,
+        showRightSidebar,
+        setShowRightSidebar,
       }}
     >
       <div className="main-layout">
@@ -99,6 +103,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
         <div className="resize-handle" onMouseDown={handleMouseDown} />
         <div className="content-area">{children}</div>
+        {showRightSidebar && <GitHubSidebar projectId={selectedProjectId} />}
       </div>
     </UiContext.Provider>
   );

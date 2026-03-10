@@ -11,6 +11,8 @@ interface UiContextValue {
   setSelectedWorktreeName: (name: string | null) => void;
   showSettings: boolean;
   setShowSettings: (show: boolean) => void;
+  showRightSidebar: boolean;
+  setShowRightSidebar: (show: boolean) => void;
 }
 
 export const UiContext = createContext<UiContextValue>({
@@ -24,6 +26,8 @@ export const UiContext = createContext<UiContextValue>({
   setSelectedWorktreeName: () => {},
   showSettings: false,
   setShowSettings: () => {},
+  showRightSidebar: true,
+  setShowRightSidebar: () => {},
 });
 
 export function useUiStore() {
