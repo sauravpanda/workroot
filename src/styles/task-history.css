@@ -1,0 +1,309 @@
+/* ==========================================================
+   Task History Panel
+   ========================================================== */
+
+.taskhistory-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.taskhistory-panel {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 520px;
+  max-width: calc(100vw - 40px);
+  max-height: 70vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* -- Header -- */
+
+.taskhistory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.taskhistory-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.taskhistory-task-name {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--accent);
+  background: var(--bg-elevated);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.taskhistory-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.taskhistory-action-btn {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition:
+    color 0.1s,
+    background-color 0.1s;
+}
+
+.taskhistory-action-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background-color: var(--bg-hover);
+}
+
+.taskhistory-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.taskhistory-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.taskhistory-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Body -- */
+
+.taskhistory-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px 12px;
+  overscroll-behavior: contain;
+}
+
+.taskhistory-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.taskhistory-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.taskhistory-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.taskhistory-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* -- Table -- */
+
+.taskhistory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82em;
+}
+
+.taskhistory-th {
+  text-align: left;
+  font-size: 0.72em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 4px 8px 6px;
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.taskhistory-th-select {
+  width: 28px;
+}
+
+.taskhistory-row {
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.taskhistory-row:hover {
+  background-color: var(--accent-muted);
+}
+
+.taskhistory-row--selected {
+  background-color: var(--bg-elevated);
+}
+
+.taskhistory-td {
+  padding: 5px 8px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.taskhistory-td-select {
+  width: 28px;
+  text-align: center;
+}
+
+.taskhistory-select-badge {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  font-size: 0.68em;
+  font-weight: 700;
+  color: var(--bg-surface);
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+.taskhistory-td-duration {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+.taskhistory-td-when {
+  color: var(--text-secondary);
+  font-size: 0.9em;
+}
+
+/* -- Exit code badges -- */
+
+.taskhistory-exit-badge {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px 6px;
+  text-align: center;
+  font-size: 0.82em;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+}
+
+.taskhistory-exit-badge--ok {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.taskhistory-exit-badge--fail {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* -- Comparison -- */
+
+.taskhistory-comparison {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.taskhistory-comparison-title {
+  font-size: 0.76em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.taskhistory-comparison-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.taskhistory-comparison-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.taskhistory-comparison-label {
+  font-size: 0.82em;
+  color: var(--text-secondary);
+}
+
+.taskhistory-comparison-value {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.taskhistory-comparison-value--better {
+  color: #22c55e;
+}
+
+.taskhistory-comparison-value--worse {
+  color: #ef4444;
+}
+
+.taskhistory-comparison-item--regression {
+  margin-top: 4px;
+  padding: 6px 8px;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+.taskhistory-regression-badge {
+  font-size: 0.76em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #ef4444;
+}
+
+.taskhistory-comparison-detail {
+  font-size: 0.76em;
+  color: var(--text-muted);
+}
