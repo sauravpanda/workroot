@@ -12,6 +12,7 @@ import { CommandBookmarks } from "./components/CommandBookmarks";
 import { TerminalThemeSelector } from "./components/TerminalThemeSelector";
 import { TaskRunner } from "./components/TaskRunner";
 import { AppThemePicker } from "./components/AppThemePicker";
+import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
 import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
 import { getAppThemeById } from "./themes/builtin";
 import { applyTheme, loadSavedThemeId } from "./themes/engine";
@@ -56,6 +57,7 @@ function AppContent() {
   const [themeSelectorOpen, setThemeSelectorOpen] = useState(false);
   const [taskRunnerOpen, setTaskRunnerOpen] = useState(false);
   const [appThemePickerOpen, setAppThemePickerOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [appThemeId, setAppThemeId] = useState("midnight");
   const [terminalThemeId, setTerminalThemeId] = useState(DEFAULT_THEME_ID);
   const { register, execute, search } = useCommandRegistry();
@@ -198,6 +200,14 @@ function AppContent() {
         action: () => setThemeSelectorOpen(true),
       },
       {
+        id: "shortcuts:open",
+        label: "Keyboard Shortcuts",
+        category: "Help",
+        shortcut: "\u2318?",
+        icon: "\u2328",
+        action: () => setShortcutsOpen(true),
+      },
+      {
         id: "tasks:open",
         label: "Task Runner",
         category: "Tools",
@@ -259,6 +269,12 @@ function AppContent() {
         key: "t",
         meta: true,
         action: () => setThemeSelectorOpen((p) => !p),
+      },
+      {
+        key: "/",
+        meta: true,
+        shift: true,
+        action: () => setShortcutsOpen((p) => !p),
       },
       {
         key: ",",
@@ -338,6 +354,9 @@ function AppContent() {
           onThemeChange={setAppThemeId}
           onClose={() => setAppThemePickerOpen(false)}
         />
+      )}
+      {shortcutsOpen && (
+        <KeyboardShortcuts onClose={() => setShortcutsOpen(false)} />
       )}
     </>
   );
