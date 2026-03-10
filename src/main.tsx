@@ -8,6 +8,7 @@ import "./styles/terminal.css";
 import "./styles/command-palette.css";
 import "./styles/command-bookmarks.css";
 import "./styles/terminal-themes.css";
+import "./styles/task-runner.css";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

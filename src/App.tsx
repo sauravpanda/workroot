@@ -10,6 +10,7 @@ import { TerminalPanel } from "./components/TerminalPanel";
 import { CommandPalette } from "./components/CommandPalette";
 import { CommandBookmarks } from "./components/CommandBookmarks";
 import { TerminalThemeSelector } from "./components/TerminalThemeSelector";
+import { TaskRunner } from "./components/TaskRunner";
 import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
 import { useUiStore } from "./stores/uiStore";
 import {
@@ -50,6 +51,7 @@ function AppContent() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const [themeSelectorOpen, setThemeSelectorOpen] = useState(false);
+  const [taskRunnerOpen, setTaskRunnerOpen] = useState(false);
   const [terminalThemeId, setTerminalThemeId] = useState(DEFAULT_THEME_ID);
   const { register, execute, search } = useCommandRegistry();
 
@@ -179,6 +181,15 @@ function AppContent() {
         icon: "\u25D0",
         action: () => setThemeSelectorOpen(true),
       },
+      {
+        id: "tasks:open",
+        label: "Task Runner",
+        category: "Tools",
+        shortcut: "\u2318R",
+        icon: "\u25B6",
+        enabled: () => selectedWorktreePath !== null,
+        action: () => setTaskRunnerOpen(true),
+      },
     ];
 
     // Add project switch commands
@@ -297,6 +308,12 @@ function AppContent() {
           currentThemeId={terminalThemeId}
           onThemeChange={setTerminalThemeId}
           onClose={() => setThemeSelectorOpen(false)}
+        />
+      )}
+      {taskRunnerOpen && selectedWorktreePath && (
+        <TaskRunner
+          cwd={selectedWorktreePath}
+          onClose={() => setTaskRunnerOpen(false)}
         />
       )}
     </>
