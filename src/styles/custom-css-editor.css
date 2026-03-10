@@ -1,0 +1,230 @@
+/* ==========================================================
+   Custom CSS Editor
+   ========================================================== */
+
+.csseditor-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.csseditor-panel {
+  position: fixed;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 860px;
+  max-width: calc(100vw - 40px);
+  max-height: 85vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* -- Header -- */
+
+.csseditor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.csseditor-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.csseditor-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.csseditor-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Body -- */
+
+.csseditor-body {
+  flex: 1;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.csseditor-main {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
+
+.csseditor-textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  resize: none;
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--bg-base);
+  border: none;
+  border-right: 1px solid var(--border-subtle);
+  padding: 12px 16px;
+  outline: none;
+  tab-size: 2;
+}
+
+.csseditor-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* -- Sidebar -- */
+
+.csseditor-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: 10px 12px;
+  overscroll-behavior: contain;
+}
+
+.csseditor-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.csseditor-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.csseditor-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.csseditor-sidebar-title {
+  font-size: 0.68em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 4px 0 8px;
+}
+
+.csseditor-var-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.csseditor-var-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  cursor: default;
+}
+
+.csseditor-var-item:hover {
+  background: var(--bg-hover);
+}
+
+.csseditor-var-name {
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  color: var(--accent);
+  background: none;
+  padding: 0;
+}
+
+.csseditor-var-desc {
+  font-size: 0.68em;
+  color: var(--text-muted);
+}
+
+/* -- Footer -- */
+
+.csseditor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.csseditor-footer-right {
+  display: flex;
+  gap: 8px;
+}
+
+.csseditor-btn {
+  font-family: var(--font-sans);
+  font-size: 0.78em;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+.csseditor-btn-primary {
+  color: var(--bg-base);
+  background: var(--accent);
+}
+
+.csseditor-btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.csseditor-btn-secondary {
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+}
+
+.csseditor-btn-secondary:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.csseditor-btn-danger {
+  color: var(--danger);
+  background: var(--danger-muted);
+}
+
+.csseditor-btn-danger:hover {
+  background: var(--danger);
+  color: #fff;
+}

@@ -15,6 +15,20 @@ import { AppThemePicker } from "./components/AppThemePicker";
 import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
 import { ThemeEditor } from "./components/ThemeEditor";
 import { DensityPicker } from "./components/DensityPicker";
+import { CustomCSSEditor } from "./components/CustomCSSEditor";
+import { StashManager } from "./components/StashManager";
+import { BlameView } from "./components/BlameView";
+import { BranchCompare } from "./components/BranchCompare";
+import { GitHooksManager } from "./components/GitHooksManager";
+import { ConflictResolver } from "./components/ConflictResolver";
+import { SecurityAudit } from "./components/SecurityAudit";
+import { SecretScanner } from "./components/SecretScanner";
+import { LicenseReport } from "./components/LicenseReport";
+import { SecurityHeaders } from "./components/SecurityHeaders";
+import { TestRunnerPanel } from "./components/TestRunnerPanel";
+import { CoverageReport } from "./components/CoverageReport";
+import { BenchmarkDashboard } from "./components/BenchmarkDashboard";
+import { DockerPanel } from "./components/DockerPanel";
 import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
 import { getAppThemeById } from "./themes/builtin";
 import { applyTheme, loadSavedThemeId } from "./themes/engine";
@@ -23,6 +37,7 @@ import {
   loadSavedDensity,
   type DensityMode,
 } from "./themes/density";
+import { loadCustomCSS } from "./themes/customCSS";
 import { useUiStore } from "./stores/uiStore";
 import {
   useCommandRegistry,
@@ -69,12 +84,27 @@ function AppContent() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [themeEditorOpen, setThemeEditorOpen] = useState(false);
   const [densityPickerOpen, setDensityPickerOpen] = useState(false);
+  const [cssEditorOpen, setCssEditorOpen] = useState(false);
+  const [stashManagerOpen, setStashManagerOpen] = useState(false);
+  const [blameViewOpen, setBlameViewOpen] = useState(false);
+  const [branchCompareOpen, setBranchCompareOpen] = useState(false);
+  const [gitHooksOpen, setGitHooksOpen] = useState(false);
+  const [conflictResolverOpen, setConflictResolverOpen] = useState(false);
+  const [securityAuditOpen, setSecurityAuditOpen] = useState(false);
+  const [secretScannerOpen, setSecretScannerOpen] = useState(false);
+  const [licenseReportOpen, setLicenseReportOpen] = useState(false);
+  const [securityHeadersOpen, setSecurityHeadersOpen] = useState(false);
+  const [testRunnerPanelOpen, setTestRunnerPanelOpen] = useState(false);
+  const [coverageReportOpen, setCoverageReportOpen] = useState(false);
+  const [benchmarkOpen, setBenchmarkOpen] = useState(false);
+  const [dockerOpen, setDockerOpen] = useState(false);
+  const [blameFilePath, setBlameFilePath] = useState("");
   const [densityMode, setDensityMode] = useState<DensityMode>("comfortable");
   const [appThemeId, setAppThemeId] = useState("midnight");
   const [terminalThemeId, setTerminalThemeId] = useState(DEFAULT_THEME_ID);
   const { register, execute, search } = useCommandRegistry();
 
-  // Load saved app theme, terminal theme, and density mode
+  // Load saved app theme, terminal theme, density mode, and custom CSS
   useEffect(() => {
     loadSavedThemeId().then((id) => {
       setAppThemeId(id);
@@ -90,6 +120,7 @@ function AppContent() {
       setDensityMode(m);
       applyDensity(m);
     });
+    loadCustomCSS();
   }, []);
 
   // Fetch projects and worktrees for quick switcher commands
@@ -215,6 +246,13 @@ function AppContent() {
         action: () => setThemeEditorOpen(true),
       },
       {
+        id: "theme:custom-css",
+        label: "Custom CSS Editor",
+        category: "Appearance",
+        icon: "\u270E",
+        action: () => setCssEditorOpen(true),
+      },
+      {
         id: "density:picker",
         label: "Layout Density",
         category: "Appearance",
@@ -254,6 +292,116 @@ function AppContent() {
         icon: "\uD83D\uDC19",
         action: () => setShowRightSidebar(!showRightSidebar),
       },
+      // Git tools
+      {
+        id: "git:stash",
+        label: "Stash Manager",
+        category: "Git",
+        icon: "\u2193",
+        enabled: () => selectedWorktreeId !== null,
+        action: () => setStashManagerOpen(true),
+      },
+      {
+        id: "git:blame",
+        label: "Blame View",
+        category: "Git",
+        icon: "\u2261",
+        enabled: () => selectedWorktreeId !== null,
+        action: () => {
+          setBlameFilePath("");
+          setBlameViewOpen(true);
+        },
+      },
+      {
+        id: "git:compare",
+        label: "Branch Compare",
+        category: "Git",
+        icon: "\u21C4",
+        enabled: () => selectedWorktreeId !== null,
+        action: () => setBranchCompareOpen(true),
+      },
+      {
+        id: "git:hooks",
+        label: "Git Hooks",
+        category: "Git",
+        icon: "\u2693",
+        enabled: () => selectedWorktreeId !== null,
+        action: () => setGitHooksOpen(true),
+      },
+      {
+        id: "git:conflicts",
+        label: "Conflict Resolver",
+        category: "Git",
+        icon: "!",
+        enabled: () => selectedWorktreeId !== null,
+        action: () => setConflictResolverOpen(true),
+      },
+      // Security tools
+      {
+        id: "security:audit",
+        label: "Security Audit",
+        category: "Security",
+        icon: "\u26A0",
+        enabled: () => selectedWorktreePath !== null,
+        action: () => setSecurityAuditOpen(true),
+      },
+      {
+        id: "security:secrets",
+        label: "Secret Scanner",
+        category: "Security",
+        icon: "\uD83D\uDD12",
+        enabled: () => selectedWorktreePath !== null,
+        action: () => setSecretScannerOpen(true),
+      },
+      {
+        id: "security:licenses",
+        label: "License Report",
+        category: "Security",
+        icon: "\u00A9",
+        enabled: () => selectedWorktreePath !== null,
+        action: () => setLicenseReportOpen(true),
+      },
+      {
+        id: "security:headers",
+        label: "Security Headers",
+        category: "Security",
+        icon: "\u26D4",
+        action: () => setSecurityHeadersOpen(true),
+      },
+      // Testing tools
+      {
+        id: "testing:runner",
+        label: "Test Runner",
+        category: "Testing",
+        icon: "\u2714",
+        enabled: () => selectedWorktreePath !== null,
+        action: () => setTestRunnerPanelOpen(true),
+      },
+      {
+        id: "testing:coverage",
+        label: "Coverage Report",
+        category: "Testing",
+        icon: "\u25A3",
+        enabled: () => selectedWorktreePath !== null,
+        action: () => setCoverageReportOpen(true),
+      },
+      {
+        id: "testing:benchmark",
+        label: "Benchmark Dashboard",
+        category: "Testing",
+        icon: "\u23F1",
+        enabled: () => selectedWorktreePath !== null,
+        action: () => setBenchmarkOpen(true),
+      },
+      // Infrastructure
+      {
+        id: "infra:docker",
+        label: "Docker",
+        category: "Infrastructure",
+        icon: "\uD83D\uDC33",
+        enabled: () => selectedWorktreePath !== null,
+        action: () => setDockerOpen(true),
+      },
     ];
 
     // Add project switch commands
@@ -285,6 +433,7 @@ function AppContent() {
   }, [
     showSettings,
     selectedWorktreePath,
+    selectedWorktreeId,
     showRightSidebar,
     allProjects,
     allWorktrees,
@@ -421,6 +570,85 @@ function AppContent() {
       )}
       {shortcutsOpen && (
         <KeyboardShortcuts onClose={() => setShortcutsOpen(false)} />
+      )}
+      {cssEditorOpen && (
+        <CustomCSSEditor onClose={() => setCssEditorOpen(false)} />
+      )}
+      {stashManagerOpen && selectedWorktreeId !== null && (
+        <StashManager
+          worktreeId={selectedWorktreeId}
+          onClose={() => setStashManagerOpen(false)}
+        />
+      )}
+      {blameViewOpen && selectedWorktreeId !== null && (
+        <BlameView
+          worktreeId={selectedWorktreeId}
+          filePath={blameFilePath}
+          onClose={() => setBlameViewOpen(false)}
+        />
+      )}
+      {branchCompareOpen && selectedWorktreeId !== null && (
+        <BranchCompare
+          worktreeId={selectedWorktreeId}
+          onClose={() => setBranchCompareOpen(false)}
+        />
+      )}
+      {gitHooksOpen && selectedWorktreeId !== null && (
+        <GitHooksManager
+          worktreeId={selectedWorktreeId}
+          onClose={() => setGitHooksOpen(false)}
+        />
+      )}
+      {conflictResolverOpen && selectedWorktreeId !== null && (
+        <ConflictResolver
+          worktreeId={selectedWorktreeId}
+          onClose={() => setConflictResolverOpen(false)}
+        />
+      )}
+      {securityAuditOpen && selectedWorktreePath && (
+        <SecurityAudit
+          cwd={selectedWorktreePath}
+          onClose={() => setSecurityAuditOpen(false)}
+        />
+      )}
+      {secretScannerOpen && selectedWorktreePath && (
+        <SecretScanner
+          cwd={selectedWorktreePath}
+          onClose={() => setSecretScannerOpen(false)}
+        />
+      )}
+      {licenseReportOpen && selectedWorktreePath && (
+        <LicenseReport
+          cwd={selectedWorktreePath}
+          onClose={() => setLicenseReportOpen(false)}
+        />
+      )}
+      {securityHeadersOpen && (
+        <SecurityHeaders onClose={() => setSecurityHeadersOpen(false)} />
+      )}
+      {testRunnerPanelOpen && selectedWorktreePath && (
+        <TestRunnerPanel
+          cwd={selectedWorktreePath}
+          onClose={() => setTestRunnerPanelOpen(false)}
+        />
+      )}
+      {coverageReportOpen && selectedWorktreePath && (
+        <CoverageReport
+          cwd={selectedWorktreePath}
+          onClose={() => setCoverageReportOpen(false)}
+        />
+      )}
+      {benchmarkOpen && selectedWorktreePath && (
+        <BenchmarkDashboard
+          cwd={selectedWorktreePath}
+          onClose={() => setBenchmarkOpen(false)}
+        />
+      )}
+      {dockerOpen && selectedWorktreePath && (
+        <DockerPanel
+          cwd={selectedWorktreePath}
+          onClose={() => setDockerOpen(false)}
+        />
       )}
     </>
   );

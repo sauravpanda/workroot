@@ -1,0 +1,292 @@
+/* ==========================================================
+   Test Runner Panel
+   ========================================================== */
+
+.testrun-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.testrun-panel {
+  position: fixed;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 620px;
+  max-width: calc(100vw - 40px);
+  max-height: 78vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+.testrun-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.testrun-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.testrun-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.testrun-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Controls -- */
+
+.testrun-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.testrun-detect-btn {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.testrun-detect-btn:hover {
+  background: var(--accent-hover);
+}
+
+.testrun-detect-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.testrun-select {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 0.82em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  outline: none;
+}
+
+.testrun-select:focus {
+  border-color: var(--accent);
+}
+
+.testrun-run-btn {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.testrun-run-btn:hover {
+  background: var(--accent-hover);
+}
+
+.testrun-run-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* -- Body -- */
+
+.testrun-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* -- Summary -- */
+
+.testrun-summary {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.testrun-badge {
+  font-size: 0.72em;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 10px;
+}
+
+.testrun-badge-pass {
+  color: var(--success);
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.testrun-badge-fail {
+  color: var(--danger);
+  background: var(--danger-muted);
+}
+
+.testrun-badge-skip {
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.12);
+}
+
+/* -- Results -- */
+
+.testrun-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 10px 10px;
+  overscroll-behavior: contain;
+}
+
+.testrun-results::-webkit-scrollbar {
+  width: 5px;
+}
+
+.testrun-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.testrun-results::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.testrun-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* -- Nodes -- */
+
+.testrun-node {
+  display: flex;
+  flex-direction: column;
+}
+
+.testrun-node-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  font-family: var(--font-sans);
+  font-size: 0.82em;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  color: var(--text-primary);
+  transition: background-color 0.1s;
+}
+
+.testrun-clickable {
+  cursor: pointer;
+}
+
+.testrun-clickable:hover {
+  background: var(--bg-hover);
+}
+
+.testrun-node-status {
+  font-size: 0.82em;
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.testrun-status-pass {
+  color: var(--success);
+}
+
+.testrun-status-fail {
+  color: var(--danger);
+}
+
+.testrun-status-skip {
+  color: var(--warning);
+}
+
+.testrun-node-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.testrun-node-time {
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.testrun-node-toggle {
+  font-size: 0.62em;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.testrun-error {
+  margin: 2px 0 4px 24px;
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  line-height: 1.5;
+  color: var(--danger);
+  background: var(--danger-muted);
+  border-radius: var(--radius-sm);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}

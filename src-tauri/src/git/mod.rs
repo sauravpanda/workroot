@@ -1,6 +1,11 @@
+pub mod blame;
 pub mod branch;
 pub mod commit;
+pub mod compare;
+pub mod conflicts;
 pub mod diff;
+pub mod hooks;
+pub mod stash;
 pub mod worktree;
 
 use serde::Serialize;

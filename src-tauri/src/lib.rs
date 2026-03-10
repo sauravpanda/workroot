@@ -3,6 +3,7 @@ pub mod browser;
 pub mod claudemd;
 pub mod db;
 pub mod dbconnect;
+pub mod docker;
 pub mod filewatcher;
 pub mod git;
 pub mod github;
@@ -12,9 +13,11 @@ pub mod network;
 pub mod process;
 pub mod projects;
 pub mod proxy;
+pub mod security;
 pub mod settings;
 pub mod shell;
 pub mod tasks;
+pub mod testing;
 pub mod tray;
 pub mod vault;
 
@@ -167,6 +170,30 @@ pub fn run() {
             bookmarks::list_bookmarks,
             bookmarks::update_bookmark,
             bookmarks::delete_bookmark,
+            git::stash::list_stashes,
+            git::stash::create_stash,
+            git::stash::apply_stash,
+            git::stash::pop_stash,
+            git::stash::drop_stash,
+            git::blame::blame_file,
+            git::compare::compare_branches,
+            git::hooks::list_hooks,
+            git::hooks::get_hook_content,
+            git::hooks::set_hook_content,
+            git::hooks::toggle_hook,
+            git::conflicts::get_conflicted_files,
+            security::audit::audit_dependencies,
+            security::secrets::scan_for_secrets,
+            security::licenses::check_licenses,
+            security::headers::check_security_headers,
+            testing::detect::detect_test_frameworks,
+            testing::runner::run_tests,
+            testing::coverage::parse_coverage,
+            testing::benchmarks::record_benchmark,
+            testing::benchmarks::get_benchmark_history,
+            docker::detect::detect_docker,
+            docker::detect::list_containers,
+            docker::compose::list_compose_services,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
