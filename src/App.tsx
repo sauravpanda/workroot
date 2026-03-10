@@ -11,7 +11,10 @@ import { CommandPalette } from "./components/CommandPalette";
 import { CommandBookmarks } from "./components/CommandBookmarks";
 import { TerminalThemeSelector } from "./components/TerminalThemeSelector";
 import { TaskRunner } from "./components/TaskRunner";
+import { AppThemePicker } from "./components/AppThemePicker";
 import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
+import { getAppThemeById } from "./themes/builtin";
+import { applyTheme, loadSavedThemeId } from "./themes/engine";
 import { useUiStore } from "./stores/uiStore";
 import {
   useCommandRegistry,
@@ -52,11 +55,17 @@ function AppContent() {
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const [themeSelectorOpen, setThemeSelectorOpen] = useState(false);
   const [taskRunnerOpen, setTaskRunnerOpen] = useState(false);
+  const [appThemePickerOpen, setAppThemePickerOpen] = useState(false);
+  const [appThemeId, setAppThemeId] = useState("midnight");
   const [terminalThemeId, setTerminalThemeId] = useState(DEFAULT_THEME_ID);
   const { register, execute, search } = useCommandRegistry();
 
-  // Load saved terminal theme
+  // Load saved app theme and terminal theme
   useEffect(() => {
+    loadSavedThemeId().then((id) => {
+      setAppThemeId(id);
+      applyTheme(getAppThemeById(id));
+    });
     invoke<string | null>("get_setting", { key: "terminal_theme" }).then(
       (val) => {
         if (val?.trim()) setTerminalThemeId(val.trim());
@@ -172,6 +181,13 @@ function AppContent() {
         shortcut: "\u2318B",
         icon: "\u2606",
         action: () => setBookmarksOpen(true),
+      },
+      {
+        id: "theme:app",
+        label: "App Theme",
+        category: "Appearance",
+        icon: "\u25D1",
+        action: () => setAppThemePickerOpen(true),
       },
       {
         id: "theme:terminal",
@@ -314,6 +330,13 @@ function AppContent() {
         <TaskRunner
           cwd={selectedWorktreePath}
           onClose={() => setTaskRunnerOpen(false)}
+        />
+      )}
+      {appThemePickerOpen && (
+        <AppThemePicker
+          currentThemeId={appThemeId}
+          onThemeChange={setAppThemeId}
+          onClose={() => setAppThemePickerOpen(false)}
         />
       )}
     </>
