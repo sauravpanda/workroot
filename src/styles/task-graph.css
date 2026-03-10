@@ -1,0 +1,152 @@
+/* ==========================================================
+   Task Dependency Graph
+   ========================================================== */
+
+.task-graph-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.task-graph-panel {
+  position: fixed;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 700px;
+  max-width: calc(100vw - 40px);
+  max-height: 80vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* ── Header ── */
+
+.task-graph-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.task-graph-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.task-graph-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.task-graph-close:hover {
+  color: var(--text-primary);
+}
+
+/* ── SVG canvas ── */
+
+.task-graph-canvas {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+  overscroll-behavior: contain;
+}
+
+.task-graph-canvas::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.task-graph-canvas::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.task-graph-canvas::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.task-graph-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* ── Nodes ── */
+
+.task-graph-node {
+  cursor: pointer;
+  transition: filter 0.1s;
+}
+
+.task-graph-node:hover .task-graph-node-rect {
+  stroke: var(--accent);
+  filter: brightness(1.1);
+}
+
+.task-graph-node-rect {
+  fill: var(--bg-elevated);
+  stroke: var(--border);
+  stroke-width: 1.5;
+  rx: 6;
+  ry: 6;
+  transition:
+    stroke 0.15s,
+    filter 0.15s;
+}
+
+.task-graph-node-rect--has-deps {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.task-graph-node-label {
+  fill: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+/* ── Edges ── */
+
+.task-graph-edge {
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  fill: none;
+  marker-end: url(#arrowhead);
+}
+
+.task-graph-arrowhead {
+  fill: var(--border-strong);
+}

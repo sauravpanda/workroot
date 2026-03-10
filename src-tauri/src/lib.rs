@@ -159,6 +159,7 @@ pub fn run() {
             settings::get_all_settings,
             settings::delete_setting,
             tasks::discover::discover_tasks,
+            tasks::deps::get_task_deps,
             bookmarks::create_bookmark,
             bookmarks::list_bookmarks,
             bookmarks::update_bookmark,
