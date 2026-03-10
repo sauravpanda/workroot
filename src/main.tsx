@@ -30,6 +30,14 @@ import "./styles/test-runner-panel.css";
 import "./styles/coverage-report.css";
 import "./styles/benchmark-dashboard.css";
 import "./styles/docker-panel.css";
+import "./styles/docker-images.css";
+import "./styles/container-monitor.css";
+import "./styles/flaky-tests.css";
+import "./styles/notification-center.css";
+import "./styles/activity-timeline.css";
+import "./styles/plugin-manager.css";
+import "./styles/backup-restore.css";
+import "./styles/analytics-dashboard.css";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

@@ -1,6 +1,8 @@
+pub mod backup;
 pub mod bookmarks;
 pub mod browser;
 pub mod claudemd;
+pub mod collaboration;
 pub mod db;
 pub mod dbconnect;
 pub mod docker;
@@ -10,6 +12,7 @@ pub mod github;
 pub mod mcp;
 pub mod memory;
 pub mod network;
+pub mod plugins;
 pub mod process;
 pub mod projects;
 pub mod proxy;
@@ -194,6 +197,24 @@ pub fn run() {
             docker::detect::detect_docker,
             docker::detect::list_containers,
             docker::compose::list_compose_services,
+            docker::images::list_docker_images,
+            docker::images::remove_docker_image,
+            docker::images::prune_docker_images,
+            docker::monitor::get_container_stats,
+            docker::monitor::get_container_logs,
+            docker::monitor::container_action,
+            testing::flaky::record_test_result,
+            testing::flaky::get_flaky_tests,
+            tasks::watch::get_watched_tasks,
+            collaboration::notifications::get_notifications,
+            collaboration::notifications::mark_notification_read,
+            collaboration::timeline::record_activity,
+            collaboration::timeline::get_activity_timeline,
+            plugins::registry::list_plugins,
+            plugins::registry::toggle_plugin,
+            backup::export_backup,
+            backup::import_backup,
+            backup::list_backups,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

@@ -1,0 +1,214 @@
+/* ==========================================================
+   Backup & Restore
+   ========================================================== */
+
+.backup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.backup-panel {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 540px;
+  max-width: calc(100vw - 40px);
+  max-height: 72vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+.backup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.backup-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.backup-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.backup-create-btn {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.backup-create-btn:hover {
+  background: var(--accent-hover);
+}
+
+.backup-create-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.backup-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.backup-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Body -- */
+
+.backup-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 10px 10px;
+  overscroll-behavior: contain;
+}
+
+.backup-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.backup-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.backup-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.backup-error {
+  padding: 8px 12px;
+  margin: 6px;
+  background: var(--danger-muted);
+  color: var(--danger);
+  font-size: 0.78em;
+  border-radius: var(--radius-sm);
+}
+
+.backup-success {
+  padding: 8px 12px;
+  margin: 6px;
+  background: rgba(34, 197, 94, 0.08);
+  color: var(--success);
+  font-size: 0.78em;
+  border-radius: var(--radius-sm);
+}
+
+.backup-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* -- List -- */
+
+.backup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+}
+
+.backup-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.1s;
+}
+
+.backup-item:hover {
+  background: var(--bg-hover);
+}
+
+.backup-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.backup-item-name {
+  font-size: 0.82em;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.backup-item-meta {
+  font-size: 0.72em;
+  color: var(--text-muted);
+}
+
+.backup-restore-btn {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    color 0.1s,
+    background-color 0.1s;
+}
+
+.backup-restore-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.backup-restore-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

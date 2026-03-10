@@ -29,6 +29,14 @@ import { TestRunnerPanel } from "./components/TestRunnerPanel";
 import { CoverageReport } from "./components/CoverageReport";
 import { BenchmarkDashboard } from "./components/BenchmarkDashboard";
 import { DockerPanel } from "./components/DockerPanel";
+import { DockerImages } from "./components/DockerImages";
+import { ContainerMonitor } from "./components/ContainerMonitor";
+import { FlakyTests } from "./components/FlakyTests";
+import { NotificationCenter } from "./components/NotificationCenter";
+import { ActivityTimeline } from "./components/ActivityTimeline";
+import { PluginManager } from "./components/PluginManager";
+import { BackupRestore } from "./components/BackupRestore";
+import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
 import { getAppThemeById } from "./themes/builtin";
 import { applyTheme, loadSavedThemeId } from "./themes/engine";
@@ -98,6 +106,14 @@ function AppContent() {
   const [coverageReportOpen, setCoverageReportOpen] = useState(false);
   const [benchmarkOpen, setBenchmarkOpen] = useState(false);
   const [dockerOpen, setDockerOpen] = useState(false);
+  const [dockerImagesOpen, setDockerImagesOpen] = useState(false);
+  const [containerMonitorOpen, setContainerMonitorOpen] = useState(false);
+  const [flakyTestsOpen, setFlakyTestsOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [activityTimelineOpen, setActivityTimelineOpen] = useState(false);
+  const [pluginManagerOpen, setPluginManagerOpen] = useState(false);
+  const [backupRestoreOpen, setBackupRestoreOpen] = useState(false);
+  const [analyticsDashboardOpen, setAnalyticsDashboardOpen] = useState(false);
   const [blameFilePath, setBlameFilePath] = useState("");
   const [densityMode, setDensityMode] = useState<DensityMode>("comfortable");
   const [appThemeId, setAppThemeId] = useState("midnight");
@@ -402,6 +418,65 @@ function AppContent() {
         enabled: () => selectedWorktreePath !== null,
         action: () => setDockerOpen(true),
       },
+      {
+        id: "infra:docker-images",
+        label: "Docker Images",
+        category: "Infrastructure",
+        icon: "\uD83D\uDCE6",
+        action: () => setDockerImagesOpen(true),
+      },
+      {
+        id: "infra:container-monitor",
+        label: "Container Monitor",
+        category: "Infrastructure",
+        icon: "\uD83D\uDCCA",
+        action: () => setContainerMonitorOpen(true),
+      },
+      {
+        id: "testing:flaky",
+        label: "Flaky Tests",
+        category: "Testing",
+        icon: "\u26A0",
+        enabled: () => selectedWorktreePath !== null,
+        action: () => setFlakyTestsOpen(true),
+      },
+      {
+        id: "collab:notifications",
+        label: "Notifications",
+        category: "Collaboration",
+        shortcut: "\u2318N",
+        icon: "\uD83D\uDD14",
+        action: () => setNotificationsOpen(true),
+      },
+      {
+        id: "collab:activity-timeline",
+        label: "Activity Timeline",
+        category: "Collaboration",
+        icon: "\uD83D\uDCC5",
+        action: () => setActivityTimelineOpen(true),
+      },
+      {
+        id: "tools:plugins",
+        label: "Plugins",
+        category: "Tools",
+        icon: "\uD83E\uDDE9",
+        action: () => setPluginManagerOpen(true),
+      },
+      {
+        id: "tools:backup",
+        label: "Backup & Restore",
+        category: "Tools",
+        icon: "\uD83D\uDCBE",
+        action: () => setBackupRestoreOpen(true),
+      },
+      {
+        id: "tools:analytics",
+        label: "Analytics",
+        category: "Tools",
+        icon: "\uD83D\uDCC8",
+        enabled: () => selectedWorktreePath !== null,
+        action: () => setAnalyticsDashboardOpen(true),
+      },
     ];
 
     // Add project switch commands
@@ -479,6 +554,11 @@ function AppContent() {
         key: "g",
         meta: true,
         action: () => setShowRightSidebar(!showRightSidebar),
+      },
+      {
+        key: "n",
+        meta: true,
+        action: () => setNotificationsOpen((p) => !p),
       },
     ],
     [
@@ -648,6 +728,37 @@ function AppContent() {
         <DockerPanel
           cwd={selectedWorktreePath}
           onClose={() => setDockerOpen(false)}
+        />
+      )}
+      {dockerImagesOpen && (
+        <DockerImages onClose={() => setDockerImagesOpen(false)} />
+      )}
+      {containerMonitorOpen && (
+        <ContainerMonitor onClose={() => setContainerMonitorOpen(false)} />
+      )}
+      {flakyTestsOpen && selectedWorktreePath && (
+        <FlakyTests
+          cwd={selectedWorktreePath}
+          onClose={() => setFlakyTestsOpen(false)}
+        />
+      )}
+      <NotificationCenter
+        open={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+      />
+      {activityTimelineOpen && (
+        <ActivityTimeline onClose={() => setActivityTimelineOpen(false)} />
+      )}
+      {pluginManagerOpen && (
+        <PluginManager onClose={() => setPluginManagerOpen(false)} />
+      )}
+      {backupRestoreOpen && (
+        <BackupRestore onClose={() => setBackupRestoreOpen(false)} />
+      )}
+      {analyticsDashboardOpen && selectedWorktreePath && (
+        <AnalyticsDashboard
+          cwd={selectedWorktreePath}
+          onClose={() => setAnalyticsDashboardOpen(false)}
         />
       )}
     </>

@@ -183,6 +183,35 @@ CREATE TABLE IF NOT EXISTS benchmarks (
 CREATE INDEX IF NOT EXISTS idx_benchmarks_lookup ON benchmarks(cwd, metric_name);
 
 -- ============================================================
+-- Test Results / Flaky Detection (PR-xxx)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS test_results (
+    id          INTEGER PRIMARY KEY,
+    cwd         TEXT NOT NULL,
+    test_name   TEXT NOT NULL,
+    status      TEXT NOT NULL,
+    duration_ms INTEGER,
+    run_id      TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_test_results_lookup ON test_results(cwd, test_name);
+
+-- ============================================================
+-- Activity Timeline (PR-xxx)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS activity_events (
+    id          INTEGER PRIMARY KEY,
+    event_type  TEXT NOT NULL,
+    title       TEXT NOT NULL,
+    detail      TEXT,
+    project_id  INTEGER,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_activity_events_created ON activity_events(created_at);
+
+-- ============================================================
 -- Ring Buffer Trigger: keep at most 50,000 log rows per process
 -- ============================================================
 
