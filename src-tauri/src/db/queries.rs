@@ -790,6 +790,97 @@ pub fn update_env_var(
     Ok(())
 }
 
+// ============================================================
+// Command Bookmarks
+// ============================================================
+
+#[derive(Debug, Serialize)]
+pub struct BookmarkRow {
+    pub id: i64,
+    pub project_id: Option<i64>,
+    pub label: String,
+    pub command: String,
+    pub tags: String,
+    pub created_at: String,
+}
+
+pub fn insert_bookmark(
+    conn: &Connection,
+    project_id: Option<i64>,
+    label: &str,
+    command: &str,
+    tags: &str,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO command_bookmarks (project_id, label, command, tags) VALUES (?1, ?2, ?3, ?4)",
+        params![project_id, label, command, tags],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn list_bookmarks(
+    conn: &Connection,
+    project_id: Option<i64>,
+) -> Result<Vec<BookmarkRow>, rusqlite::Error> {
+    // Return global bookmarks (project_id IS NULL) plus project-scoped ones
+    if let Some(pid) = project_id {
+        let mut stmt = conn.prepare(
+            "SELECT id, project_id, label, command, tags, created_at
+             FROM command_bookmarks
+             WHERE project_id IS NULL OR project_id = ?1
+             ORDER BY created_at DESC",
+        )?;
+        let rows = stmt.query_map(params![pid], |row| {
+            Ok(BookmarkRow {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                label: row.get(2)?,
+                command: row.get(3)?,
+                tags: row.get(4)?,
+                created_at: row.get(5)?,
+            })
+        })?;
+        rows.collect()
+    } else {
+        let mut stmt = conn.prepare(
+            "SELECT id, project_id, label, command, tags, created_at
+             FROM command_bookmarks
+             WHERE project_id IS NULL
+             ORDER BY created_at DESC",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(BookmarkRow {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                label: row.get(2)?,
+                command: row.get(3)?,
+                tags: row.get(4)?,
+                created_at: row.get(5)?,
+            })
+        })?;
+        rows.collect()
+    }
+}
+
+pub fn update_bookmark(
+    conn: &Connection,
+    id: i64,
+    label: &str,
+    command: &str,
+    tags: &str,
+) -> Result<(), rusqlite::Error> {
+    conn.execute(
+        "UPDATE command_bookmarks SET label = ?1, command = ?2, tags = ?3 WHERE id = ?4",
+        params![label, command, tags, id],
+    )?;
+    Ok(())
+}
+
+pub fn delete_bookmark(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute("DELETE FROM command_bookmarks WHERE id = ?1", params![id])?;
+    Ok(affected > 0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::init_test_db;
@@ -929,6 +1020,42 @@ mod tests {
         // Invalid category should fail
         let result = insert_memory_note(&conn, wid, "bad", "invalid_category");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn bookmark_crud() {
+        let conn = init_test_db();
+        let pid = insert_project(&conn, "test", "/tmp/test", None, None).unwrap();
+
+        // Insert global bookmark
+        let b1 = insert_bookmark(&conn, None, "List files", "ls -la", "fs,util").unwrap();
+        assert!(b1 > 0);
+
+        // Insert project-scoped bookmark
+        let b2 = insert_bookmark(&conn, Some(pid), "Run tests", "npm test", "test,npm").unwrap();
+        assert!(b2 > 0);
+
+        // List with project context: should see both global + project-scoped
+        let all = list_bookmarks(&conn, Some(pid)).unwrap();
+        assert_eq!(all.len(), 2);
+
+        // List without project: only global
+        let global = list_bookmarks(&conn, None).unwrap();
+        assert_eq!(global.len(), 1);
+        assert_eq!(global[0].label, "List files");
+
+        // Update
+        update_bookmark(&conn, b1, "List all files", "ls -lah", "fs,util").unwrap();
+        let updated = list_bookmarks(&conn, None).unwrap();
+        assert_eq!(updated[0].label, "List all files");
+        assert_eq!(updated[0].command, "ls -lah");
+
+        // Delete
+        let deleted = delete_bookmark(&conn, b1).unwrap();
+        assert!(deleted);
+        let remaining = list_bookmarks(&conn, Some(pid)).unwrap();
+        assert_eq!(remaining.len(), 1);
+        assert_eq!(remaining[0].label, "Run tests");
     }
 
     #[test]

@@ -8,6 +8,7 @@ import { ActiveProjectBadge } from "./components/ActiveProjectBadge";
 import { SettingsTab } from "./components/SettingsTab";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { CommandPalette } from "./components/CommandPalette";
+import { CommandBookmarks } from "./components/CommandBookmarks";
 import { useUiStore } from "./stores/uiStore";
 import {
   useCommandRegistry,
@@ -45,6 +46,7 @@ function AppContent() {
   } = useUiStore();
 
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const { register, execute, search } = useCommandRegistry();
 
   // Fetch projects and worktrees for quick switcher commands
@@ -147,6 +149,14 @@ function AppContent() {
           setSelectedWorktreeName(null);
         },
       },
+      {
+        id: "bookmarks:open",
+        label: "Command Bookmarks",
+        category: "Tools",
+        shortcut: "\u2318B",
+        icon: "\u2606",
+        action: () => setBookmarksOpen(true),
+      },
     ];
 
     // Add project switch commands
@@ -195,6 +205,7 @@ function AppContent() {
   const shortcuts = useMemo(
     () => [
       { key: "k", meta: true, action: () => setPaletteOpen((p) => !p) },
+      { key: "b", meta: true, action: () => setBookmarksOpen((p) => !p) },
       {
         key: ",",
         meta: true,
@@ -216,6 +227,7 @@ function AppContent() {
   useGlobalShortcuts(shortcuts);
 
   const handleClosePalette = useCallback(() => setPaletteOpen(false), []);
+  const handleCloseBookmarks = useCallback(() => setBookmarksOpen(false), []);
 
   return (
     <>
@@ -246,6 +258,12 @@ function AppContent() {
         onExecute={execute}
         search={search}
       />
+      {bookmarksOpen && (
+        <CommandBookmarks
+          projectId={selectedProjectId}
+          onClose={handleCloseBookmarks}
+        />
+      )}
     </>
   );
 }
