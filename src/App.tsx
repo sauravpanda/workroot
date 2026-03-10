@@ -1,3 +1,5 @@
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { MainLayout } from "./layouts/MainLayout";
 import { AuthButton } from "./components/AuthButton";
 import { RepoList } from "./components/RepoList";
@@ -5,42 +7,246 @@ import { EnvPanel } from "./components/EnvPanel";
 import { ActiveProjectBadge } from "./components/ActiveProjectBadge";
 import { SettingsTab } from "./components/SettingsTab";
 import { TerminalPanel } from "./components/TerminalPanel";
+import { CommandPalette } from "./components/CommandPalette";
 import { useUiStore } from "./stores/uiStore";
+import {
+  useCommandRegistry,
+  useGlobalShortcuts,
+} from "./hooks/useCommandRegistry";
+import type { Command } from "./hooks/useCommandRegistry";
+
+interface ProjectInfo {
+  id: number;
+  name: string;
+  local_path: string;
+  framework: string | null;
+}
+
+interface WorktreeInfo {
+  id: number;
+  project_id: number;
+  branch_name: string;
+  path: string;
+  status: string;
+}
 
 function AppContent() {
   const {
     selectedProjectId,
+    selectedWorktreeId,
     selectedWorktreePath,
     selectedWorktreeName,
     showSettings,
+    setShowSettings,
+    setSelectedProjectId,
+    setSelectedWorktreeId,
+    setSelectedWorktreePath,
+    setSelectedWorktreeName,
   } = useUiStore();
 
-  if (showSettings) {
-    return <SettingsTab />;
-  }
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const { register, execute, search } = useCommandRegistry();
 
-  if (selectedWorktreePath) {
-    return (
-      <TerminalPanel
-        cwd={selectedWorktreePath}
-        worktreeName={selectedWorktreeName ?? "Shell"}
-      />
-    );
-  }
+  // Fetch projects and worktrees for quick switcher commands
+  const [allProjects, setAllProjects] = useState<ProjectInfo[]>([]);
+  const [allWorktrees, setAllWorktrees] = useState<
+    Array<WorktreeInfo & { projectName: string }>
+  >([]);
+
+  useEffect(() => {
+    async function loadSwitcherData() {
+      try {
+        const projects = await invoke<ProjectInfo[]>("list_projects");
+        setAllProjects(projects);
+
+        // Fetch worktrees for each project
+        const wtResults = await Promise.all(
+          projects.map(async (p) => {
+            try {
+              const wts = await invoke<WorktreeInfo[]>(
+                "list_project_worktrees",
+                { projectId: p.id },
+              );
+              return wts.map((wt) => ({ ...wt, projectName: p.name }));
+            } catch {
+              return [];
+            }
+          }),
+        );
+        setAllWorktrees(wtResults.flat());
+      } catch {
+        // ignore — commands just won't have project/worktree entries
+      }
+    }
+    loadSwitcherData();
+  }, [selectedProjectId, selectedWorktreeId]);
+
+  // Stable refs for worktree selection actions
+  const selectWorktree = useCallback(
+    (wt: WorktreeInfo & { projectName: string }) => {
+      setSelectedProjectId(wt.project_id);
+      setSelectedWorktreeId(wt.id);
+      setSelectedWorktreePath(wt.path);
+      setSelectedWorktreeName(wt.branch_name);
+      setShowSettings(false);
+    },
+    [
+      setSelectedProjectId,
+      setSelectedWorktreeId,
+      setSelectedWorktreePath,
+      setSelectedWorktreeName,
+      setShowSettings,
+    ],
+  );
+
+  // Build commands from current app state
+  const commands: Command[] = useMemo(() => {
+    const cmds: Command[] = [
+      {
+        id: "nav:home",
+        label: "Go Home",
+        category: "Navigation",
+        icon: "\u2302",
+        action: () => {
+          setShowSettings(false);
+          setSelectedWorktreeId(null);
+          setSelectedWorktreePath(null);
+          setSelectedWorktreeName(null);
+        },
+      },
+      {
+        id: "nav:settings",
+        label: "Open Settings",
+        category: "Navigation",
+        shortcut: "\u2318,",
+        icon: "\u2699",
+        action: () => {
+          setShowSettings(true);
+          setSelectedWorktreeId(null);
+          setSelectedWorktreePath(null);
+          setSelectedWorktreeName(null);
+        },
+      },
+      {
+        id: "nav:close-settings",
+        label: "Close Settings",
+        category: "Navigation",
+        icon: "\u2717",
+        enabled: () => showSettings,
+        action: () => setShowSettings(false),
+      },
+      {
+        id: "nav:close-terminal",
+        label: "Close Terminal",
+        category: "Navigation",
+        icon: "\u2717",
+        enabled: () => selectedWorktreePath !== null,
+        action: () => {
+          setSelectedWorktreeId(null);
+          setSelectedWorktreePath(null);
+          setSelectedWorktreeName(null);
+        },
+      },
+    ];
+
+    // Add project switch commands
+    for (const project of allProjects) {
+      cmds.push({
+        id: `project:${project.id}`,
+        label: project.name,
+        category: "Switch Project",
+        icon: "\u2630",
+        action: () => {
+          setSelectedProjectId(project.id);
+          setShowSettings(false);
+        },
+      });
+    }
+
+    // Add worktree switch commands
+    for (const wt of allWorktrees) {
+      cmds.push({
+        id: `worktree:${wt.id}`,
+        label: `${wt.branch_name}`,
+        category: `Open Terminal \u2014 ${wt.projectName}`,
+        icon: "\u9741",
+        action: () => selectWorktree(wt),
+      });
+    }
+
+    return cmds;
+  }, [
+    showSettings,
+    selectedWorktreePath,
+    allProjects,
+    allWorktrees,
+    selectWorktree,
+    setShowSettings,
+    setSelectedProjectId,
+    setSelectedWorktreeId,
+    setSelectedWorktreePath,
+    setSelectedWorktreeName,
+  ]);
+
+  // Register commands whenever they change
+  useMemo(() => register(commands), [commands, register]);
+
+  // Global keyboard shortcuts
+  const shortcuts = useMemo(
+    () => [
+      { key: "k", meta: true, action: () => setPaletteOpen((p) => !p) },
+      {
+        key: ",",
+        meta: true,
+        action: () => {
+          setShowSettings(true);
+          setSelectedWorktreeId(null);
+          setSelectedWorktreePath(null);
+          setSelectedWorktreeName(null);
+        },
+      },
+    ],
+    [
+      setShowSettings,
+      setSelectedWorktreeId,
+      setSelectedWorktreePath,
+      setSelectedWorktreeName,
+    ],
+  );
+  useGlobalShortcuts(shortcuts);
+
+  const handleClosePalette = useCallback(() => setPaletteOpen(false), []);
 
   return (
-    <div className="content-scroll">
-      <div className="content-inner">
-        <h1>Workroot</h1>
-        <p>Local Intelligence Platform for AI-Native Development</p>
-        <ActiveProjectBadge />
-        <AuthButton />
-        <RepoList />
-        {selectedProjectId !== null && (
-          <EnvPanel projectId={selectedProjectId} />
-        )}
-      </div>
-    </div>
+    <>
+      {showSettings ? (
+        <SettingsTab />
+      ) : selectedWorktreePath ? (
+        <TerminalPanel
+          cwd={selectedWorktreePath}
+          worktreeName={selectedWorktreeName ?? "Shell"}
+        />
+      ) : (
+        <div className="content-scroll">
+          <div className="content-inner">
+            <h1>Workroot</h1>
+            <p>Local Intelligence Platform for AI-Native Development</p>
+            <ActiveProjectBadge />
+            <AuthButton />
+            <RepoList />
+            {selectedProjectId !== null && (
+              <EnvPanel projectId={selectedProjectId} />
+            )}
+          </div>
+        </div>
+      )}
+      <CommandPalette
+        open={paletteOpen}
+        onClose={handleClosePalette}
+        onExecute={execute}
+        search={search}
+      />
+    </>
   );
 }
 
