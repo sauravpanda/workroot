@@ -13,6 +13,7 @@ import { TerminalThemeSelector } from "./components/TerminalThemeSelector";
 import { TaskRunner } from "./components/TaskRunner";
 import { AppThemePicker } from "./components/AppThemePicker";
 import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
+import { ThemeEditor } from "./components/ThemeEditor";
 import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
 import { getAppThemeById } from "./themes/builtin";
 import { applyTheme, loadSavedThemeId } from "./themes/engine";
@@ -60,6 +61,7 @@ function AppContent() {
   const [taskRunnerOpen, setTaskRunnerOpen] = useState(false);
   const [appThemePickerOpen, setAppThemePickerOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [themeEditorOpen, setThemeEditorOpen] = useState(false);
   const [appThemeId, setAppThemeId] = useState("midnight");
   const [terminalThemeId, setTerminalThemeId] = useState(DEFAULT_THEME_ID);
   const { register, execute, search } = useCommandRegistry();
@@ -192,6 +194,13 @@ function AppContent() {
         category: "Appearance",
         icon: "\u25D1",
         action: () => setAppThemePickerOpen(true),
+      },
+      {
+        id: "theme:editor",
+        label: "Theme Editor",
+        category: "Appearance",
+        icon: "\uD83C\uDFA8",
+        action: () => setThemeEditorOpen(true),
       },
       {
         id: "theme:terminal",
@@ -372,6 +381,16 @@ function AppContent() {
           currentThemeId={appThemeId}
           onThemeChange={setAppThemeId}
           onClose={() => setAppThemePickerOpen(false)}
+        />
+      )}
+      {themeEditorOpen && (
+        <ThemeEditor
+          currentThemeId={appThemeId}
+          onClose={() => setThemeEditorOpen(false)}
+          onThemeSave={(theme) => {
+            applyTheme(theme);
+            setAppThemeId(theme.id);
+          }}
         />
       )}
       {shortcutsOpen && (
