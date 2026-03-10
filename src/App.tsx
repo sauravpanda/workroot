@@ -9,6 +9,8 @@ import { SettingsTab } from "./components/SettingsTab";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { CommandPalette } from "./components/CommandPalette";
 import { CommandBookmarks } from "./components/CommandBookmarks";
+import { TerminalThemeSelector } from "./components/TerminalThemeSelector";
+import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
 import { useUiStore } from "./stores/uiStore";
 import {
   useCommandRegistry,
@@ -47,7 +49,19 @@ function AppContent() {
 
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [bookmarksOpen, setBookmarksOpen] = useState(false);
+  const [themeSelectorOpen, setThemeSelectorOpen] = useState(false);
+  const [terminalThemeId, setTerminalThemeId] = useState(DEFAULT_THEME_ID);
   const { register, execute, search } = useCommandRegistry();
+
+  // Load saved terminal theme
+  useEffect(() => {
+    invoke<string | null>("get_setting", { key: "terminal_theme" }).then(
+      (val) => {
+        if (val?.trim()) setTerminalThemeId(val.trim());
+      },
+      () => {},
+    );
+  }, []);
 
   // Fetch projects and worktrees for quick switcher commands
   const [allProjects, setAllProjects] = useState<ProjectInfo[]>([]);
@@ -157,6 +171,14 @@ function AppContent() {
         icon: "\u2606",
         action: () => setBookmarksOpen(true),
       },
+      {
+        id: "theme:terminal",
+        label: "Terminal Theme",
+        category: "Appearance",
+        shortcut: "\u2318T",
+        icon: "\u25D0",
+        action: () => setThemeSelectorOpen(true),
+      },
     ];
 
     // Add project switch commands
@@ -207,6 +229,11 @@ function AppContent() {
       { key: "k", meta: true, action: () => setPaletteOpen((p) => !p) },
       { key: "b", meta: true, action: () => setBookmarksOpen((p) => !p) },
       {
+        key: "t",
+        meta: true,
+        action: () => setThemeSelectorOpen((p) => !p),
+      },
+      {
         key: ",",
         meta: true,
         action: () => {
@@ -237,6 +264,7 @@ function AppContent() {
         <TerminalPanel
           cwd={selectedWorktreePath}
           worktreeName={selectedWorktreeName ?? "Shell"}
+          themeId={terminalThemeId}
         />
       ) : (
         <div className="content-scroll">
@@ -262,6 +290,13 @@ function AppContent() {
         <CommandBookmarks
           projectId={selectedProjectId}
           onClose={handleCloseBookmarks}
+        />
+      )}
+      {themeSelectorOpen && (
+        <TerminalThemeSelector
+          currentThemeId={terminalThemeId}
+          onThemeChange={setTerminalThemeId}
+          onClose={() => setThemeSelectorOpen(false)}
         />
       )}
     </>
