@@ -158,3 +158,66 @@
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
+
+/* ==========================================================
+   Split Panes
+   ========================================================== */
+
+.split-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.split-horizontal {
+  flex-direction: row;
+}
+
+.split-vertical {
+  flex-direction: column;
+}
+
+.split-pane-child {
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+.split-leaf {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.split-leaf-focused {
+  box-shadow: inset 0 0 0 1px var(--accent-muted);
+}
+
+/* ── Dividers ── */
+
+.split-divider {
+  flex-shrink: 0;
+  background-color: var(--border-subtle);
+  transition: background-color 0.15s;
+  z-index: 2;
+}
+
+.split-divider:hover {
+  background-color: var(--accent);
+}
+
+.split-divider-h {
+  width: 3px;
+  cursor: col-resize;
+}
+
+.split-divider-v {
+  height: 3px;
+  cursor: row-resize;
+}
