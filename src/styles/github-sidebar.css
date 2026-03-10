@@ -1,0 +1,407 @@
+/* ==========================================================
+   GitHub Sidebar — Industrial-Utilitarian
+   ========================================================== */
+
+/* ---- Container ---- */
+
+.gh-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 280px;
+  background-color: var(--bg-surface);
+  border-left: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  overflow: hidden;
+  animation: ghSidebarFadeIn 0.15s ease-out;
+}
+
+.gh-sidebar--collapsed {
+  width: 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8px;
+  background-color: var(--bg-surface);
+  border-left: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+@keyframes ghSidebarFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---- Header ---- */
+
+.gh-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.gh-sidebar__title {
+  font-weight: 600;
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.gh-sidebar__header-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.gh-sidebar__icon-btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85em;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  line-height: 1;
+  transition:
+    background-color 0.12s,
+    color 0.12s;
+}
+
+.gh-sidebar__icon-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.gh-sidebar__icon-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.gh-sidebar__icon-btn--spin {
+  animation: ghRefreshSpin 0.8s linear infinite;
+}
+
+@keyframes ghRefreshSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.gh-sidebar__expand-btn {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7em;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition:
+    background-color 0.12s,
+    color 0.12s;
+}
+
+.gh-sidebar__expand-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+/* ---- Tab Bar ---- */
+
+.gh-sidebar__tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  padding: 0 4px;
+}
+
+.gh-sidebar__tab {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 0.7em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 0;
+  transition:
+    color 0.12s,
+    border-color 0.12s;
+}
+
+.gh-sidebar__tab:hover {
+  color: var(--text-secondary);
+  background: none;
+}
+
+.gh-sidebar__tab--active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ---- Scrollable Content ---- */
+
+.gh-sidebar__content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.gh-sidebar__content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.gh-sidebar__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gh-sidebar__content::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 2px;
+}
+
+/* ---- State Messages ---- */
+
+.gh-sidebar__empty {
+  padding: 24px 14px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.78em;
+}
+
+.gh-sidebar__loading {
+  padding: 24px 14px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.75em;
+  animation: ghSidebarFadeIn 0.2s ease-out;
+}
+
+.gh-sidebar__error {
+  padding: 10px 12px;
+  font-size: 0.72em;
+  color: var(--danger);
+  word-break: break-word;
+}
+
+.gh-sidebar__auth-msg {
+  padding: 24px 14px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.78em;
+  line-height: 1.5;
+}
+
+/* ---- List ---- */
+
+.gh-sidebar__list {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 0;
+  animation: ghSidebarFadeIn 0.15s ease-out;
+}
+
+/* ---- PR / Issue Row ---- */
+
+.gh-sidebar__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 0;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.78em;
+  line-height: 1.35;
+  transition: background-color 0.1s;
+}
+
+.gh-sidebar__row:hover {
+  background-color: var(--bg-hover);
+}
+
+.gh-sidebar__row-left {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.gh-sidebar__row-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.gh-sidebar__row-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+/* ---- Status Dot ---- */
+
+.gh-sidebar__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.gh-sidebar__status-dot--green {
+  background-color: var(--success);
+  box-shadow: 0 0 3px rgba(34, 197, 94, 0.35);
+}
+
+.gh-sidebar__status-dot--yellow {
+  background-color: var(--warning);
+  box-shadow: 0 0 3px rgba(245, 158, 11, 0.35);
+}
+
+.gh-sidebar__status-dot--red {
+  background-color: var(--danger);
+  box-shadow: 0 0 3px rgba(239, 68, 68, 0.35);
+}
+
+.gh-sidebar__status-dot--gray {
+  background-color: var(--text-muted);
+}
+
+/* ---- PR / Issue Number ---- */
+
+.gh-sidebar__number {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* ---- Meta (author) ---- */
+
+.gh-sidebar__meta {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Relative Time ---- */
+
+.gh-sidebar__time {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ---- Badges ---- */
+
+.gh-sidebar__badge {
+  font-size: 0.75em;
+  font-weight: 500;
+  padding: 1px 5px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.gh-sidebar__badge--draft {
+  background-color: var(--bg-elevated);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* ---- Label Dots (Issues) ---- */
+
+.gh-sidebar__label-dots {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.gh-sidebar__label-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ---- Activity Event Row ---- */
+
+.gh-sidebar__event {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 5px 10px;
+  font-size: 0.78em;
+  line-height: 1.4;
+  transition: background-color 0.1s;
+}
+
+.gh-sidebar__event:hover {
+  background-color: var(--bg-hover);
+}
+
+.gh-sidebar__event-icon {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--text-muted);
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.gh-sidebar__event-body {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gh-sidebar__event-actor {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.gh-sidebar__event-desc {
+  color: var(--text-secondary);
+}

@@ -50,6 +50,8 @@ function AppContent() {
     setSelectedWorktreeId,
     setSelectedWorktreePath,
     setSelectedWorktreeName,
+    showRightSidebar,
+    setShowRightSidebar,
   } = useUiStore();
 
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -216,6 +218,14 @@ function AppContent() {
         enabled: () => selectedWorktreePath !== null,
         action: () => setTaskRunnerOpen(true),
       },
+      {
+        id: "github:toggle",
+        label: showRightSidebar ? "Hide GitHub Sidebar" : "Show GitHub Sidebar",
+        category: "Panels",
+        shortcut: "\u2318G",
+        icon: "\uD83D\uDC19",
+        action: () => setShowRightSidebar(!showRightSidebar),
+      },
     ];
 
     // Add project switch commands
@@ -247,6 +257,7 @@ function AppContent() {
   }, [
     showSettings,
     selectedWorktreePath,
+    showRightSidebar,
     allProjects,
     allWorktrees,
     selectWorktree,
@@ -255,6 +266,7 @@ function AppContent() {
     setSelectedWorktreeId,
     setSelectedWorktreePath,
     setSelectedWorktreeName,
+    setShowRightSidebar,
   ]);
 
   // Register commands whenever they change
@@ -286,12 +298,19 @@ function AppContent() {
           setSelectedWorktreeName(null);
         },
       },
+      {
+        key: "g",
+        meta: true,
+        action: () => setShowRightSidebar(!showRightSidebar),
+      },
     ],
     [
       setShowSettings,
       setSelectedWorktreeId,
       setSelectedWorktreePath,
       setSelectedWorktreeName,
+      showRightSidebar,
+      setShowRightSidebar,
     ],
   );
   useGlobalShortcuts(shortcuts);
