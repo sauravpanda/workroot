@@ -1,0 +1,214 @@
+/* ==========================================================
+   App Theme Picker
+   ========================================================== */
+
+.app-theme-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.app-theme-panel {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 640px;
+  max-width: calc(100vw - 40px);
+  max-height: 75vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* ── Header ── */
+
+.app-theme-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.app-theme-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.app-theme-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.app-theme-close:hover {
+  color: var(--text-primary);
+}
+
+/* ── Grid ── */
+
+.app-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.app-theme-grid::-webkit-scrollbar {
+  width: 5px;
+}
+
+.app-theme-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-theme-grid::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/* ── Theme card ── */
+
+.app-theme-card {
+  display: flex;
+  flex-direction: column;
+  background: none;
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius);
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+  transition:
+    border-color 0.15s,
+    transform 0.1s;
+}
+
+.app-theme-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.app-theme-card-active {
+  border-color: var(--accent);
+}
+
+.app-theme-card-active:hover {
+  border-color: var(--accent);
+}
+
+.app-theme-card-hovered {
+  border-color: var(--accent-hover);
+}
+
+/* ── Preview mini-mockup ── */
+
+.app-theme-preview {
+  display: flex;
+  height: 80px;
+  padding: 6px;
+  gap: 4px;
+}
+
+.app-theme-preview-sidebar {
+  width: 28%;
+  border-radius: 3px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.app-theme-preview-bar {
+  height: 3px;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+.app-theme-preview-content {
+  flex: 1;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.app-theme-preview-line {
+  height: 3px;
+  border-radius: 2px;
+  opacity: 0.5;
+}
+
+.app-theme-preview-colors {
+  display: flex;
+  gap: 3px;
+  margin-top: auto;
+}
+
+.app-theme-preview-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* ── Card footer ── */
+
+.app-theme-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background-color: var(--bg-elevated);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.app-theme-card-name {
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-theme-card-variant {
+  font-size: 0.62em;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.app-theme-card-check {
+  color: var(--accent);
+  font-size: 0.82em;
+  flex-shrink: 0;
+}
