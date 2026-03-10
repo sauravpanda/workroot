@@ -9,6 +9,7 @@ import "./styles/command-palette.css";
 import "./styles/command-bookmarks.css";
 import "./styles/terminal-themes.css";
 import "./styles/task-runner.css";
+import "./styles/task-graph.css";
 import "./styles/app-theme-picker.css";
 import "./styles/keyboard-shortcuts.css";
 import "./styles/github-sidebar.css";
