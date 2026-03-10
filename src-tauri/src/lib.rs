@@ -14,6 +14,7 @@ pub mod projects;
 pub mod proxy;
 pub mod settings;
 pub mod shell;
+pub mod tasks;
 pub mod tray;
 pub mod vault;
 
@@ -154,6 +155,7 @@ pub fn run() {
             settings::set_setting,
             settings::get_all_settings,
             settings::delete_setting,
+            tasks::discover::discover_tasks,
             bookmarks::create_bookmark,
             bookmarks::list_bookmarks,
             bookmarks::update_bookmark,
