@@ -88,6 +88,7 @@ pub fn run() {
             git::worktree::get_worktree_status,
             git::branch::list_branches,
             git::branch::create_branch,
+            git::compare::compare_branches,
             vault::vault_store_env_var,
             vault::vault_update_env_var,
             vault::vault_get_env_vars,
