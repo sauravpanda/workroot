@@ -14,9 +14,15 @@ import { TaskRunner } from "./components/TaskRunner";
 import { AppThemePicker } from "./components/AppThemePicker";
 import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
 import { ThemeEditor } from "./components/ThemeEditor";
+import { DensityPicker } from "./components/DensityPicker";
 import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
 import { getAppThemeById } from "./themes/builtin";
 import { applyTheme, loadSavedThemeId } from "./themes/engine";
+import {
+  applyDensity,
+  loadSavedDensity,
+  type DensityMode,
+} from "./themes/density";
 import { useUiStore } from "./stores/uiStore";
 import {
   useCommandRegistry,
@@ -62,11 +68,13 @@ function AppContent() {
   const [appThemePickerOpen, setAppThemePickerOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [themeEditorOpen, setThemeEditorOpen] = useState(false);
+  const [densityPickerOpen, setDensityPickerOpen] = useState(false);
+  const [densityMode, setDensityMode] = useState<DensityMode>("comfortable");
   const [appThemeId, setAppThemeId] = useState("midnight");
   const [terminalThemeId, setTerminalThemeId] = useState(DEFAULT_THEME_ID);
   const { register, execute, search } = useCommandRegistry();
 
-  // Load saved app theme and terminal theme
+  // Load saved app theme, terminal theme, and density mode
   useEffect(() => {
     loadSavedThemeId().then((id) => {
       setAppThemeId(id);
@@ -78,6 +86,10 @@ function AppContent() {
       },
       () => {},
     );
+    loadSavedDensity().then((m) => {
+      setDensityMode(m);
+      applyDensity(m);
+    });
   }, []);
 
   // Fetch projects and worktrees for quick switcher commands
@@ -201,6 +213,13 @@ function AppContent() {
         category: "Appearance",
         icon: "\uD83C\uDFA8",
         action: () => setThemeEditorOpen(true),
+      },
+      {
+        id: "density:picker",
+        label: "Layout Density",
+        category: "Appearance",
+        icon: "\u25A4",
+        action: () => setDensityPickerOpen(true),
       },
       {
         id: "theme:terminal",
@@ -391,6 +410,13 @@ function AppContent() {
             applyTheme(theme);
             setAppThemeId(theme.id);
           }}
+        />
+      )}
+      {densityPickerOpen && (
+        <DensityPicker
+          currentMode={densityMode}
+          onModeChange={setDensityMode}
+          onClose={() => setDensityPickerOpen(false)}
         />
       )}
       {shortcutsOpen && (
