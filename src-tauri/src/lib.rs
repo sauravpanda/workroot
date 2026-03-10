@@ -1,3 +1,4 @@
+pub mod bookmarks;
 pub mod browser;
 pub mod claudemd;
 pub mod db;
@@ -153,6 +154,10 @@ pub fn run() {
             settings::set_setting,
             settings::get_all_settings,
             settings::delete_setting,
+            bookmarks::create_bookmark,
+            bookmarks::list_bookmarks,
+            bookmarks::update_bookmark,
+            bookmarks::delete_bookmark,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

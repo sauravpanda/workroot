@@ -123,6 +123,15 @@ CREATE TABLE IF NOT EXISTS settings (
     value       TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS command_bookmarks (
+    id          INTEGER PRIMARY KEY,
+    project_id  INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+    label       TEXT NOT NULL,
+    command     TEXT NOT NULL,
+    tags        TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- ============================================================
 -- Indexes
 -- ============================================================
@@ -142,6 +151,7 @@ CREATE INDEX IF NOT EXISTS idx_network_traffic_process_id ON network_traffic(pro
 CREATE INDEX IF NOT EXISTS idx_network_traffic_timestamp ON network_traffic(timestamp);
 CREATE INDEX IF NOT EXISTS idx_browser_events_timestamp ON browser_events(timestamp);
 CREATE INDEX IF NOT EXISTS idx_browser_events_type ON browser_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_command_bookmarks_project_id ON command_bookmarks(project_id);
 
 -- ============================================================
 -- Ring Buffer Trigger: keep at most 50,000 log rows per process
