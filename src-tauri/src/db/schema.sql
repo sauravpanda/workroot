@@ -154,6 +154,21 @@ CREATE INDEX IF NOT EXISTS idx_browser_events_type ON browser_events(event_type)
 CREATE INDEX IF NOT EXISTS idx_command_bookmarks_project_id ON command_bookmarks(project_id);
 
 -- ============================================================
+-- Task Runs (PR-069)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS task_runs (
+    id          INTEGER PRIMARY KEY,
+    task_name   TEXT NOT NULL,
+    cwd         TEXT NOT NULL,
+    exit_code   INTEGER NOT NULL,
+    duration_ms INTEGER NOT NULL,
+    output_preview TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_task_runs_lookup ON task_runs(cwd, task_name);
+
+-- ============================================================
 -- Ring Buffer Trigger: keep at most 50,000 log rows per process
 -- ============================================================
 
