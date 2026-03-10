@@ -1,0 +1,233 @@
+/* ==========================================================
+   Stash Manager
+   ========================================================== */
+
+.stash-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.stash-panel {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 560px;
+  max-width: calc(100vw - 40px);
+  max-height: 70vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+.stash-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.stash-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.stash-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.stash-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Create form -- */
+
+.stash-create {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.stash-input {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 0.82em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.stash-input:focus {
+  border-color: var(--accent);
+}
+
+.stash-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.stash-checkbox-label input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+.stash-create-btn {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.stash-create-btn:hover {
+  background: var(--accent-hover);
+}
+
+.stash-create-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* -- List -- */
+
+.stash-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 10px 10px;
+  overscroll-behavior: contain;
+}
+
+.stash-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.stash-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.stash-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.stash-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+.stash-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  transition: background-color 0.1s;
+}
+
+.stash-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.stash-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stash-item-msg {
+  font-size: 0.82em;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stash-item-meta {
+  font-size: 0.7em;
+  color: var(--text-muted);
+}
+
+.stash-item-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.stash-action-btn {
+  font-family: var(--font-sans);
+  font-size: 0.68em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  cursor: pointer;
+  transition:
+    color 0.1s,
+    background-color 0.1s;
+}
+
+.stash-action-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.stash-action-danger {
+  color: var(--danger);
+  border-color: var(--danger-muted);
+}
+
+.stash-action-danger:hover {
+  background: var(--danger-muted);
+  color: var(--danger);
+}

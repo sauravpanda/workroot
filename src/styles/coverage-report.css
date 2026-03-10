@@ -1,0 +1,229 @@
+/* ==========================================================
+   Coverage Report
+   ========================================================== */
+
+.coverage-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.coverage-panel {
+  position: fixed;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 680px;
+  max-width: calc(100vw - 40px);
+  max-height: 78vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+.coverage-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.coverage-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.coverage-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coverage-run-btn {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.coverage-run-btn:hover {
+  background: var(--accent-hover);
+}
+
+.coverage-run-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.coverage-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.coverage-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Body -- */
+
+.coverage-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 10px 10px;
+  overscroll-behavior: contain;
+}
+
+.coverage-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.coverage-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.coverage-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.coverage-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* -- Total -- */
+
+.coverage-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px;
+  margin-bottom: 6px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius);
+}
+
+.coverage-total-label {
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.coverage-total-pct {
+  font-size: 1.2em;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+/* -- Table -- */
+
+.coverage-table-wrap {
+  overflow-x: auto;
+}
+
+.coverage-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.coverage-th {
+  font-size: 0.68em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.coverage-th-right {
+  text-align: right;
+}
+
+.coverage-row {
+  transition: background-color 0.1s;
+}
+
+.coverage-row:hover {
+  background: var(--bg-hover);
+}
+
+.coverage-td {
+  padding: 5px 8px;
+  font-size: 0.78em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.coverage-file {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+}
+
+.coverage-lines {
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  color: var(--text-muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.coverage-pct {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* -- Bar -- */
+
+.coverage-bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-base);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.coverage-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}

@@ -16,6 +16,20 @@ import "./styles/github-sidebar.css";
 import "./styles/task-history.css";
 import "./styles/theme-editor.css";
 import "./styles/density-picker.css";
+import "./styles/custom-css-editor.css";
+import "./styles/stash-manager.css";
+import "./styles/blame-view.css";
+import "./styles/branch-compare.css";
+import "./styles/git-hooks.css";
+import "./styles/conflict-resolver.css";
+import "./styles/security-audit.css";
+import "./styles/secret-scanner.css";
+import "./styles/license-report.css";
+import "./styles/security-headers.css";
+import "./styles/test-runner-panel.css";
+import "./styles/coverage-report.css";
+import "./styles/benchmark-dashboard.css";
+import "./styles/docker-panel.css";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

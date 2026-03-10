@@ -169,6 +169,20 @@ CREATE TABLE IF NOT EXISTS task_runs (
 CREATE INDEX IF NOT EXISTS idx_task_runs_lookup ON task_runs(cwd, task_name);
 
 -- ============================================================
+-- Benchmarks (PR-xxx)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS benchmarks (
+    id          INTEGER PRIMARY KEY,
+    cwd         TEXT NOT NULL,
+    metric_name TEXT NOT NULL,
+    value       REAL NOT NULL,
+    unit        TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_benchmarks_lookup ON benchmarks(cwd, metric_name);
+
+-- ============================================================
 -- Ring Buffer Trigger: keep at most 50,000 log rows per process
 -- ============================================================
 

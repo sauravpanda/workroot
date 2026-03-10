@@ -1,0 +1,203 @@
+/* ==========================================================
+   License Report
+   ========================================================== */
+
+.license-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.license-panel {
+  position: fixed;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 620px;
+  max-width: calc(100vw - 40px);
+  max-height: 78vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+.license-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.license-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.license-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.license-run-btn {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.license-run-btn:hover {
+  background: var(--accent-hover);
+}
+
+.license-run-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.license-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.license-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Body -- */
+
+.license-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 10px 10px;
+  overscroll-behavior: contain;
+}
+
+.license-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.license-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.license-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.license-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* -- Groups -- */
+
+.license-group {
+  margin-bottom: 12px;
+}
+
+.license-group-label {
+  font-size: 0.72em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 8px 8px 6px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+}
+
+.license-cat-permissive {
+  color: var(--success);
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.license-cat-copyleft {
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.license-cat-unknown {
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* -- Table -- */
+
+.license-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.license-th {
+  font-size: 0.68em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.license-row {
+  transition: background-color 0.1s;
+}
+
+.license-row:hover {
+  background: var(--bg-hover);
+}
+
+.license-td {
+  padding: 5px 8px;
+  font-size: 0.78em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.license-pkg {
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.license-ver {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+}
+
+.license-lic {
+  color: var(--text-secondary);
+}
