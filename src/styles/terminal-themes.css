@@ -1,0 +1,228 @@
+/* ==========================================================
+   Terminal Theme Selector
+   ========================================================== */
+
+.theme-selector-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.theme-selector-panel {
+  position: fixed;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 680px;
+  max-width: calc(100vw - 40px);
+  max-height: 80vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* ── Header ── */
+
+.theme-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.theme-selector-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.theme-selector-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.theme-selector-close:hover {
+  color: var(--text-primary);
+}
+
+/* ── Body ── */
+
+.theme-selector-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Theme list ── */
+
+.theme-selector-list {
+  width: 220px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: 8px;
+  border-right: 1px solid var(--border-subtle);
+}
+
+.theme-selector-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.theme-selector-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.theme-selector-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.theme-selector-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  font-family: var(--font-sans);
+  font-size: 0.78em;
+  font-weight: 400;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.1s;
+}
+
+.theme-selector-item:hover {
+  background-color: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+.theme-selector-item-active {
+  background-color: var(--accent-muted);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.theme-selector-swatch {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 32px;
+  height: 18px;
+  padding: 0 3px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-subtle);
+}
+
+.theme-swatch-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.theme-selector-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theme-selector-check {
+  color: var(--accent);
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+
+/* ── Preview ── */
+
+.theme-selector-preview {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.theme-preview-terminal {
+  width: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  line-height: 1.55;
+  border: 1px solid var(--border-subtle);
+}
+
+.theme-preview-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  opacity: 0.8;
+}
+
+.theme-preview-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.theme-preview-name {
+  margin-left: 8px;
+  font-size: 0.85em;
+  opacity: 0.6;
+}
+
+.theme-preview-content {
+  padding: 4px 14px 16px;
+  white-space: pre;
+}
+
+.theme-preview-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  vertical-align: text-bottom;
+  animation: cursor-blink 1s step-end infinite;
+}
+
+@keyframes cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}

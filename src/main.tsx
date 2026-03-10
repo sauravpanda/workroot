@@ -7,6 +7,7 @@ import "./styles/env-panel.css";
 import "./styles/terminal.css";
 import "./styles/command-palette.css";
 import "./styles/command-bookmarks.css";
+import "./styles/terminal-themes.css";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

@@ -4,6 +4,8 @@ import { FitAddon } from "@xterm/addon-fit";
 import { invoke } from "@tauri-apps/api/core";
 import { spawn } from "tauri-pty";
 import type { IPty } from "tauri-pty";
+import { getThemeById, DEFAULT_THEME_ID } from "../lib/terminalThemes";
+import type { TerminalTheme } from "../lib/terminalThemes";
 import "@xterm/xterm/css/xterm.css";
 import "../styles/terminal.css";
 import {
@@ -25,6 +27,7 @@ interface TerminalTab {
 interface TerminalPanelProps {
   cwd: string;
   worktreeName: string;
+  themeId?: string;
 }
 
 let paneCounter = 0;
@@ -43,7 +46,11 @@ function makeTab(label: string, cwd: string): TerminalTab {
   };
 }
 
-export function TerminalPanel({ cwd, worktreeName }: TerminalPanelProps) {
+export function TerminalPanel({
+  cwd,
+  worktreeName,
+  themeId,
+}: TerminalPanelProps) {
   const [tabs, setTabs] = useState<TerminalTab[]>(() => [
     makeTab(worktreeName, cwd),
   ]);
@@ -153,9 +160,10 @@ export function TerminalPanel({ cwd, worktreeName }: TerminalPanelProps) {
         cwd={cwd}
         active={activeTab?.id === activeTabId && isFocused}
         visible={activeTab?.id === activeTabId}
+        themeId={themeId}
       />
     ),
-    [cwd, activeTab, activeTabId],
+    [cwd, activeTab, activeTabId, themeId],
   );
 
   return (
@@ -229,27 +237,35 @@ interface TerminalInstanceProps {
   cwd: string;
   active: boolean;
   visible?: boolean;
+  themeId?: string;
 }
 
 async function loadTerminalSettings(): Promise<{
   shell: string;
   initCommand: string | null;
+  theme: TerminalTheme;
 }> {
   const defaultShell = navigator.platform.toLowerCase().includes("win")
     ? "powershell.exe"
     : "/bin/zsh";
 
   try {
-    const [shellSetting, initSetting] = await Promise.all([
+    const [shellSetting, initSetting, themeSetting] = await Promise.all([
       invoke<string | null>("get_setting", { key: "terminal_shell" }),
       invoke<string | null>("get_setting", { key: "terminal_init_command" }),
+      invoke<string | null>("get_setting", { key: "terminal_theme" }),
     ]);
     return {
       shell: shellSetting?.trim() || defaultShell,
       initCommand: initSetting?.trim() || null,
+      theme: getThemeById(themeSetting?.trim() || DEFAULT_THEME_ID),
     };
   } catch {
-    return { shell: defaultShell, initCommand: null };
+    return {
+      shell: defaultShell,
+      initCommand: null,
+      theme: getThemeById(DEFAULT_THEME_ID),
+    };
   }
 }
 
@@ -257,6 +273,7 @@ function TerminalInstance({
   cwd,
   active,
   visible = true,
+  themeId,
 }: TerminalInstanceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -270,34 +287,12 @@ function TerminalInstance({
 
     let cancelled = false;
 
+    const initialTheme = getThemeById(themeId || DEFAULT_THEME_ID);
     const term = new Terminal({
       fontFamily: "'JetBrains Mono', 'Menlo', 'Monaco', monospace",
       fontSize: 13,
       lineHeight: 1.35,
-      theme: {
-        background: "#0c0c0e",
-        foreground: "#ededef",
-        cursor: "#10b981",
-        cursorAccent: "#0c0c0e",
-        selectionBackground: "rgba(16, 185, 129, 0.2)",
-        selectionForeground: "#ededef",
-        black: "#1b1b1f",
-        red: "#ef4444",
-        green: "#10b981",
-        yellow: "#f59e0b",
-        blue: "#3b82f6",
-        magenta: "#a855f7",
-        cyan: "#06b6d4",
-        white: "#ededef",
-        brightBlack: "#5c5c66",
-        brightRed: "#f87171",
-        brightGreen: "#34d399",
-        brightYellow: "#fbbf24",
-        brightBlue: "#60a5fa",
-        brightMagenta: "#c084fc",
-        brightCyan: "#22d3ee",
-        brightWhite: "#fafafa",
-      },
+      theme: initialTheme.theme,
       cursorBlink: true,
       scrollback: 10000,
       allowProposedApi: true,
@@ -323,6 +318,9 @@ function TerminalInstance({
       const settings = await loadTerminalSettings();
 
       if (cancelled) return;
+
+      // Apply the saved theme (may differ from initial)
+      term.options.theme = settings.theme.theme;
 
       try {
         const pty = spawn(settings.shell, [], {
@@ -377,7 +375,14 @@ function TerminalInstance({
       ptyRef.current = null;
       fitAddonRef.current = null;
     };
-  }, [cwd]);
+  }, [cwd, themeId]);
+
+  // Update theme when themeId prop changes
+  useEffect(() => {
+    if (!termRef.current || !themeId) return;
+    const t = getThemeById(themeId);
+    termRef.current.options.theme = t.theme;
+  }, [themeId]);
 
   // Refit when becoming active or visible
   useEffect(() => {
