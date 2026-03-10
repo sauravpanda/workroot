@@ -12,6 +12,7 @@ import "./styles/task-runner.css";
 import "./styles/app-theme-picker.css";
 import "./styles/keyboard-shortcuts.css";
 import "./styles/github-sidebar.css";
+import "./styles/theme-editor.css";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
