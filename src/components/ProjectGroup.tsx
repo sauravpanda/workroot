@@ -61,15 +61,29 @@ export function ProjectGroup({
         tabIndex={0}
       >
         <span className={`project-chevron ${expanded ? "expanded" : ""}`}>
-          &#9656;
+          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+            <path d="M2.5 1.5l4 3-4 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </span>
-        <span className="project-name">{project.name}</span>
-        {project.framework && (
-          <span className="project-framework">{project.framework}</span>
-        )}
-        {!project.exists_locally && (
-          <span className="project-missing">missing</span>
-        )}
+        <span className="project-info">
+          <span className="project-name-row">
+            <span className="project-name">{project.name}</span>
+          </span>
+          <span className="project-path">
+            {project.local_path.replace(/^\/Users\/[^/]+/, "~")}
+          </span>
+        </span>
+        <span className="project-badges">
+          {project.framework && (
+            <span className="project-framework">{project.framework}</span>
+          )}
+          {expanded && worktrees.length > 0 && (
+            <span className="project-wt-count">{worktrees.length}</span>
+          )}
+          {!project.exists_locally && (
+            <span className="project-missing">missing</span>
+          )}
+        </span>
       </div>
 
       {expanded && (

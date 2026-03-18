@@ -1,200 +1,435 @@
+/* ==========================================================
+   Create PR Panel — Industrial-utilitarian, Linear-inspired
+   ========================================================== */
+
 .create-pr {
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: var(--bg-base);
 }
 
+/* ---- Header ---- */
+
 .create-pr-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border, #333);
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--bg-elevated) 60%, var(--bg-surface)) 0%,
+    var(--bg-surface) 100%
+  );
 }
 
 .create-pr-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text, #e0e0e0);
+  font-size: 0.82em;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
 }
 
-.create-pr-branch-info {
-  font-size: 12px;
-  color: var(--text-muted, #888);
-}
-
-.create-pr-branch-name {
-  color: #60a5fa;
-  font-family: var(--font-mono, monospace);
-}
-
-.create-pr-existing {
-  padding: 16px;
+.create-pr-branch-flow {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.create-pr-existing-badge {
-  font-size: 12px;
-  background: rgba(96, 165, 250, 0.1);
-  color: #60a5fa;
-  padding: 4px 12px;
-  border-radius: 12px;
+.create-pr-branch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  background: var(--accent-muted);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 20px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.create-pr-existing a {
-  color: var(--accent, #7c5cbf);
-  text-decoration: none;
+.create-pr-chip-icon {
+  flex-shrink: 0;
+  opacity: 0.8;
 }
 
-.create-pr-existing a:hover {
-  text-decoration: underline;
+.create-pr-branch-arrow {
+  color: var(--text-muted);
+  font-size: 0.9em;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
+
+.create-pr-base-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+}
+
+/* ---- Form ---- */
 
 .create-pr-form {
   flex: 1;
-  padding: 16px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 .create-pr-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .create-pr-label {
-  font-size: 11px;
+  font-size: 0.7em;
   font-weight: 600;
   text-transform: uppercase;
-  color: var(--text-muted, #888);
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.create-pr-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .create-pr-input {
-  padding: 6px 8px;
-  border: 1px solid var(--border, #444);
-  border-radius: 3px;
-  background: var(--bg-input, #1a1a2e);
-  color: var(--text, #e0e0e0);
-  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.85em;
   outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .create-pr-input:focus {
-  border-color: var(--accent, #7c5cbf);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-muted);
+}
+
+.create-pr-input::placeholder {
+  color: var(--text-muted);
 }
 
 .create-pr-textarea {
-  padding: 8px;
-  border: 1px solid var(--border, #444);
-  border-radius: 3px;
-  background: var(--bg-input, #1a1a2e);
-  color: var(--text, #e0e0e0);
-  font-size: 12px;
-  font-family: var(--font-mono, monospace);
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  line-height: 1.6;
   outline: none;
   resize: vertical;
-  min-height: 120px;
+  min-height: 130px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .create-pr-textarea:focus {
-  border-color: var(--accent, #7c5cbf);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-muted);
 }
+
+.create-pr-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* ---- AI Generate button ---- */
+
+.create-pr-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  font-size: 0.72em;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: var(--accent);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+
+.create-pr-ai-btn:hover:not(:disabled) {
+  background: var(--accent-muted);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.create-pr-ai-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.create-pr-ai-btn svg {
+  flex-shrink: 0;
+}
+
+/* ---- Bottom row: base branch + draft ---- */
 
 .create-pr-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 12px;
 }
 
+.create-pr-row .create-pr-field {
+  flex: 1;
+}
+
 .create-pr-select {
-  padding: 6px 8px;
-  border: 1px solid var(--border, #444);
-  border-radius: 3px;
-  background: var(--bg-input, #1a1a2e);
-  color: var(--text, #e0e0e0);
-  font-size: 13px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.85em;
   outline: none;
+  width: 100%;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.create-pr-select:focus {
+  border-color: var(--accent);
 }
 
 .create-pr-toggle {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
-  color: var(--text, #e0e0e0);
+  font-size: 0.8em;
+  color: var(--text-secondary);
   cursor: pointer;
+  padding-bottom: 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.create-pr-toggle input {
-  accent-color: var(--accent, #7c5cbf);
-}
-
-.create-pr-footer {
-  padding: 12px 16px;
-  border-top: 1px solid var(--border, #333);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.create-pr-btn {
-  padding: 6px 18px;
-  border: 1px solid var(--border, #444);
-  background: var(--accent, #7c5cbf);
-  color: #fff;
-  font-size: 13px;
-  cursor: pointer;
+.create-pr-toggle input[type="checkbox"] {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--border-strong);
   border-radius: 3px;
-  border-color: var(--accent, #7c5cbf);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.create-pr-btn:hover {
-  opacity: 0.9;
+.create-pr-toggle input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
-.create-pr-btn:disabled {
-  opacity: 0.4;
-  cursor: default;
+.create-pr-toggle input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 1px;
+  width: 5px;
+  height: 8px;
+  border: 2px solid var(--bg-base);
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
 }
+
+/* ---- Error ---- */
 
 .create-pr-error {
   padding: 8px 12px;
-  background: rgba(248, 113, 113, 0.1);
-  border: 1px solid rgba(248, 113, 113, 0.3);
-  border-radius: 3px;
-  color: #f87171;
-  font-size: 12px;
+  background: var(--danger-muted);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius);
+  color: var(--danger);
+  font-size: 0.78em;
+  line-height: 1.5;
 }
 
-.create-pr-success {
+/* ---- Footer / Submit ---- */
+
+.create-pr-footer {
   padding: 12px 16px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.create-pr-btn {
+  width: 100%;
+  padding: 9px 18px;
+  background: var(--accent);
+  color: var(--bg-base);
+  font-family: var(--font-sans);
+  font-size: 0.85em;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  color: #4ade80;
-  font-size: 13px;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
 }
 
-.create-pr-success a {
-  color: var(--accent, #7c5cbf);
-  text-decoration: none;
+.create-pr-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+  box-shadow: 0 2px 12px var(--accent-glow);
 }
 
-.create-pr-success a:hover {
-  text-decoration: underline;
+.create-pr-btn:active:not(:disabled) {
+  transform: scale(0.99);
 }
+
+.create-pr-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---- Loading ---- */
 
 .create-pr-loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 200px;
-  color: var(--text-muted, #888);
+  height: 160px;
+  color: var(--text-muted);
+  font-size: 0.82em;
+  gap: 8px;
+}
+
+/* ---- Success state ---- */
+
+.create-pr-success {
+  margin: 20px 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: color-mix(in srgb, var(--accent-muted) 60%, transparent);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.create-pr-success-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-muted);
+  border: 1.5px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+}
+
+.create-pr-success-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.create-pr-success-link {
+  font-size: 0.78em;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  border-radius: var(--radius);
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.create-pr-success-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---- Existing PR state ---- */
+
+.create-pr-existing-card {
+  margin: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.create-pr-existing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+  padding: 3px 10px;
+  border-radius: 20px;
+  width: fit-content;
+}
+
+.create-pr-existing-title {
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.create-pr-existing-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78em;
+  color: var(--accent);
+  text-decoration: none;
+  width: fit-content;
+  transition: opacity 0.15s;
+}
+
+.create-pr-existing-link:hover {
+  opacity: 0.8;
 }

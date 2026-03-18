@@ -355,6 +355,10 @@ button:disabled {
    Global Scrollbar
    ========================================================== */
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
