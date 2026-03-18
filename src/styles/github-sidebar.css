@@ -200,7 +200,6 @@
   text-align: center;
   color: var(--text-muted);
   font-size: 0.75em;
-  animation: ghSidebarFadeIn 0.2s ease-out;
 }
 
 .gh-sidebar__error {
@@ -336,7 +335,6 @@
   display: flex;
   flex-direction: column;
   padding: 2px 0;
-  animation: ghSidebarFadeIn 0.15s ease-out;
 }
 
 /* ---- PR / Issue Row ---- */
