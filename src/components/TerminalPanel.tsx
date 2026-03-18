@@ -153,17 +153,20 @@ export function TerminalPanel({
 
   useSplitPaneShortcuts(handleSplitH, handleSplitV, handleClosePane);
 
-  const renderLeaf = useCallback(
-    (paneId: string, isFocused: boolean) => (
-      <TerminalInstance
-        key={paneId}
-        cwd={cwd}
-        active={activeTab?.id === activeTabId && isFocused}
-        visible={activeTab?.id === activeTabId}
-        themeId={themeId}
-      />
-    ),
-    [cwd, activeTab, activeTabId, themeId],
+  // Per-tab renderLeaf so inactive tabs can stay mounted (visibility:hidden)
+  // without being confused about active/visible state.
+  const makeRenderLeaf = useCallback(
+    (tabId: string) =>
+      (paneId: string, isFocused: boolean) => (
+        <TerminalInstance
+          key={paneId}
+          cwd={cwd}
+          active={tabId === activeTabId && isFocused}
+          visible={tabId === activeTabId}
+          themeId={themeId}
+        />
+      ),
+    [cwd, activeTabId, themeId],
   );
 
   return (
@@ -217,15 +220,22 @@ export function TerminalPanel({
             key={tab.id}
             className={`terminal-instance ${tab.id === activeTabId ? "terminal-instance-active" : ""}`}
           >
-            {tab.id === activeTabId && activeTab ? (
-              <SplitPane
-                node={activeTab.paneTree}
-                onUpdateNode={updatePaneTree}
-                renderLeaf={renderLeaf}
-                focusedId={focusedPaneId}
-                onFocusLeaf={setFocusedPaneId}
-              />
-            ) : null}
+            <SplitPane
+              node={tab.paneTree}
+              onUpdateNode={
+                tab.id === activeTabId
+                  ? updatePaneTree
+                  : (newTree) =>
+                      setTabs((prev) =>
+                        prev.map((t) =>
+                          t.id === tab.id ? { ...t, paneTree: newTree } : t,
+                        ),
+                      )
+              }
+              renderLeaf={makeRenderLeaf(tab.id)}
+              focusedId={tab.id === activeTabId ? focusedPaneId : null}
+              onFocusLeaf={tab.id === activeTabId ? setFocusedPaneId : () => {}}
+            />
           </div>
         ))}
       </div>
