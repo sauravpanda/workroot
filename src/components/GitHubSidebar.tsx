@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { useAuth } from "../hooks/useAuth";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -157,13 +156,23 @@ function eventDescription(event: RepoEvent): string {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
+interface DeviceCodeInfo {
+  device_code: string;
+  user_code: string;
+  verification_uri: string;
+  interval: number;
+}
+
 export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>("prs");
   const [collapsed, setCollapsed] = useState(false);
+
+  // Local sign-in state — managed here so we can call fetchData directly on success
   const [patInput, setPatInput] = useState("");
   const [showPatForm, setShowPatForm] = useState(false);
-
-  const auth = useAuth();
+  const [deviceCode, setDeviceCode] = useState<DeviceCodeInfo | null>(null);
+  const [signingIn, setSigningIn] = useState(false);
+  const [signInError, setSignInError] = useState<string | null>(null);
 
   // Data
   const [pulls, setPulls] = useState<RepoPull[]>([]);
@@ -230,13 +239,49 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
     fetchData(activeTab);
   }, [activeTab, fetchData]);
 
-  /* ---- Re-fetch once the user successfully signs in ---- */
-  useEffect(() => {
-    if (auth.isAuthenticated && authError) {
+  /* ---- Sign-in handlers — call fetchData directly on success ---- */
+  const handleDeviceFlow = useCallback(async () => {
+    setSigningIn(true);
+    setSignInError(null);
+    try {
+      const dc = await invoke<DeviceCodeInfo>("github_start_device_flow");
+      setDeviceCode(dc);
+      setSigningIn(false);
+      invoke("github_poll_for_token", {
+        deviceCode: dc.device_code,
+        interval: dc.interval,
+      })
+        .then(() => {
+          setDeviceCode(null);
+          setAuthError(false);
+          fetchData(activeTab);
+        })
+        .catch((err: unknown) => {
+          setDeviceCode(null);
+          setSignInError(String(err));
+        });
+    } catch (err: unknown) {
+      setSigningIn(false);
+      setSignInError(String(err));
+    }
+  }, [activeTab, fetchData]);
+
+  const handlePatSubmit = useCallback(async () => {
+    if (!patInput.trim()) return;
+    setSigningIn(true);
+    setSignInError(null);
+    try {
+      await invoke("github_store_pat", { token: patInput.trim() });
+      setPatInput("");
+      setShowPatForm(false);
       setAuthError(false);
       fetchData(activeTab);
+    } catch (err: unknown) {
+      setSignInError(String(err));
+    } finally {
+      setSigningIn(false);
     }
-  }, [auth.isAuthenticated, authError, activeTab, fetchData]);
+  }, [patInput, activeTab, fetchData]);
 
   /* ---- Auto-refresh every 60 seconds ---- */
   useEffect(() => {
@@ -340,12 +385,12 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
             </svg>
             <p className="gh-sidebar__auth-msg">Sign in to GitHub to view {activeTab}.</p>
 
-            {auth.deviceCode && auth.isPolling ? (
+            {deviceCode ? (
               <div className="gh-sidebar__device-flow">
                 <p className="gh-sidebar__device-hint">
                   Go to <strong>github.com/login/device</strong> and enter:
                 </p>
-                <div className="gh-sidebar__device-code">{auth.deviceCode.user_code}</div>
+                <div className="gh-sidebar__device-code">{deviceCode.user_code}</div>
                 <p className="gh-sidebar__device-waiting">Waiting for authorization…</p>
               </div>
             ) : showPatForm ? (
@@ -357,22 +402,22 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
                   value={patInput}
                   onChange={(e) => setPatInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && patInput.trim()) auth.loginWithPat(patInput.trim());
+                    if (e.key === "Enter") handlePatSubmit();
                   }}
                   autoFocus
                 />
-                {auth.error && <p className="gh-sidebar__auth-error">{auth.error}</p>}
+                {signInError && <p className="gh-sidebar__auth-error">{signInError}</p>}
                 <div className="gh-sidebar__pat-actions">
                   <button
                     className="gh-sidebar__signin-btn"
-                    onClick={() => auth.loginWithPat(patInput.trim())}
-                    disabled={!patInput.trim() || auth.isLoading}
+                    onClick={handlePatSubmit}
+                    disabled={!patInput.trim() || signingIn}
                   >
-                    {auth.isLoading ? "Saving…" : "Save Token"}
+                    {signingIn ? "Saving…" : "Save Token"}
                   </button>
                   <button
                     className="gh-sidebar__signin-btn gh-sidebar__signin-btn--secondary"
-                    onClick={() => setShowPatForm(false)}
+                    onClick={() => { setShowPatForm(false); setSignInError(null); }}
                   >
                     Cancel
                   </button>
@@ -380,13 +425,13 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
               </div>
             ) : (
               <div className="gh-sidebar__signin-options">
-                {auth.error && <p className="gh-sidebar__auth-error">{auth.error}</p>}
+                {signInError && <p className="gh-sidebar__auth-error">{signInError}</p>}
                 <button
                   className="gh-sidebar__signin-btn"
-                  onClick={auth.startLogin}
-                  disabled={auth.isLoading}
+                  onClick={handleDeviceFlow}
+                  disabled={signingIn}
                 >
-                  {auth.isLoading ? "Starting…" : "Sign in with GitHub"}
+                  {signingIn ? "Starting…" : "Sign in with GitHub"}
                 </button>
                 <button
                   className="gh-sidebar__signin-btn gh-sidebar__signin-btn--secondary"
