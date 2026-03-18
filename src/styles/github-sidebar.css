@@ -210,12 +210,124 @@
   word-break: break-word;
 }
 
-.gh-sidebar__auth-msg {
+.gh-sidebar__auth-panel {
   padding: 24px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.gh-sidebar__auth-msg {
   text-align: center;
   color: var(--text-muted);
   font-size: 0.78em;
   line-height: 1.5;
+  margin: 0;
+}
+
+.gh-sidebar__signin-options,
+.gh-sidebar__pat-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gh-sidebar__signin-btn {
+  width: 100%;
+  padding: 0.45em 0.75em;
+  font-size: 0.78em;
+  font-weight: 500;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background-color 0.15s;
+  background-color: var(--accent);
+  color: var(--bg-base);
+  border: none;
+}
+
+.gh-sidebar__signin-btn:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+
+.gh-sidebar__signin-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gh-sidebar__signin-btn--secondary {
+  background-color: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.gh-sidebar__signin-btn--secondary:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+}
+
+.gh-sidebar__pat-input {
+  width: 100%;
+  font-size: 0.78em;
+  padding: 0.4em 0.6em;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  box-sizing: border-box;
+}
+
+.gh-sidebar__pat-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.gh-sidebar__pat-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.gh-sidebar__pat-actions .gh-sidebar__signin-btn {
+  flex: 1;
+}
+
+.gh-sidebar__auth-error {
+  font-size: 0.75em;
+  color: var(--danger);
+  margin: 0;
+  text-align: center;
+}
+
+.gh-sidebar__device-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.gh-sidebar__device-hint {
+  font-size: 0.75em;
+  color: var(--text-secondary);
+  margin: 0;
+  text-align: center;
+}
+
+.gh-sidebar__device-code {
+  font-family: var(--font-mono);
+  font-size: 1.1em;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  background: var(--accent-muted);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 0.35em 0.75em;
+}
+
+.gh-sidebar__device-waiting {
+  font-size: 0.72em;
+  color: var(--text-muted);
+  margin: 0;
 }
 
 /* ---- List ---- */

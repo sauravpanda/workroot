@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useAuth } from "../hooks/useAuth";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -159,6 +160,10 @@ function eventDescription(event: RepoEvent): string {
 export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>("prs");
   const [collapsed, setCollapsed] = useState(false);
+  const [patInput, setPatInput] = useState("");
+  const [showPatForm, setShowPatForm] = useState(false);
+
+  const auth = useAuth();
 
   // Data
   const [pulls, setPulls] = useState<RepoPull[]>([]);
@@ -224,6 +229,14 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
   useEffect(() => {
     fetchData(activeTab);
   }, [activeTab, fetchData]);
+
+  /* ---- Re-fetch once the user successfully signs in ---- */
+  useEffect(() => {
+    if (auth.isAuthenticated && authError) {
+      setAuthError(false);
+      fetchData(activeTab);
+    }
+  }, [auth.isAuthenticated, authError, activeTab, fetchData]);
 
   /* ---- Auto-refresh every 60 seconds ---- */
   useEffect(() => {
@@ -320,8 +333,69 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
       {/* Content */}
       <div className="gh-sidebar__content">
         {authError ? (
-          <div className="gh-sidebar__auth-msg">
-            Sign in to GitHub to view {activeTab}.
+          <div className="gh-sidebar__auth-panel">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true" style={{ margin: "0 auto 8px", display: "block" }}>
+              <circle cx="14" cy="10" r="4.5" stroke="var(--text-muted)" strokeWidth="1.5"/>
+              <path d="M5 24c0-4.97 4.03-9 9-9s9 4.03 9 9" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <p className="gh-sidebar__auth-msg">Sign in to GitHub to view {activeTab}.</p>
+
+            {auth.deviceCode && auth.isPolling ? (
+              <div className="gh-sidebar__device-flow">
+                <p className="gh-sidebar__device-hint">
+                  Go to <strong>github.com/login/device</strong> and enter:
+                </p>
+                <div className="gh-sidebar__device-code">{auth.deviceCode.user_code}</div>
+                <p className="gh-sidebar__device-waiting">Waiting for authorization…</p>
+              </div>
+            ) : showPatForm ? (
+              <div className="gh-sidebar__pat-form">
+                <input
+                  type="password"
+                  className="gh-sidebar__pat-input"
+                  placeholder="ghp_xxxxxxxxxxxx"
+                  value={patInput}
+                  onChange={(e) => setPatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && patInput.trim()) auth.loginWithPat(patInput.trim());
+                  }}
+                  autoFocus
+                />
+                {auth.error && <p className="gh-sidebar__auth-error">{auth.error}</p>}
+                <div className="gh-sidebar__pat-actions">
+                  <button
+                    className="gh-sidebar__signin-btn"
+                    onClick={() => auth.loginWithPat(patInput.trim())}
+                    disabled={!patInput.trim() || auth.isLoading}
+                  >
+                    {auth.isLoading ? "Saving…" : "Save Token"}
+                  </button>
+                  <button
+                    className="gh-sidebar__signin-btn gh-sidebar__signin-btn--secondary"
+                    onClick={() => setShowPatForm(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="gh-sidebar__signin-options">
+                {auth.error && <p className="gh-sidebar__auth-error">{auth.error}</p>}
+                <button
+                  className="gh-sidebar__signin-btn"
+                  onClick={auth.startLogin}
+                  disabled={auth.isLoading}
+                >
+                  {auth.isLoading ? "Starting…" : "Sign in with GitHub"}
+                </button>
+                <button
+                  className="gh-sidebar__signin-btn gh-sidebar__signin-btn--secondary"
+                  onClick={() => setShowPatForm(true)}
+                >
+                  Use Access Token
+                </button>
+              </div>
+            )}
           </div>
         ) : loading && !refreshing ? (
           <div className="gh-sidebar__loading">Loading...</div>
