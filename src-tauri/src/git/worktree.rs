@@ -61,6 +61,28 @@ pub fn create_worktree(
             .map_err(|e| format!("Failed to create .worktrees directory: {}", e))?;
     }
 
+    // Keep .worktrees/ out of the parent repo's git status by writing to .git/info/exclude
+    let exclude_path = Path::new(&project.local_path)
+        .join(".git")
+        .join("info")
+        .join("exclude");
+    let already_excluded = std::fs::read_to_string(&exclude_path)
+        .map(|s| s.contains(".worktrees/"))
+        .unwrap_or(false);
+    if !already_excluded {
+        if let Some(parent) = exclude_path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let mut file = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&exclude_path)
+            .map_err(|e| format!("Failed to open .git/info/exclude: {}", e))?;
+        use std::io::Write;
+        writeln!(file, "\n# Workroot managed worktrees\n.worktrees/")
+            .map_err(|e| format!("Failed to write to .git/info/exclude: {}", e))?;
+    }
+
     if worktree_path.exists() {
         return Err(format!(
             "Worktree path already exists: {}",
@@ -69,9 +91,14 @@ pub fn create_worktree(
     }
 
     if create_new_branch {
-        let head = repo
-            .head()
-            .map_err(|e| format!("Failed to get HEAD: {}", e))?;
+        let head = match repo.head() {
+            Ok(h) => h,
+            Err(_) => {
+                return Err(
+                    "Cannot create a worktree: repository has no commits yet. Make an initial commit first.".into(),
+                );
+            }
+        };
         let head_commit = head
             .peel_to_commit()
             .map_err(|e| format!("Failed to get HEAD commit: {}", e))?;

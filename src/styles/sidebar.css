@@ -4,7 +4,7 @@
 
 .main-layout {
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 24px);
   overflow: hidden;
 }
 
@@ -17,16 +17,41 @@
 }
 
 .resize-handle {
-  width: 3px;
+  width: 4px;
   cursor: col-resize;
   flex-shrink: 0;
   background: transparent;
-  transition: background-color 0.15s;
+  transition: background-color 0.2s;
+  position: relative;
 }
 
-.resize-handle:hover,
+.resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 24px;
+  border-radius: 1px;
+  background: transparent;
+  transition: background-color 0.2s;
+}
+
+.resize-handle:hover {
+  background-color: var(--accent-muted);
+}
+
+.resize-handle:hover::after {
+  background-color: var(--accent);
+}
+
 .resize-handle:active {
   background-color: var(--accent);
+}
+
+.resize-handle--right {
+  border-left: 1px solid var(--border-subtle);
 }
 
 .content-area {
@@ -47,9 +72,21 @@
 
 .content-inner {
   padding: 2.5em 2em;
-  max-width: 640px;
+  max-width: 700px;
   margin: 0 auto;
   text-align: center;
+  animation: content-fade-in 0.3s ease-out;
+}
+
+@keyframes content-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ==========================================================
@@ -69,6 +106,43 @@
   padding: 0.65em 0.85em;
   border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-elevated) 40%, var(--bg-surface)) 0%,
+    var(--bg-surface) 100%
+  );
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sidebar-brand:hover .sidebar-logo {
+  background-color: var(--accent);
+  color: var(--bg-base);
+}
+
+.sidebar-brand:hover .sidebar-title {
+  color: var(--text-secondary);
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius);
+  background-color: var(--accent-muted);
+  color: var(--accent);
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+  flex-shrink: 0;
 }
 
 .sidebar-title {
@@ -77,13 +151,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
-  cursor: pointer;
   transition: color 0.15s;
-  user-select: none;
-}
-
-.sidebar-title:hover {
-  color: var(--text-secondary);
 }
 
 .sidebar-header-actions {
@@ -154,6 +222,84 @@
 .sidebar-empty-btn {
   font-size: 0.78em;
   padding: 0.35em 0.8em;
+}
+
+/* ==========================================================
+   Sidebar Toolbar (bottom bar)
+   ========================================================== */
+
+.sidebar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0.5em 0.65em;
+  border-top: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.sidebar-toolbar-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.sidebar-toolbar-btn:hover {
+  background-color: var(--accent-muted);
+  color: var(--accent);
+  border-color: transparent;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.sidebar-toolbar-btn:active {
+  background-color: var(--accent-muted);
+  color: var(--accent);
+  transform: scale(0.95);
+}
+
+.sidebar-toolbar-btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.sidebar-toolbar-divider {
+  width: 1px;
+  height: 18px;
+  background-color: var(--border-subtle);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.sidebar-toolbar-hint {
+  font-family: var(--font-mono);
+  font-size: 0.65em;
+  color: var(--text-muted);
+  padding: 0.2em 0.45em;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  user-select: none;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.sidebar-toolbar-hint:hover {
+  opacity: 1;
 }
 
 /* ==========================================================
