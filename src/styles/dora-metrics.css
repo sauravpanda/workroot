@@ -1,0 +1,459 @@
+/* ==========================================================
+   DORA Metrics Dashboard
+   ========================================================== */
+
+.dora-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.dora-panel {
+  position: fixed;
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 780px;
+  max-width: calc(100vw - 40px);
+  max-height: 84vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* ---- Header ---- */
+
+.dora-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dora-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.dora-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dora-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.dora-close:hover {
+  color: var(--text-primary);
+}
+
+/* ---- Period Selector ---- */
+
+.dora-period-selector {
+  display: flex;
+  gap: 2px;
+}
+
+.dora-period-btn {
+  font-family: var(--font-mono);
+  font-size: 0.7em;
+  font-weight: 500;
+  padding: 4px 10px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dora-period-btn:hover {
+  color: var(--text-secondary);
+  border-color: var(--border-strong);
+}
+
+.dora-period-btn--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-base);
+}
+
+.dora-period-btn--active:hover {
+  background: var(--accent-hover);
+  color: var(--bg-base);
+}
+
+/* ---- Error ---- */
+
+.dora-error {
+  padding: 8px 16px;
+  font-size: 0.75em;
+  color: var(--danger);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ---- Body ---- */
+
+.dora-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.dora-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dora-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dora-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.dora-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* ---- Rating Badge ---- */
+
+.dora-rating-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.dora-rating-badge {
+  display: inline-block;
+  font-size: 0.78em;
+  font-weight: 600;
+  padding: 6px 18px;
+  border-radius: 16px;
+  letter-spacing: 0.02em;
+}
+
+.dora-rating--elite {
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.18),
+    rgba(245, 158, 11, 0.12)
+  );
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #fbbf24;
+}
+
+.dora-rating--high {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: var(--success);
+}
+
+.dora-rating--medium {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--warning);
+}
+
+.dora-rating--low {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--danger);
+}
+
+/* ---- Metric Cards ---- */
+
+.dora-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.dora-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-image: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+  transition: border-color 0.15s;
+}
+
+.dora-card.dora-metric--good {
+  border-left: 3px solid var(--success);
+}
+
+.dora-card.dora-metric--warn {
+  border-left: 3px solid var(--warning);
+}
+
+.dora-card.dora-metric--bad {
+  border-left: 3px solid var(--danger);
+}
+
+.dora-card__label {
+  font-size: 0.68em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.dora-card__value {
+  font-size: 1.8em;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.dora-card__unit {
+  font-size: 0.4em;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.dora-card__subtitle {
+  font-size: 0.68em;
+  color: var(--text-muted);
+}
+
+/* ---- Sparkline ---- */
+
+.dora-card__sparkline {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 28px;
+  margin-top: 6px;
+}
+
+.dora-sparkline-bar {
+  flex: 1;
+  background: var(--accent);
+  border-radius: 1px 1px 0 0;
+  min-height: 2px;
+  opacity: 0.7;
+  transition: height 0.3s;
+}
+
+/* ---- Deploy Section ---- */
+
+.dora-deploy-section {
+  margin-bottom: 16px;
+}
+
+.dora-deploy-btn {
+  font-family: var(--font-sans);
+  font-size: 0.78em;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-muted);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.dora-deploy-btn:hover {
+  background: rgba(16, 185, 129, 0.18);
+}
+
+.dora-deploy-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dora-deploy-input {
+  flex: 1;
+  min-width: 120px;
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.dora-deploy-input:focus {
+  border-color: var(--accent);
+}
+
+.dora-deploy-select {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 6px;
+  outline: none;
+}
+
+.dora-deploy-submit {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dora-deploy-submit:hover {
+  background: var(--accent-hover);
+}
+
+.dora-deploy-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dora-deploy-cancel {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  padding: 6px 10px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.dora-deploy-cancel:hover {
+  background: var(--bg-hover);
+}
+
+/* ---- Deployment Table ---- */
+
+.dora-table-wrapper {
+  overflow-x: auto;
+}
+
+.dora-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78em;
+}
+
+.dora-table th {
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  background: none;
+}
+
+.dora-table td {
+  padding: 8px 10px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dora-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.dora-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.dora-table__version {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.dora-table__env {
+  font-size: 0.92em;
+}
+
+.dora-table__date {
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+.dora-table__lead {
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+/* ---- Status Badge ---- */
+
+.dora-status-badge {
+  display: inline-block;
+  font-size: 0.85em;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.dora-status--success {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--success);
+}
+
+.dora-status--failure {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
+
+.dora-status--rollback {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--warning);
+}

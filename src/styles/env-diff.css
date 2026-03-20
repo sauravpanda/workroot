@@ -1,0 +1,316 @@
+/* ==========================================================
+   Env Profile Diff – Clean diff view
+   ========================================================== */
+
+.envdiff-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.envdiff-panel {
+  position: fixed;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 720px;
+  max-width: calc(100vw - 40px);
+  max-height: 80vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* -- Header -- */
+
+.envdiff-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.envdiff-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.envdiff-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.envdiff-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Selectors -- */
+
+.envdiff-selectors {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.envdiff-select {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 0.8em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  outline: none;
+}
+
+.envdiff-arrow {
+  font-size: 1em;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.envdiff-compare-btn {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.envdiff-compare-btn:hover {
+  background: var(--accent-hover);
+}
+
+.envdiff-compare-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* -- Body -- */
+
+.envdiff-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overscroll-behavior: contain;
+}
+
+.envdiff-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.envdiff-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.envdiff-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.envdiff-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* -- Summary -- */
+
+.envdiff-summary {
+  display: flex;
+  gap: 10px;
+}
+
+.envdiff-summary-item {
+  font-size: 0.72em;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+}
+
+.envdiff-sum-added {
+  background: rgba(38, 166, 65, 0.12);
+  color: #26a641;
+}
+
+.envdiff-sum-removed {
+  background: rgba(218, 54, 51, 0.12);
+  color: #da3633;
+}
+
+.envdiff-sum-changed {
+  background: rgba(227, 179, 65, 0.12);
+  color: #e3b341;
+}
+
+/* -- Filters -- */
+
+.envdiff-filters {
+  display: flex;
+  gap: 4px;
+}
+
+.envdiff-filter-btn {
+  font-family: var(--font-sans);
+  font-size: 0.7em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition:
+    color 0.1s,
+    background-color 0.1s,
+    border-color 0.1s;
+}
+
+.envdiff-filter-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-tertiary);
+}
+
+.envdiff-filter-btn.active {
+  background: var(--accent);
+  color: var(--bg-base);
+  border-color: var(--accent);
+}
+
+/* -- Table -- */
+
+.envdiff-table-wrap {
+  overflow-x: auto;
+}
+
+.envdiff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78em;
+}
+
+.envdiff-th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.88em;
+  color: var(--text-secondary);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.envdiff-td {
+  padding: 5px 8px;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.envdiff-td-key {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.envdiff-td-val {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.envdiff-empty-row {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 16px 8px;
+}
+
+/* -- Row status coloring -- */
+
+.envdiff-row-added {
+  background: rgba(38, 166, 65, 0.04);
+}
+
+.envdiff-row-removed {
+  background: rgba(218, 54, 51, 0.04);
+}
+
+.envdiff-row-changed {
+  background: rgba(227, 179, 65, 0.04);
+}
+
+.envdiff-row-unchanged {
+  background: transparent;
+}
+
+/* -- Status badges -- */
+
+.envdiff-status-badge {
+  font-size: 0.82em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.envdiff-badge-added {
+  background: rgba(38, 166, 65, 0.15);
+  color: #26a641;
+}
+
+.envdiff-badge-removed {
+  background: rgba(218, 54, 51, 0.15);
+  color: #da3633;
+}
+
+.envdiff-badge-changed {
+  background: rgba(227, 179, 65, 0.15);
+  color: #e3b341;
+}
+
+.envdiff-badge-unchanged {
+  background: rgba(139, 148, 158, 0.15);
+  color: #8b949e;
+}

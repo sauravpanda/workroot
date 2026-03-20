@@ -1,0 +1,226 @@
+/* ==========================================================
+   Inline Diff — GitHub-style diff view
+   ========================================================== */
+
+.idiff-container {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+}
+
+/* -- Header -- */
+
+.idiff-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+}
+
+.idiff-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.idiff-title {
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.idiff-language {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.68em;
+  color: var(--text-tertiary);
+  background: var(--bg-surface);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.idiff-stat {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72em;
+  font-weight: 600;
+}
+
+.idiff-stat--added {
+  color: var(--success);
+}
+
+.idiff-stat--removed {
+  color: var(--danger);
+}
+
+.idiff-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.idiff-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Body -- */
+
+.idiff-body {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 500px;
+}
+
+.idiff-body::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.idiff-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.idiff-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.idiff-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* -- Table -- */
+
+.idiff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78em;
+  line-height: 1.5;
+}
+
+/* -- Line rows -- */
+
+.idiff-line {
+  border: none;
+}
+
+.idiff-line--added {
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.idiff-line--removed {
+  background: rgba(248, 113, 113, 0.08);
+}
+
+.idiff-line--unchanged {
+  background: transparent;
+}
+
+.idiff-line--modified {
+  background: rgba(250, 204, 21, 0.06);
+}
+
+/* -- Line numbers -- */
+
+.idiff-ln {
+  padding: 0 8px;
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 0.88em;
+  user-select: none;
+  min-width: 40px;
+  white-space: nowrap;
+  vertical-align: top;
+  border-right: 1px solid var(--border-subtle);
+}
+
+.idiff-ln--old {
+  border-left: none;
+}
+
+.idiff-ln--new {
+  border-right: 1px solid var(--border-subtle);
+}
+
+/* -- Prefix (+/-/space) -- */
+
+.idiff-prefix {
+  padding: 0 4px 0 8px;
+  color: var(--text-muted);
+  user-select: none;
+  width: 16px;
+  text-align: center;
+  vertical-align: top;
+}
+
+.idiff-line--added .idiff-prefix {
+  color: var(--success);
+}
+
+.idiff-line--removed .idiff-prefix {
+  color: var(--danger);
+}
+
+/* -- Content -- */
+
+.idiff-content {
+  padding: 0 12px 0 4px;
+  white-space: pre;
+  color: var(--text-primary);
+  vertical-align: top;
+}
+
+.idiff-line--removed .idiff-content {
+  color: var(--text-secondary);
+}
+
+/* -- Collapse row -- */
+
+.idiff-collapse-row {
+  background: var(--bg-elevated);
+}
+
+.idiff-collapse-cell {
+  padding: 4px 0;
+  text-align: center;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.idiff-expand-btn {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 12px;
+  border-radius: var(--radius-sm);
+  transition:
+    background-color 0.1s,
+    color 0.1s;
+}
+
+.idiff-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+}

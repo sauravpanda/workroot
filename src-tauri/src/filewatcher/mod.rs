@@ -1,4 +1,5 @@
 pub mod analysis;
+pub mod stats;
 pub mod tracker;
 
 use serde::Serialize;

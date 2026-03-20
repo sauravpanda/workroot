@@ -1,0 +1,254 @@
+/* ==========================================================
+   Clipboard History – Utility panel
+   ========================================================== */
+
+.cliph-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.cliph-panel {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 520px;
+  max-width: calc(100vw - 40px);
+  max-height: 70vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* -- Header -- */
+
+.cliph-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.cliph-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.cliph-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cliph-clear-btn {
+  font-family: var(--font-sans);
+  font-size: 0.68em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  cursor: pointer;
+  transition:
+    color 0.1s,
+    background-color 0.1s;
+}
+
+.cliph-clear-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.cliph-clear-confirm {
+  color: var(--danger);
+  border-color: var(--danger-muted);
+}
+
+.cliph-clear-confirm:hover {
+  background: var(--danger-muted);
+  color: var(--danger);
+}
+
+.cliph-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.cliph-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Search -- */
+
+.cliph-search-row {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.cliph-search {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.82em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.cliph-search:focus {
+  border-color: var(--accent);
+}
+
+/* -- List -- */
+
+.cliph-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 10px 10px;
+  overscroll-behavior: contain;
+}
+
+.cliph-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.cliph-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cliph-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.cliph-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* -- Item -- */
+
+.cliph-item {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.cliph-item:hover {
+  background: var(--bg-hover);
+}
+
+.cliph-item-copied {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.cliph-item-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.cliph-preview {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.4;
+  overflow: hidden;
+}
+
+.cliph-expand-btn {
+  flex-shrink: 0;
+  font-family: var(--font-sans);
+  font-size: 0.62em;
+  font-weight: 500;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.cliph-expand-btn:hover {
+  text-decoration: underline;
+}
+
+.cliph-item-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cliph-source {
+  font-size: 0.6em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-tertiary);
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  padding: 1px 6px;
+}
+
+.cliph-time {
+  font-size: 0.62em;
+  color: var(--text-muted);
+}
+
+.cliph-copied-badge {
+  font-size: 0.62em;
+  font-weight: 600;
+  color: var(--success);
+  margin-left: auto;
+  animation: cliph-flash 0.3s ease-out;
+}
+
+@keyframes cliph-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

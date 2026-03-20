@@ -8,6 +8,11 @@ const SIDEBAR_MAX = 480;
 const SIDEBAR_DEFAULT = 260;
 const STORAGE_KEY = "workroot:sidebar-width";
 
+const RIGHT_SIDEBAR_MIN = 200;
+const RIGHT_SIDEBAR_MAX = 500;
+const RIGHT_SIDEBAR_DEFAULT = 280;
+const RIGHT_STORAGE_KEY = "workroot:right-sidebar-width";
+
 function getSavedWidth(): number {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -21,12 +26,37 @@ function getSavedWidth(): number {
   return SIDEBAR_DEFAULT;
 }
 
-interface MainLayoutProps {
-  children: React.ReactNode;
+function getSavedRightWidth(): number {
+  try {
+    const saved = localStorage.getItem(RIGHT_STORAGE_KEY);
+    if (saved) {
+      const n = parseInt(saved, 10);
+      if (n >= RIGHT_SIDEBAR_MIN && n <= RIGHT_SIDEBAR_MAX) return n;
+    }
+  } catch {
+    // ignore
+  }
+  return RIGHT_SIDEBAR_DEFAULT;
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
+interface MainLayoutProps {
+  children: React.ReactNode;
+  onOpenSearch?: () => void;
+  onOpenAiChat?: () => void;
+  onOpenNotifications?: () => void;
+  onOpenSettings?: () => void;
+}
+
+export function MainLayout({
+  children,
+  onOpenSearch,
+  onOpenAiChat,
+  onOpenNotifications,
+  onOpenSettings,
+}: MainLayoutProps) {
   const [sidebarWidth, setSidebarWidth] = useState(getSavedWidth);
+  const [rightSidebarWidth, setRightSidebarWidth] =
+    useState(getSavedRightWidth);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
     null,
   );
@@ -42,6 +72,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [showRightSidebar, setShowRightSidebar] = useState(true);
   const dragging = useRef(false);
+  const draggingRight = useRef(false);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -50,18 +81,39 @@ export function MainLayout({ children }: MainLayoutProps) {
     document.body.style.userSelect = "none";
   }, []);
 
+  const handleRightMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    draggingRight.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, []);
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!dragging.current) return;
-      const width = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, e.clientX));
-      setSidebarWidth(width);
+      if (dragging.current) {
+        const width = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, e.clientX));
+        setSidebarWidth(width);
+      }
+      if (draggingRight.current) {
+        const width = Math.min(
+          RIGHT_SIDEBAR_MAX,
+          Math.max(RIGHT_SIDEBAR_MIN, window.innerWidth - e.clientX),
+        );
+        setRightSidebarWidth(width);
+      }
     };
 
     const handleMouseUp = () => {
-      if (!dragging.current) return;
-      dragging.current = false;
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
+      if (dragging.current) {
+        dragging.current = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
+      if (draggingRight.current) {
+        draggingRight.current = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
     };
 
     document.addEventListener("mousemove", handleMouseMove);
@@ -79,6 +131,14 @@ export function MainLayout({ children }: MainLayoutProps) {
       // ignore
     }
   }, [sidebarWidth]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(RIGHT_STORAGE_KEY, String(rightSidebarWidth));
+    } catch {
+      // ignore
+    }
+  }, [rightSidebarWidth]);
 
   return (
     <UiContext.Provider
@@ -99,11 +159,26 @@ export function MainLayout({ children }: MainLayoutProps) {
     >
       <div className="main-layout">
         <div className="sidebar-panel" style={{ width: sidebarWidth }}>
-          <Sidebar />
+          <Sidebar
+            onOpenSearch={onOpenSearch}
+            onOpenAiChat={onOpenAiChat}
+            onOpenNotifications={onOpenNotifications}
+            onOpenSettings={onOpenSettings}
+          />
         </div>
         <div className="resize-handle" onMouseDown={handleMouseDown} />
         <div className="content-area">{children}</div>
-        {showRightSidebar && <GitHubSidebar projectId={selectedProjectId} />}
+        {showRightSidebar && (
+          <>
+            <div
+              className="resize-handle resize-handle--right"
+              onMouseDown={handleRightMouseDown}
+            />
+            <div style={{ width: rightSidebarWidth, flexShrink: 0 }}>
+              <GitHubSidebar projectId={selectedProjectId} />
+            </div>
+          </>
+        )}
       </div>
     </UiContext.Provider>
   );

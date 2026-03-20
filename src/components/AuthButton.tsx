@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 
 export function AuthButton() {
@@ -9,8 +10,12 @@ export function AuthButton() {
     deviceCode,
     isPolling,
     startLogin,
+    loginWithPat,
     logout,
   } = useAuth();
+
+  const [patInput, setPatInput] = useState("");
+  const [showPatForm, setShowPatForm] = useState(false);
 
   if (isLoading) {
     return <div className="auth-section">Loading...</div>;
@@ -53,9 +58,75 @@ export function AuthButton() {
   return (
     <div className="auth-section">
       {error && <p className="auth-error">{error}</p>}
-      <button onClick={startLogin} className="auth-button auth-login">
-        Sign in with GitHub
-      </button>
+
+      {showPatForm ? (
+        <div className="auth-pat-form">
+          <label className="auth-pat-label">
+            Personal Access Token
+            <input
+              type="password"
+              className="auth-pat-input"
+              value={patInput}
+              onChange={(e) => setPatInput(e.target.value)}
+              placeholder="ghp_xxxxxxxxxxxx"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && patInput.trim()) {
+                  loginWithPat(patInput.trim());
+                }
+              }}
+            />
+          </label>
+          <p className="auth-pat-hint">
+            Generate a token at{" "}
+            <a
+              href="https://github.com/settings/tokens"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              github.com/settings/tokens
+            </a>{" "}
+            with <code>repo</code> and <code>user</code> scopes.
+          </p>
+          <div className="auth-pat-actions">
+            <button
+              onClick={() => loginWithPat(patInput.trim())}
+              className="auth-button auth-login"
+              disabled={!patInput.trim()}
+            >
+              Save Token
+            </button>
+            <button
+              onClick={() => setShowPatForm(false)}
+              className="auth-button auth-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="auth-options">
+          <button
+            onClick={() => setShowPatForm(true)}
+            className="auth-button auth-login"
+          >
+            Sign in with Token
+          </button>
+          <button onClick={startLogin} className="auth-button auth-secondary">
+            Use Device Flow
+          </button>
+          <p className="auth-pat-hint">
+            If you have the{" "}
+            <a
+              href="https://cli.github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub CLI
+            </a>{" "}
+            installed, your token is detected automatically.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

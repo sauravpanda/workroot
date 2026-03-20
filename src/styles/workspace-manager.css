@@ -1,0 +1,287 @@
+/* ==========================================================
+   Workspace Manager – Clean card layout
+   ========================================================== */
+
+.wspmgr-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.wspmgr-panel {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 540px;
+  max-width: calc(100vw - 40px);
+  max-height: 70vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* -- Header -- */
+
+.wspmgr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.wspmgr-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.wspmgr-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.wspmgr-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Toolbar -- */
+
+.wspmgr-toolbar {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.wspmgr-save-current {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--accent);
+  background: none;
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.1s;
+}
+
+.wspmgr-save-current:hover {
+  background: var(--accent-muted);
+}
+
+.wspmgr-save-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wspmgr-save-input {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 0.82em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.wspmgr-save-input:focus {
+  border-color: var(--accent);
+}
+
+.wspmgr-save-btn {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.wspmgr-save-btn:hover {
+  background: var(--accent-hover);
+}
+
+.wspmgr-save-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.wspmgr-cancel-btn {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.wspmgr-cancel-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* -- List -- */
+
+.wspmgr-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px 12px;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wspmgr-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.wspmgr-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.wspmgr-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.wspmgr-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* -- Card -- */
+
+.wspmgr-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.wspmgr-card:hover {
+  border-color: var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.wspmgr-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wspmgr-card-name {
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wspmgr-card-date {
+  font-size: 0.68em;
+  color: var(--text-muted);
+}
+
+.wspmgr-card-preview {
+  font-size: 0.68em;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wspmgr-card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.wspmgr-action-btn {
+  font-family: var(--font-sans);
+  font-size: 0.68em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition:
+    color 0.1s,
+    background-color 0.1s;
+}
+
+.wspmgr-action-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.wspmgr-action-load {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.wspmgr-action-load:hover {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.wspmgr-action-danger {
+  color: var(--danger);
+  border-color: var(--danger-muted);
+}
+
+.wspmgr-action-danger:hover {
+  background: var(--danger-muted);
+  color: var(--danger);
+}

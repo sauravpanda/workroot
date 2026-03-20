@@ -45,6 +45,11 @@
   padding: 6px 10px;
   border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--bg-elevated) 40%, var(--bg-surface)) 0%,
+    var(--bg-surface) 100%
+  );
 }
 
 .gh-sidebar__title {
@@ -161,6 +166,7 @@
 .gh-sidebar__tab--active {
   color: var(--accent);
   border-bottom-color: var(--accent);
+  background: color-mix(in srgb, var(--accent-muted) 50%, transparent);
 }
 
 /* ---- Scrollable Content ---- */
@@ -344,21 +350,24 @@
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  padding: 5px 10px;
+  padding: 5px 10px 5px 12px;
   width: 100%;
   text-align: left;
   background: none;
   border: none;
+  border-left: 2px solid transparent;
   border-radius: 0;
   color: var(--text-primary);
   cursor: pointer;
   font-size: 0.78em;
   line-height: 1.35;
-  transition: background-color 0.1s;
+  transition: background-color 0.1s, border-color 0.1s;
+  box-sizing: border-box;
 }
 
 .gh-sidebar__row:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--bg-elevated);
+  border-left-color: var(--border-strong);
 }
 
 .gh-sidebar__row-left {

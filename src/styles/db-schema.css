@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border, #333);
+  border-bottom: 1px solid var(--border);
 }
 
 .db-schema-status {
@@ -35,7 +35,7 @@
 
 .db-schema-refresh {
   padding: 4px 10px;
-  border: 1px solid var(--border, #444);
+  border: 1px solid var(--border);
   background: transparent;
   color: var(--text-muted, #888);
   font-size: 12px;
@@ -44,7 +44,7 @@
 }
 
 .db-schema-refresh:hover {
-  color: var(--text, #e0e0e0);
+  color: var(--text-primary);
 }
 
 .db-schema-body {
@@ -55,7 +55,7 @@
 
 .db-schema-sidebar {
   width: 220px;
-  border-right: 1px solid var(--border, #333);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
 }
@@ -63,10 +63,10 @@
 .db-schema-search {
   margin: 8px;
   padding: 5px 8px;
-  border: 1px solid var(--border, #444);
+  border: 1px solid var(--border);
   border-radius: 3px;
-  background: var(--bg-input, #1a1a2e);
-  color: var(--text, #e0e0e0);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   font-size: 12px;
   outline: none;
 }
@@ -87,16 +87,16 @@
 }
 
 .db-schema-table-item:hover {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.04));
+  background: var(--bg-hover);
 }
 
 .db-schema-table-item.active {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.06));
-  border-left-color: var(--accent, #7c5cbf);
+  background: var(--bg-hover);
+  border-left-color: var(--accent);
 }
 
 .db-table-name {
-  color: var(--text, #e0e0e0);
+  color: var(--text-primary);
 }
 
 .db-table-count {
@@ -113,7 +113,7 @@
 .db-detail-title {
   margin: 0 0 4px;
   font-size: 16px;
-  color: var(--text, #e0e0e0);
+  color: var(--text-primary);
 }
 
 .db-detail-meta {
@@ -131,7 +131,7 @@
 .db-columns-table th {
   text-align: left;
   padding: 6px 10px;
-  border-bottom: 1px solid var(--border, #333);
+  border-bottom: 1px solid var(--border);
   color: var(--text-muted, #888);
   font-weight: 500;
   font-size: 11px;
@@ -141,7 +141,7 @@
 .db-columns-table td {
   padding: 6px 10px;
   border-bottom: 1px solid var(--border-subtle, #2a2a3e);
-  color: var(--text, #e0e0e0);
+  color: var(--text-primary);
 }
 
 .db-pk-icon {
@@ -178,7 +178,7 @@
 .db-index-list li {
   padding: 4px 0;
   font-size: 13px;
-  color: var(--text, #e0e0e0);
+  color: var(--text-primary);
 }
 
 .db-fk-link {

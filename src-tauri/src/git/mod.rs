@@ -1,3 +1,4 @@
+pub mod analytics;
 pub mod blame;
 pub mod branch;
 pub mod commit;
@@ -5,7 +6,9 @@ pub mod compare;
 pub mod conflicts;
 pub mod diff;
 pub mod hooks;
+pub mod log;
 pub mod stash;
+pub mod tags;
 pub mod worktree;
 
 use serde::Serialize;

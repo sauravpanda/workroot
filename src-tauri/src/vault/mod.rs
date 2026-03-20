@@ -1,4 +1,5 @@
 pub mod crypto;
+pub mod diff;
 pub mod import;
 pub mod share;
 pub mod synthesis;

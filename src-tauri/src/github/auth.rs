@@ -12,7 +12,50 @@ const KEYRING_USER: &str = "github_token";
 fn get_client_id(db: &AppDb) -> Result<String, String> {
     let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
     settings::get_setting_value(&conn, "github_client_id")
-        .ok_or_else(|| "GitHub Client ID not configured. Go to Settings to set it up.".to_string())
+        .ok_or_else(|| "GitHub Client ID not configured. Use a Personal Access Token instead — go to Settings > GitHub and paste your token.".to_string())
+}
+
+/// Stores a personal access token directly (no OAuth app needed).
+/// Users can generate one at https://github.com/settings/tokens
+pub fn store_pat(token: &str) -> Result<(), String> {
+    store_token(token)
+}
+
+/// Attempts to read a GitHub token from the `gh` CLI config or environment.
+/// Falls back to the OS keychain.
+pub fn get_token_from_env_or_gh() -> Result<Option<String>, String> {
+    // 1. Check OS keychain first (user may have already stored a token)
+    if let Some(t) = get_token()? {
+        return Ok(Some(t));
+    }
+
+    // 2. Check GH_TOKEN / GITHUB_TOKEN env vars
+    if let Ok(token) = std::env::var("GH_TOKEN") {
+        if !token.is_empty() {
+            return Ok(Some(token));
+        }
+    }
+    if let Ok(token) = std::env::var("GITHUB_TOKEN") {
+        if !token.is_empty() {
+            return Ok(Some(token));
+        }
+    }
+
+    // 3. Try reading from `gh auth token` (GitHub CLI)
+    match std::process::Command::new("gh")
+        .args(["auth", "token"])
+        .output()
+    {
+        Ok(output) if output.status.success() => {
+            let token = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !token.is_empty() {
+                return Ok(Some(token));
+            }
+        }
+        _ => {}
+    }
+
+    Ok(None)
 }
 
 /// Starts the GitHub OAuth device code flow.
@@ -136,9 +179,9 @@ pub fn delete_token() -> Result<(), String> {
     }
 }
 
-/// Fetches the authenticated user's profile from GitHub using the stored token.
+/// Fetches the authenticated user's profile from GitHub using any available token.
 pub async fn get_authenticated_user() -> Result<Option<GitHubUser>, String> {
-    let token = match get_token()? {
+    let token = match get_token_from_env_or_gh()? {
         Some(t) => t,
         None => return Ok(None),
     };
