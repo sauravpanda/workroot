@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { GitHubSidebar } from "../components/GitHubSidebar";
 import { UiContext } from "../stores/uiStore";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 
 const SIDEBAR_MIN = 200;
 const SIDEBAR_MAX = 480;
@@ -159,12 +160,14 @@ export function MainLayout({
     >
       <div className="main-layout">
         <div className="sidebar-panel" style={{ width: sidebarWidth }}>
-          <Sidebar
-            onOpenSearch={onOpenSearch}
-            onOpenAiChat={onOpenAiChat}
-            onOpenNotifications={onOpenNotifications}
-            onOpenSettings={onOpenSettings}
-          />
+          <ErrorBoundary name="Sidebar">
+            <Sidebar
+              onOpenSearch={onOpenSearch}
+              onOpenAiChat={onOpenAiChat}
+              onOpenNotifications={onOpenNotifications}
+              onOpenSettings={onOpenSettings}
+            />
+          </ErrorBoundary>
         </div>
         <div className="resize-handle" onMouseDown={handleMouseDown} />
         <div className="content-area">{children}</div>
@@ -175,7 +178,9 @@ export function MainLayout({
               onMouseDown={handleRightMouseDown}
             />
             <div style={{ width: rightSidebarWidth, flexShrink: 0 }}>
-              <GitHubSidebar projectId={selectedProjectId} />
+              <ErrorBoundary name="GitHub Sidebar">
+                <GitHubSidebar projectId={selectedProjectId} />
+              </ErrorBoundary>
             </div>
           </>
         )}

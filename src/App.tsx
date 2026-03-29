@@ -1,4 +1,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { ErrorProvider } from "./contexts/ErrorContext";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { GlobalErrorToast } from "./components/GlobalErrorToast";
 import { invoke } from "@tauri-apps/api/core";
 import { MainLayout } from "./layouts/MainLayout";
 import { AuthButton } from "./components/AuthButton";
@@ -1660,14 +1663,21 @@ function App() {
   });
 
   return (
-    <MainLayout
-      onOpenSearch={() => sidebarActionsRef.current.openSearch()}
-      onOpenAiChat={() => sidebarActionsRef.current.openAiChat()}
-      onOpenNotifications={() => sidebarActionsRef.current.openNotifications()}
-      onOpenSettings={() => sidebarActionsRef.current.openSettings()}
-    >
-      <AppContent sidebarActionsRef={sidebarActionsRef} />
-    </MainLayout>
+    <ErrorProvider>
+      <ErrorBoundary name="App">
+        <MainLayout
+          onOpenSearch={() => sidebarActionsRef.current.openSearch()}
+          onOpenAiChat={() => sidebarActionsRef.current.openAiChat()}
+          onOpenNotifications={() => sidebarActionsRef.current.openNotifications()}
+          onOpenSettings={() => sidebarActionsRef.current.openSettings()}
+        >
+          <ErrorBoundary name="AppContent">
+            <AppContent sidebarActionsRef={sidebarActionsRef} />
+          </ErrorBoundary>
+        </MainLayout>
+        <GlobalErrorToast />
+      </ErrorBoundary>
+    </ErrorProvider>
   );
 }
 
