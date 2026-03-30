@@ -208,7 +208,7 @@ pub async fn list_repo_pulls(
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
     let token = auth::get_token()?.ok_or("Not authenticated. Please sign in with GitHub first.")?;
 
-    let client = reqwest::Client::new();
+    let client = super::api_client()?;
     let url = format!(
         "https://api.github.com/repos/{}/{}/pulls?state=open&per_page=25&sort=updated",
         owner, repo_name
@@ -241,7 +241,7 @@ pub async fn list_repo_issues(
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
     let token = auth::get_token()?.ok_or("Not authenticated. Please sign in with GitHub first.")?;
 
-    let client = reqwest::Client::new();
+    let client = super::api_client()?;
     let url = format!(
         "https://api.github.com/repos/{}/{}/issues?state=open&per_page=25&sort=updated&direction=desc",
         owner, repo_name
@@ -281,7 +281,7 @@ pub async fn get_repo_activity(
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
     let token = auth::get_token()?.ok_or("Not authenticated. Please sign in with GitHub first.")?;
 
-    let client = reqwest::Client::new();
+    let client = super::api_client()?;
     let url = format!(
         "https://api.github.com/repos/{}/{}/events?per_page=20",
         owner, repo_name

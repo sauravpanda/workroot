@@ -1,4 +1,4 @@
-use crate::github::auth;
+use crate::github::{self, auth};
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
@@ -18,7 +18,7 @@ pub struct Notification {
 pub async fn get_notifications() -> Result<Vec<Notification>, String> {
     let token = auth::get_token()?.ok_or_else(|| "Not authenticated".to_string())?;
 
-    let client = reqwest::Client::new();
+    let client = github::api_client()?;
     let resp = client
         .get("https://api.github.com/notifications?per_page=30")
         .header("Authorization", format!("Bearer {}", token))
@@ -94,7 +94,7 @@ pub async fn get_notifications() -> Result<Vec<Notification>, String> {
 pub async fn mark_notification_read(thread_id: String) -> Result<(), String> {
     let token = auth::get_token()?.ok_or_else(|| "Not authenticated".to_string())?;
 
-    let client = reqwest::Client::new();
+    let client = github::api_client()?;
     let resp = client
         .patch(format!(
             "https://api.github.com/notifications/threads/{}",

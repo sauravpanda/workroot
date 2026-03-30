@@ -112,7 +112,7 @@ pub async fn get_pr_status(
 
     let token = auth::get_token()?.ok_or("Not authenticated. Please sign in with GitHub first.")?;
 
-    let client = reqwest::Client::new();
+    let client = super::api_client()?;
 
     // Fetch PR detail, checks, and reviews in parallel
     let pr_url = format!(

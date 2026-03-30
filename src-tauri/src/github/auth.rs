@@ -63,7 +63,7 @@ pub fn get_token_from_env_or_gh() -> Result<Option<String>, String> {
 /// at the verification_uri.
 pub async fn start_device_flow(db: State<'_, AppDb>) -> Result<DeviceCodeResponse, String> {
     let client_id = get_client_id(&db)?;
-    let client = reqwest::Client::new();
+    let client = super::api_client()?;
     let resp = client
         .post("https://github.com/login/device/code")
         .header("Accept", "application/json")
@@ -103,7 +103,7 @@ pub async fn poll_for_token(
     interval: u64,
 ) -> Result<String, String> {
     let client_id = get_client_id(&db)?;
-    let client = reqwest::Client::new();
+    let client = super::api_client()?;
     let poll_interval = std::time::Duration::from_secs(interval.max(5));
     let max_attempts = 120; // ~10 minutes at 5s interval
 
@@ -186,7 +186,7 @@ pub async fn get_authenticated_user() -> Result<Option<GitHubUser>, String> {
         None => return Ok(None),
     };
 
-    let client = reqwest::Client::new();
+    let client = super::api_client()?;
     let resp = client
         .get("https://api.github.com/user")
         .header("Authorization", format!("Bearer {}", token))

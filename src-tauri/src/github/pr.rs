@@ -87,7 +87,7 @@ pub async fn create_pull_request(
 
     let token = auth::get_token()?.ok_or("Not authenticated. Please sign in with GitHub first.")?;
 
-    let client = reqwest::Client::new();
+    let client = super::api_client()?;
     let resp = client
         .post(format!(
             "https://api.github.com/repos/{}/{}/pulls",
@@ -150,7 +150,7 @@ pub async fn get_pr_for_branch(
 
     let token = auth::get_token()?.ok_or("Not authenticated. Please sign in with GitHub first.")?;
 
-    let client = reqwest::Client::new();
+    let client = super::api_client()?;
     let resp = client
         .get(format!(
             "https://api.github.com/repos/{}/{}/pulls",
