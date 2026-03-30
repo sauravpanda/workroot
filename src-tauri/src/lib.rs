@@ -2,6 +2,7 @@ pub mod ai;
 pub mod backup;
 pub mod bookmarks;
 pub mod browser;
+pub mod errors;
 pub mod claudemd;
 pub mod clipboard;
 pub mod collaboration;
