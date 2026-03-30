@@ -33,6 +33,7 @@ pub mod terminal;
 pub mod testing;
 pub mod todos;
 pub mod tray;
+pub mod validate;
 pub mod vault;
 pub mod webhooks;
 pub mod workspace;
