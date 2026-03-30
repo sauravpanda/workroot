@@ -156,16 +156,15 @@ export function TerminalPanel({
   // Per-tab renderLeaf so inactive tabs can stay mounted (visibility:hidden)
   // without being confused about active/visible state.
   const makeRenderLeaf = useCallback(
-    (tabId: string) =>
-      (paneId: string, isFocused: boolean) => (
-        <TerminalInstance
-          key={paneId}
-          cwd={cwd}
-          active={tabId === activeTabId && isFocused}
-          visible={tabId === activeTabId}
-          themeId={themeId}
-        />
-      ),
+    (tabId: string) => (paneId: string, isFocused: boolean) => (
+      <TerminalInstance
+        key={paneId}
+        cwd={cwd}
+        active={tabId === activeTabId && isFocused}
+        visible={tabId === activeTabId}
+        themeId={themeId}
+      />
+    ),
     [cwd, activeTabId, themeId],
   );
 

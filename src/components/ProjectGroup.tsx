@@ -62,7 +62,13 @@ export function ProjectGroup({
       >
         <span className={`project-chevron ${expanded ? "expanded" : ""}`}>
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-            <path d="M2.5 1.5l4 3-4 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M2.5 1.5l4 3-4 3"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </span>
         <span className="project-info">

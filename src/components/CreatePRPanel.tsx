@@ -109,8 +109,21 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
   if (loading) {
     return (
       <div className="create-pr-loading">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ animation: "spin 1s linear infinite" }}>
-          <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="20 15" />
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          fill="none"
+          style={{ animation: "spin 1s linear infinite" }}
+        >
+          <circle
+            cx="7"
+            cy="7"
+            r="5.5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeDasharray="20 15"
+          />
         </svg>
         Loading…
       </div>
@@ -126,11 +139,24 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
         <div className="create-pr-success">
           <div className="create-pr-success-icon">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M4 9l4 4 6-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M4 9l4 4 6-7"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
-          <span className="create-pr-success-title">PR #{createdPR.number} created</span>
-          <a className="create-pr-success-link" href={createdPR.html_url} target="_blank" rel="noopener noreferrer">
+          <span className="create-pr-success-title">
+            PR #{createdPR.number} created
+          </span>
+          <a
+            className="create-pr-success-link"
+            href={createdPR.html_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             View on GitHub ↗
           </a>
         </div>
@@ -145,10 +171,33 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
           <span className="create-pr-title">Pull Request</span>
           <div className="create-pr-branch-flow">
             <span className="create-pr-branch-chip">
-              <svg className="create-pr-chip-icon" width="10" height="10" viewBox="0 0 12 12" fill="none">
-                <circle cx="3" cy="3" r="2" stroke="currentColor" strokeWidth="1.2" />
-                <circle cx="9" cy="9" r="2" stroke="currentColor" strokeWidth="1.2" />
-                <path d="M3 5v1a3 3 0 003 3h0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              <svg
+                className="create-pr-chip-icon"
+                width="10"
+                height="10"
+                viewBox="0 0 12 12"
+                fill="none"
+              >
+                <circle
+                  cx="3"
+                  cy="3"
+                  r="2"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                />
+                <circle
+                  cx="9"
+                  cy="9"
+                  r="2"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                />
+                <path
+                  d="M3 5v1a3 3 0 003 3h0"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
               </svg>
               {branch}
             </span>
@@ -156,13 +205,26 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
         </div>
         <div className="create-pr-existing-card">
           <span className="create-pr-existing-badge">
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="3" /></svg>
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
+              <circle cx="4" cy="4" r="3" />
+            </svg>
             PR #{existingPR.number} open{existingPR.draft ? " · draft" : ""}
           </span>
           <span className="create-pr-existing-title">{existingPR.title}</span>
-          <a className="create-pr-existing-link" href={existingPR.html_url} target="_blank" rel="noopener noreferrer">
+          <a
+            className="create-pr-existing-link"
+            href={existingPR.html_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M2 6h8M7 3l3 3-3 3"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
             Open on GitHub
           </a>
@@ -177,22 +239,68 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
         <span className="create-pr-title">Create Pull Request</span>
         <div className="create-pr-branch-flow">
           <span className="create-pr-branch-chip">
-            <svg className="create-pr-chip-icon" width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <circle cx="3" cy="3" r="2" stroke="currentColor" strokeWidth="1.2" />
-              <circle cx="9" cy="9" r="2" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M3 5v1a3 3 0 003 3h0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <svg
+              className="create-pr-chip-icon"
+              width="10"
+              height="10"
+              viewBox="0 0 12 12"
+              fill="none"
+            >
+              <circle
+                cx="3"
+                cy="3"
+                r="2"
+                stroke="currentColor"
+                strokeWidth="1.2"
+              />
+              <circle
+                cx="9"
+                cy="9"
+                r="2"
+                stroke="currentColor"
+                strokeWidth="1.2"
+              />
+              <path
+                d="M3 5v1a3 3 0 003 3h0"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+              />
             </svg>
             {branch}
           </span>
           <span className="create-pr-branch-arrow">
             <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
-              <path d="M1 5h11M9 2l3 3-3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M1 5h11M9 2l3 3-3 3"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </span>
           <span className="create-pr-base-chip">
-            <svg className="create-pr-chip-icon" width="10" height="10" viewBox="0 0 12 12" fill="none">
-              <circle cx="6" cy="3" r="2" stroke="currentColor" strokeWidth="1.2" />
-              <path d="M6 5v6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+            <svg
+              className="create-pr-chip-icon"
+              width="10"
+              height="10"
+              viewBox="0 0 12 12"
+              fill="none"
+            >
+              <circle
+                cx="6"
+                cy="3"
+                r="2"
+                stroke="currentColor"
+                strokeWidth="1.2"
+              />
+              <path
+                d="M6 5v6"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+              />
             </svg>
             {baseBranch}
           </span>
@@ -223,8 +331,20 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
               title="Generate with AI"
             >
               <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
-                <path d="M6 1l1.2 3.8L11 6 7.2 7.2 6 11l-1.2-3.8L1 6l3.8-1.2z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" fill="currentColor" opacity="0.3" />
-                <path d="M6 1l1.2 3.8L11 6 7.2 7.2 6 11l-1.2-3.8L1 6l3.8-1.2z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" />
+                <path
+                  d="M6 1l1.2 3.8L11 6 7.2 7.2 6 11l-1.2-3.8L1 6l3.8-1.2z"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                  strokeLinejoin="round"
+                  fill="currentColor"
+                  opacity="0.3"
+                />
+                <path
+                  d="M6 1l1.2 3.8L11 6 7.2 7.2 6 11l-1.2-3.8L1 6l3.8-1.2z"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                  strokeLinejoin="round"
+                />
               </svg>
               {generatingDesc ? "Generating…" : "AI Generate"}
             </button>
@@ -270,16 +390,41 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
         >
           {creating ? (
             <>
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style={{ animation: "spin 1s linear infinite" }}>
-                <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="20 15" />
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 14 14"
+                fill="none"
+                style={{ animation: "spin 1s linear infinite" }}
+              >
+                <circle
+                  cx="7"
+                  cy="7"
+                  r="5.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeDasharray="20 15"
+                />
               </svg>
               Creating…
             </>
           ) : (
             <>
               <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                <path d="M3 7c0-2.2 1.8-4 4-4h5M9 1l3 2-3 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M11 9c0 2.2-1.8 4-4 4H2M5 13l-3-2 3-2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M3 7c0-2.2 1.8-4 4-4h5M9 1l3 2-3 2"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M11 9c0 2.2-1.8 4-4 4H2M5 13l-3-2 3-2"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               Create Pull Request
             </>

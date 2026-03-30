@@ -361,7 +361,9 @@
   cursor: pointer;
   font-size: 0.78em;
   line-height: 1.35;
-  transition: background-color 0.1s, border-color 0.1s;
+  transition:
+    background-color 0.1s,
+    border-color 0.1s;
   box-sizing: border-box;
 }
 

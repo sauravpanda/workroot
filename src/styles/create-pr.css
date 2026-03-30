@@ -125,7 +125,9 @@
   font-family: var(--font-sans);
   font-size: 0.85em;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   width: 100%;
   box-sizing: border-box;
 }
@@ -151,7 +153,9 @@
   outline: none;
   resize: vertical;
   min-height: 130px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   width: 100%;
   box-sizing: border-box;
 }
@@ -179,7 +183,10 @@
   color: var(--accent);
   border-radius: 20px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
   white-space: nowrap;
 }
 
@@ -250,7 +257,9 @@
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .create-pr-toggle input[type="checkbox"]:checked {
@@ -307,7 +316,10 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s,
+    transform 0.1s;
 }
 
 .create-pr-btn:hover:not(:disabled) {
@@ -376,7 +388,9 @@
   border: 1px solid var(--border);
   padding: 4px 12px;
   border-radius: var(--radius);
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .create-pr-success-link:hover {

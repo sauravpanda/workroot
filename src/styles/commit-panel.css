@@ -56,7 +56,9 @@
   font-size: 12.5px;
   outline: none;
   box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .commit-subject::placeholder {
@@ -87,7 +89,9 @@
   background: transparent;
   color: var(--accent);
   cursor: pointer;
-  transition: background-color 0.15s, box-shadow 0.15s;
+  transition:
+    background-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .commit-ai-btn:hover:not(:disabled) {
@@ -133,7 +137,9 @@
   resize: vertical;
   min-height: 42px;
   box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .commit-body::placeholder {
@@ -195,7 +201,10 @@
   font-weight: 500;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .commit-btn:hover:not(:disabled) {
