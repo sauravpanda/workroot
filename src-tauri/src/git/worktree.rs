@@ -190,10 +190,7 @@ pub fn delete_worktree(db: State<'_, AppDb>, worktree_id: i64) -> Result<bool, S
 
 /// Gets the current status of a worktree (dirty/clean, exists on disk).
 #[tauri::command]
-pub fn get_worktree_status(
-    db: State<'_, AppDb>,
-    worktree_id: i64,
-) -> Result<WorktreeInfo, String> {
+pub fn get_worktree_status(db: State<'_, AppDb>, worktree_id: i64) -> Result<WorktreeInfo, String> {
     let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
     let row = queries::get_worktree(&conn, worktree_id)
         .map_err(|e| format!("DB error: {}", e))?

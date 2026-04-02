@@ -91,9 +91,7 @@ export function useWorktrees(projectId: number | null) {
     [loadWorktrees],
   );
 
-  const loadWorktreeHistory = useCallback(async (): Promise<
-    WorktreeInfo[]
-  > => {
+  const loadWorktreeHistory = useCallback(async (): Promise<WorktreeInfo[]> => {
     if (projectId === null) return [];
     try {
       return await invoke<WorktreeInfo[]>("list_worktree_history", {
