@@ -97,6 +97,7 @@ import {
   useGlobalShortcuts,
 } from "./hooks/useCommandRegistry";
 import type { Command } from "./hooks/useCommandRegistry";
+import { usePanels } from "./hooks/usePanels";
 
 interface ProjectInfo {
   id: number;
@@ -151,86 +152,15 @@ function AppContent({
     return () => clearInterval(id);
   }, []);
 
-  const [paletteOpen, setPaletteOpen] = useState(false);
-  const [bookmarksOpen, setBookmarksOpen] = useState(false);
-  const [themeSelectorOpen, setThemeSelectorOpen] = useState(false);
-  const [taskRunnerOpen, setTaskRunnerOpen] = useState(false);
-  const [appThemePickerOpen, setAppThemePickerOpen] = useState(false);
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [themeEditorOpen, setThemeEditorOpen] = useState(false);
-  const [densityPickerOpen, setDensityPickerOpen] = useState(false);
-  const [cssEditorOpen, setCssEditorOpen] = useState(false);
-  const [stashManagerOpen, setStashManagerOpen] = useState(false);
-  const [blameViewOpen, setBlameViewOpen] = useState(false);
-  const [branchCompareOpen, setBranchCompareOpen] = useState(false);
-  const [gitHooksOpen, setGitHooksOpen] = useState(false);
-  const [conflictResolverOpen, setConflictResolverOpen] = useState(false);
-  const [securityAuditOpen, setSecurityAuditOpen] = useState(false);
-  const [secretScannerOpen, setSecretScannerOpen] = useState(false);
-  const [licenseReportOpen, setLicenseReportOpen] = useState(false);
-  const [securityHeadersOpen, setSecurityHeadersOpen] = useState(false);
-  const [testRunnerPanelOpen, setTestRunnerPanelOpen] = useState(false);
-  const [coverageReportOpen, setCoverageReportOpen] = useState(false);
-  const [benchmarkOpen, setBenchmarkOpen] = useState(false);
-  const [dockerOpen, setDockerOpen] = useState(false);
-  const [dockerImagesOpen, setDockerImagesOpen] = useState(false);
-  const [containerMonitorOpen, setContainerMonitorOpen] = useState(false);
-  const [flakyTestsOpen, setFlakyTestsOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [activityTimelineOpen, setActivityTimelineOpen] = useState(false);
-  const [pluginManagerOpen, setPluginManagerOpen] = useState(false);
-  const [backupRestoreOpen, setBackupRestoreOpen] = useState(false);
-  const [analyticsDashboardOpen, setAnalyticsDashboardOpen] = useState(false);
-  const [aiChatOpen, setAiChatOpen] = useState(false);
-  const [unifiedSearchOpen, setUnifiedSearchOpen] = useState(false);
-  const [settingsPageOpen, setSettingsPageOpen] = useState(false);
-  const [terminalRecordingOpen, setTerminalRecordingOpen] = useState(false);
-  const [doraMetricsOpen, setDoraMetricsOpen] = useState(false);
-  const [webhookEventsOpen, setWebhookEventsOpen] = useState(false);
-  const [sshManagerOpen, setSshManagerOpen] = useState(false);
-  const [gitAnalyticsOpen, setGitAnalyticsOpen] = useState(false);
-  const [snippetManagerOpen, setSnippetManagerOpen] = useState(false);
-  const [envDiffOpen, setEnvDiffOpen] = useState(false);
-  const [appPerformanceOpen, setAppPerformanceOpen] = useState(false);
-  const [fileExplorerOpen, setFileExplorerOpen] = useState(false);
-  const [projectOverviewOpen, setProjectOverviewOpen] = useState(false);
-  const [webVitalsOpen, setWebVitalsOpen] = useState(false);
-  const [pluginRuntimeOpen, setPluginRuntimeOpen] = useState(false);
-  const [depAnalyzerOpen, setDepAnalyzerOpen] = useState(false);
-  const [portScannerOpen, setPortScannerOpen] = useState(false);
-  const [dirStatsOpen, setDirStatsOpen] = useState(false);
-  const [tagManagerOpen, setTagManagerOpen] = useState(false);
-  const [gitLogOpen, setGitLogOpen] = useState(false);
-  const [workspaceManagerOpen, setWorkspaceManagerOpen] = useState(false);
-  const [taskSchedulerOpen, setTaskSchedulerOpen] = useState(false);
-  const [clipboardHistoryOpen, setClipboardHistoryOpen] = useState(false);
-  const [todoPanelOpen, setTodoPanelOpen] = useState(false);
-  const [quickSwitcherOpen, setQuickSwitcherOpen] = useState(false);
-  const [errorDiagnosisOpen, setErrorDiagnosisOpen] = useState(false);
-  const [morningBriefingOpen, setMorningBriefingOpen] = useState(false);
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
-  const [networkTabOpen, setNetworkTabOpen] = useState(false);
-  const [prStatusOpen, setPrStatusOpen] = useState(false);
-  const [gitDiffOpen, setGitDiffOpen] = useState(false);
-  const [createPrOpen, setCreatePrOpen] = useState(false);
-  const [memoryTabOpen, setMemoryTabOpen] = useState(false);
-  const [shellHistoryOpen, setShellHistoryOpen] = useState(false);
-  const [deadEndsOpen, setDeadEndsOpen] = useState(false);
-  const [dbSchemaOpen, setDbSchemaOpen] = useState(false);
-  const [browserEventsOpen, setBrowserEventsOpen] = useState(false);
-  const [dbExplorerOpen, setDbExplorerOpen] = useState(false);
+  const { panels, openPanel, closePanel, togglePanel, closePanels } = usePanels();
   const [blameFilePath, setBlameFilePath] = useState("");
   const [contentTab, setContentTab] = useState("terminal");
 
   // Reset content tab and close tab-launched panels when switching worktrees
   useEffect(() => {
     setContentTab("terminal");
-    setGitDiffOpen(false);
-    setCreatePrOpen(false);
-    setSecurityAuditOpen(false);
-    setTestRunnerPanelOpen(false);
-    setDockerOpen(false);
-  }, [selectedWorktreeId]);
+    closePanels(["gitDiff", "createPr", "securityAudit", "testRunnerPanel", "docker"]);
+  }, [selectedWorktreeId, closePanels]);
 
   const [densityMode, setDensityMode] = useState<DensityMode>("comfortable");
   const [appThemeId, setAppThemeId] = useState("midnight");
@@ -367,35 +297,35 @@ function AppContent({
         category: "Tools",
         shortcut: "\u2318B",
         icon: "\u2606",
-        action: () => setBookmarksOpen(true),
+        action: () => openPanel("bookmarks"),
       },
       {
         id: "theme:app",
         label: "App Theme",
         category: "Appearance",
         icon: "\u25D1",
-        action: () => setAppThemePickerOpen(true),
+        action: () => openPanel("appThemePicker"),
       },
       {
         id: "theme:editor",
         label: "Theme Editor",
         category: "Appearance",
         icon: "\uD83C\uDFA8",
-        action: () => setThemeEditorOpen(true),
+        action: () => openPanel("themeEditor"),
       },
       {
         id: "theme:custom-css",
         label: "Custom CSS Editor",
         category: "Appearance",
         icon: "\u270E",
-        action: () => setCssEditorOpen(true),
+        action: () => openPanel("cssEditor"),
       },
       {
         id: "density:picker",
         label: "Layout Density",
         category: "Appearance",
         icon: "\u25A4",
-        action: () => setDensityPickerOpen(true),
+        action: () => openPanel("densityPicker"),
       },
       {
         id: "theme:terminal",
@@ -403,7 +333,7 @@ function AppContent({
         category: "Appearance",
         shortcut: "\u2318T",
         icon: "\u25D0",
-        action: () => setThemeSelectorOpen(true),
+        action: () => openPanel("themeSelector"),
       },
       {
         id: "shortcuts:open",
@@ -411,7 +341,7 @@ function AppContent({
         category: "Help",
         shortcut: "\u2318?",
         icon: "\u2328",
-        action: () => setShortcutsOpen(true),
+        action: () => openPanel("shortcuts"),
       },
       {
         id: "tasks:open",
@@ -420,7 +350,7 @@ function AppContent({
         shortcut: "\u2318R",
         icon: "\u25B6",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setTaskRunnerOpen(true),
+        action: () => openPanel("taskRunner"),
       },
       {
         id: "github:toggle",
@@ -437,7 +367,7 @@ function AppContent({
         category: "Git",
         icon: "\u2193",
         enabled: () => selectedWorktreeId !== null,
-        action: () => setStashManagerOpen(true),
+        action: () => openPanel("stashManager"),
       },
       {
         id: "git:blame",
@@ -447,7 +377,7 @@ function AppContent({
         enabled: () => selectedWorktreeId !== null,
         action: () => {
           setBlameFilePath("");
-          setBlameViewOpen(true);
+          openPanel("blameView");
         },
       },
       {
@@ -456,7 +386,7 @@ function AppContent({
         category: "Git",
         icon: "\u21C4",
         enabled: () => selectedWorktreeId !== null,
-        action: () => setBranchCompareOpen(true),
+        action: () => openPanel("branchCompare"),
       },
       {
         id: "git:hooks",
@@ -464,7 +394,7 @@ function AppContent({
         category: "Git",
         icon: "\u2693",
         enabled: () => selectedWorktreeId !== null,
-        action: () => setGitHooksOpen(true),
+        action: () => openPanel("gitHooks"),
       },
       {
         id: "git:conflicts",
@@ -472,7 +402,7 @@ function AppContent({
         category: "Git",
         icon: "!",
         enabled: () => selectedWorktreeId !== null,
-        action: () => setConflictResolverOpen(true),
+        action: () => openPanel("conflictResolver"),
       },
       // Security tools
       {
@@ -481,7 +411,7 @@ function AppContent({
         category: "Security",
         icon: "\u26A0",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setSecurityAuditOpen(true),
+        action: () => openPanel("securityAudit"),
       },
       {
         id: "security:secrets",
@@ -489,7 +419,7 @@ function AppContent({
         category: "Security",
         icon: "\uD83D\uDD12",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setSecretScannerOpen(true),
+        action: () => openPanel("secretScanner"),
       },
       {
         id: "security:licenses",
@@ -497,14 +427,14 @@ function AppContent({
         category: "Security",
         icon: "\u00A9",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setLicenseReportOpen(true),
+        action: () => openPanel("licenseReport"),
       },
       {
         id: "security:headers",
         label: "Security Headers",
         category: "Security",
         icon: "\u26D4",
-        action: () => setSecurityHeadersOpen(true),
+        action: () => openPanel("securityHeaders"),
       },
       // Testing tools
       {
@@ -513,7 +443,7 @@ function AppContent({
         category: "Testing",
         icon: "\u2714",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setTestRunnerPanelOpen(true),
+        action: () => openPanel("testRunnerPanel"),
       },
       {
         id: "testing:coverage",
@@ -521,7 +451,7 @@ function AppContent({
         category: "Testing",
         icon: "\u25A3",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setCoverageReportOpen(true),
+        action: () => openPanel("coverageReport"),
       },
       {
         id: "testing:benchmark",
@@ -529,7 +459,7 @@ function AppContent({
         category: "Testing",
         icon: "\u23F1",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setBenchmarkOpen(true),
+        action: () => openPanel("benchmark"),
       },
       // Infrastructure
       {
@@ -538,21 +468,21 @@ function AppContent({
         category: "Infrastructure",
         icon: "\uD83D\uDC33",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setDockerOpen(true),
+        action: () => openPanel("docker"),
       },
       {
         id: "infra:docker-images",
         label: "Docker Images",
         category: "Infrastructure",
         icon: "\uD83D\uDCE6",
-        action: () => setDockerImagesOpen(true),
+        action: () => openPanel("dockerImages"),
       },
       {
         id: "infra:container-monitor",
         label: "Container Monitor",
         category: "Infrastructure",
         icon: "\uD83D\uDCCA",
-        action: () => setContainerMonitorOpen(true),
+        action: () => openPanel("containerMonitor"),
       },
       {
         id: "testing:flaky",
@@ -560,7 +490,7 @@ function AppContent({
         category: "Testing",
         icon: "\u26A0",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setFlakyTestsOpen(true),
+        action: () => openPanel("flakyTests"),
       },
       {
         id: "collab:notifications",
@@ -568,28 +498,28 @@ function AppContent({
         category: "Collaboration",
         shortcut: "\u2318N",
         icon: "\uD83D\uDD14",
-        action: () => setNotificationsOpen(true),
+        action: () => openPanel("notifications"),
       },
       {
         id: "collab:activity-timeline",
         label: "Activity Timeline",
         category: "Collaboration",
         icon: "\uD83D\uDCC5",
-        action: () => setActivityTimelineOpen(true),
+        action: () => openPanel("activityTimeline"),
       },
       {
         id: "tools:plugins",
         label: "Plugins",
         category: "Tools",
         icon: "\uD83E\uDDE9",
-        action: () => setPluginManagerOpen(true),
+        action: () => openPanel("pluginManager"),
       },
       {
         id: "tools:backup",
         label: "Backup & Restore",
         category: "Tools",
         icon: "\uD83D\uDCBE",
-        action: () => setBackupRestoreOpen(true),
+        action: () => openPanel("backupRestore"),
       },
       {
         id: "tools:analytics",
@@ -597,7 +527,7 @@ function AppContent({
         category: "Tools",
         icon: "\uD83D\uDCC8",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setAnalyticsDashboardOpen(true),
+        action: () => openPanel("analyticsDashboard"),
       },
       {
         id: "ai:chat",
@@ -605,7 +535,7 @@ function AppContent({
         category: "AI",
         shortcut: "\u2318J",
         icon: "\u2728",
-        action: () => setAiChatOpen((p) => !p),
+        action: () => togglePanel("aiChat"),
       },
       {
         id: "search:unified",
@@ -613,14 +543,14 @@ function AppContent({
         category: "Navigation",
         shortcut: "\u2318P",
         icon: "\u2315",
-        action: () => setUnifiedSearchOpen(true),
+        action: () => openPanel("unifiedSearch"),
       },
       {
         id: "nav:settings-page",
         label: "All Settings",
         category: "Navigation",
         icon: "\u2699",
-        action: () => setSettingsPageOpen(true),
+        action: () => openPanel("settingsPage"),
       },
       {
         id: "terminal:recording",
@@ -628,7 +558,7 @@ function AppContent({
         category: "Tools",
         icon: "\u25CF",
         enabled: () => selectedWorktreeId !== null,
-        action: () => setTerminalRecordingOpen(true),
+        action: () => openPanel("terminalRecording"),
       },
       {
         id: "metrics:dora",
@@ -636,21 +566,21 @@ function AppContent({
         category: "Metrics",
         icon: "\u2261",
         enabled: () => selectedProjectId !== null,
-        action: () => setDoraMetricsOpen(true),
+        action: () => openPanel("doraMetrics"),
       },
       {
         id: "tools:webhooks",
         label: "Webhook Events",
         category: "Tools",
         icon: "\u21AF",
-        action: () => setWebhookEventsOpen(true),
+        action: () => openPanel("webhookEvents"),
       },
       {
         id: "tools:ssh",
         label: "SSH Connections",
         category: "Tools",
         icon: "\u2192",
-        action: () => setSshManagerOpen(true),
+        action: () => openPanel("sshManager"),
       },
       {
         id: "git:analytics",
@@ -658,14 +588,14 @@ function AppContent({
         category: "Git",
         icon: "\u2593",
         enabled: () => selectedWorktreeId !== null,
-        action: () => setGitAnalyticsOpen(true),
+        action: () => openPanel("gitAnalytics"),
       },
       {
         id: "tools:snippets",
         label: "Code Snippets",
         category: "Tools",
         icon: "\u2702",
-        action: () => setSnippetManagerOpen(true),
+        action: () => openPanel("snippetManager"),
       },
       {
         id: "env:diff",
@@ -673,14 +603,14 @@ function AppContent({
         category: "Environment",
         icon: "\u2194",
         enabled: () => selectedProjectId !== null,
-        action: () => setEnvDiffOpen(true),
+        action: () => openPanel("envDiff"),
       },
       {
         id: "tools:performance",
         label: "App Performance",
         category: "Tools",
         icon: "\u2261",
-        action: () => setAppPerformanceOpen(true),
+        action: () => openPanel("appPerformance"),
       },
       {
         id: "nav:files",
@@ -689,7 +619,7 @@ function AppContent({
         shortcut: "\u2318E",
         icon: "\u2630",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setFileExplorerOpen(true),
+        action: () => openPanel("fileExplorer"),
       },
       {
         id: "nav:project-overview",
@@ -697,14 +627,14 @@ function AppContent({
         category: "Navigation",
         icon: "\u25A3",
         enabled: () => selectedProjectId !== null,
-        action: () => setProjectOverviewOpen(true),
+        action: () => openPanel("projectOverview"),
       },
       {
         id: "perf:vitals",
         label: "Web Vitals",
         category: "Performance",
         icon: "\u26A1",
-        action: () => setWebVitalsOpen(true),
+        action: () => openPanel("webVitals"),
       },
       {
         id: "tools:plugin-runtime",
@@ -712,7 +642,7 @@ function AppContent({
         category: "Tools",
         icon: "\u25B7",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setPluginRuntimeOpen(true),
+        action: () => openPanel("pluginRuntime"),
       },
       {
         id: "tools:deps",
@@ -720,14 +650,14 @@ function AppContent({
         category: "Tools",
         icon: "\u2B21",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setDepAnalyzerOpen(true),
+        action: () => openPanel("depAnalyzer"),
       },
       {
         id: "network:ports",
         label: "Port Scanner",
         category: "Network",
         icon: "\u2299",
-        action: () => setPortScannerOpen(true),
+        action: () => openPanel("portScanner"),
       },
       {
         id: "tools:dir-stats",
@@ -735,7 +665,7 @@ function AppContent({
         category: "Tools",
         icon: "\u25A7",
         enabled: () => selectedWorktreePath !== null,
-        action: () => setDirStatsOpen(true),
+        action: () => openPanel("dirStats"),
       },
       {
         id: "git:tags",
@@ -743,7 +673,7 @@ function AppContent({
         category: "Git",
         icon: "\u2691",
         enabled: () => selectedWorktreeId !== null,
-        action: () => setTagManagerOpen(true),
+        action: () => openPanel("tagManager"),
       },
       {
         id: "git:log",
@@ -752,35 +682,35 @@ function AppContent({
         shortcut: "\u2318L",
         icon: "\u2630",
         enabled: () => selectedWorktreeId !== null,
-        action: () => setGitLogOpen(true),
+        action: () => openPanel("gitLog"),
       },
       {
         id: "tools:workspaces",
         label: "Workspaces",
         category: "Tools",
         icon: "\u25A1",
-        action: () => setWorkspaceManagerOpen(true),
+        action: () => openPanel("workspaceManager"),
       },
       {
         id: "tools:scheduler",
         label: "Task Scheduler",
         category: "Tools",
         icon: "\u23F0",
-        action: () => setTaskSchedulerOpen(true),
+        action: () => openPanel("taskScheduler"),
       },
       {
         id: "tools:clipboard",
         label: "Clipboard History",
         category: "Tools",
         icon: "\u2398",
-        action: () => setClipboardHistoryOpen(true),
+        action: () => openPanel("clipboardHistory"),
       },
       {
         id: "tools:todos",
         label: "Todos",
         category: "Tools",
         icon: "\u2611",
-        action: () => setTodoPanelOpen(true),
+        action: () => openPanel("todoPanel"),
       },
       {
         id: "nav:quick-switcher",
@@ -788,7 +718,7 @@ function AppContent({
         category: "Navigation",
         icon: "\u21C4",
         shortcut: "Cmd+Shift+O",
-        action: () => setQuickSwitcherOpen(true),
+        action: () => openPanel("quickSwitcher"),
       },
       {
         id: "ai:error-diagnosis",
@@ -796,91 +726,91 @@ function AppContent({
         category: "AI",
         icon: "\u26A0",
         shortcut: "Cmd+Shift+D",
-        action: () => setErrorDiagnosisOpen(true),
+        action: () => openPanel("errorDiagnosis"),
       },
       {
         id: "view:morning-briefing",
         label: "Morning Briefing",
         category: "View",
         icon: "\u2600",
-        action: () => setMorningBriefingOpen(true),
+        action: () => openPanel("morningBriefing"),
       },
       {
         id: "view:network-traffic",
         label: "Network Traffic",
         category: "View",
         icon: "\u21C6",
-        action: () => setNetworkTabOpen(true),
+        action: () => openPanel("networkTab"),
       },
       {
         id: "git:pr-status",
         label: "PR Status",
         category: "Git",
         icon: "\u2117",
-        action: () => setPrStatusOpen(true),
+        action: () => openPanel("prStatus"),
       },
       {
         id: "git:diff-view",
         label: "Git Changes",
         category: "Git",
         icon: "\u00B1",
-        action: () => setGitDiffOpen(true),
+        action: () => openPanel("gitDiff"),
       },
       {
         id: "git:create-pr",
         label: "Create Pull Request",
         category: "Git",
         icon: "\u2197",
-        action: () => setCreatePrOpen(true),
+        action: () => openPanel("createPr"),
       },
       {
         id: "view:memory-notes",
         label: "Memory Notes",
         category: "View",
         icon: "\u2709",
-        action: () => setMemoryTabOpen(true),
+        action: () => openPanel("memoryTab"),
       },
       {
         id: "view:shell-history",
         label: "Shell History",
         category: "View",
         icon: "\u2328",
-        action: () => setShellHistoryOpen(true),
+        action: () => openPanel("shellHistory"),
       },
       {
         id: "view:dead-ends",
         label: "Dead Ends Log",
         category: "View",
         icon: "\u26D4",
-        action: () => setDeadEndsOpen(true),
+        action: () => openPanel("deadEnds"),
       },
       {
         id: "view:db-schema",
         label: "Database Schema",
         category: "View",
         icon: "\u2637",
-        action: () => setDbSchemaOpen(true),
+        action: () => openPanel("dbSchema"),
       },
       {
         id: "help:onboarding",
         label: "Setup Wizard",
         category: "Help",
         icon: "\u2699",
-        action: () => setOnboardingOpen(true),
+        action: () => openPanel("onboarding"),
       },
       {
         id: "view:browser-events",
         label: "Browser Events",
         category: "View",
         icon: "\u2301",
-        action: () => setBrowserEventsOpen(true),
+        action: () => openPanel("browserEvents"),
       },
       {
         id: "view:db-explorer",
         label: "Database Explorer",
         category: "View",
         icon: "\u2338",
-        action: () => setDbExplorerOpen(true),
+        action: () => openPanel("dbExplorer"),
       },
     ];
 
@@ -933,18 +863,18 @@ function AppContent({
   // Global keyboard shortcuts
   const shortcuts = useMemo(
     () => [
-      { key: "k", meta: true, action: () => setPaletteOpen((p) => !p) },
-      { key: "b", meta: true, action: () => setBookmarksOpen((p) => !p) },
+      { key: "k", meta: true, action: () => togglePanel("palette") },
+      { key: "b", meta: true, action: () => togglePanel("bookmarks") },
       {
         key: "t",
         meta: true,
-        action: () => setThemeSelectorOpen((p) => !p),
+        action: () => togglePanel("themeSelector"),
       },
       {
         key: "/",
         meta: true,
         shift: true,
-        action: () => setShortcutsOpen((p) => !p),
+        action: () => togglePanel("shortcuts"),
       },
       {
         key: ",",
@@ -964,60 +894,54 @@ function AppContent({
       {
         key: "n",
         meta: true,
-        action: () => setNotificationsOpen((p) => !p),
+        action: () => togglePanel("notifications"),
       },
       {
         key: "j",
         meta: true,
-        action: () => setAiChatOpen((p) => !p),
+        action: () => togglePanel("aiChat"),
       },
       {
         key: "p",
         meta: true,
-        action: () => setUnifiedSearchOpen((p) => !p),
+        action: () => togglePanel("unifiedSearch"),
       },
       {
         key: "e",
         meta: true,
-        action: () => setFileExplorerOpen((p) => !p),
+        action: () => togglePanel("fileExplorer"),
       },
       {
         key: "l",
         meta: true,
-        action: () => setGitLogOpen((p) => !p),
+        action: () => togglePanel("gitLog"),
       },
       {
         key: "o",
         meta: true,
         shift: true,
-        action: () => setQuickSwitcherOpen((p) => !p),
+        action: () => togglePanel("quickSwitcher"),
       },
       {
         key: "d",
         meta: true,
         shift: true,
-        action: () => setErrorDiagnosisOpen((p) => !p),
+        action: () => togglePanel("errorDiagnosis"),
       },
     ],
-    [
-      setShowSettings,
-      setSelectedWorktreeId,
-      setSelectedWorktreePath,
-      setSelectedWorktreeName,
-      showRightSidebar,
-      setShowRightSidebar,
-    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [showRightSidebar, setShowSettings, setSelectedWorktreeId, setSelectedWorktreePath, setSelectedWorktreeName, setShowRightSidebar],
   );
   useGlobalShortcuts(shortcuts);
 
-  const handleClosePalette = useCallback(() => setPaletteOpen(false), []);
-  const handleCloseBookmarks = useCallback(() => setBookmarksOpen(false), []);
+  const handleClosePalette = useCallback(() => closePanel("palette"), []);
+  const handleCloseBookmarks = useCallback(() => closePanel("bookmarks"), []);
 
   /* Expose sidebar-toolbar actions to parent via ref */
   sidebarActionsRef.current = {
-    openSearch: () => setUnifiedSearchOpen(true),
-    openAiChat: () => setAiChatOpen(true),
-    openNotifications: () => setNotificationsOpen(true),
+    openSearch: () => openPanel("unifiedSearch"),
+    openAiChat: () => openPanel("aiChat"),
+    openNotifications: () => openPanel("notifications"),
     openSettings: () => {
       setShowSettings(true);
       setSelectedWorktreeId(null);
@@ -1031,19 +955,19 @@ function AppContent({
       case "terminal":
         break;
       case "git":
-        setGitDiffOpen(true);
+        openPanel("gitDiff");
         break;
       case "ai":
-        setAiChatOpen(true);
+        openPanel("aiChat");
         break;
       case "search":
-        setUnifiedSearchOpen(true);
+        openPanel("unifiedSearch");
         break;
       case "security":
-        setSecurityAuditOpen(true);
+        openPanel("securityAudit");
         break;
       case "docker":
-        setDockerOpen(true);
+        openPanel("docker");
         break;
     }
   }, []);
@@ -1052,19 +976,19 @@ function AppContent({
     setContentTab(tab);
     switch (tab) {
       case "changes":
-        setGitDiffOpen(true);
+        openPanel("gitDiff");
         break;
       case "pr":
-        setCreatePrOpen(true);
+        openPanel("createPr");
         break;
       case "tests":
-        setTestRunnerPanelOpen(true);
+        openPanel("testRunnerPanel");
         break;
       case "security":
-        setSecurityAuditOpen(true);
+        openPanel("securityAudit");
         break;
       case "docker":
-        setDockerOpen(true);
+        openPanel("docker");
         break;
     }
   }, []);
@@ -1109,311 +1033,311 @@ function AppContent({
         isGitHubConnected={isGitHubConnected}
       />
       <CommandPalette
-        open={paletteOpen}
+        open={panels.palette}
         onClose={handleClosePalette}
         onExecute={execute}
         search={search}
       />
-      {bookmarksOpen && (
+      {panels.bookmarks && (
         <CommandBookmarks
           projectId={selectedProjectId}
           onClose={handleCloseBookmarks}
         />
       )}
-      {themeSelectorOpen && (
+      {panels.themeSelector && (
         <TerminalThemeSelector
           currentThemeId={terminalThemeId}
           onThemeChange={setTerminalThemeId}
-          onClose={() => setThemeSelectorOpen(false)}
+          onClose={() => closePanel("themeSelector")}
         />
       )}
-      {taskRunnerOpen && selectedWorktreePath && (
+      {panels.taskRunner && selectedWorktreePath && (
         <TaskRunner
           cwd={selectedWorktreePath}
-          onClose={() => setTaskRunnerOpen(false)}
+          onClose={() => closePanel("taskRunner")}
         />
       )}
-      {appThemePickerOpen && (
+      {panels.appThemePicker && (
         <AppThemePicker
           currentThemeId={appThemeId}
           onThemeChange={setAppThemeId}
-          onClose={() => setAppThemePickerOpen(false)}
+          onClose={() => closePanel("appThemePicker")}
         />
       )}
-      {themeEditorOpen && (
+      {panels.themeEditor && (
         <ThemeEditor
           currentThemeId={appThemeId}
-          onClose={() => setThemeEditorOpen(false)}
+          onClose={() => closePanel("themeEditor")}
           onThemeSave={(theme) => {
             applyTheme(theme);
             setAppThemeId(theme.id);
           }}
         />
       )}
-      {densityPickerOpen && (
+      {panels.densityPicker && (
         <DensityPicker
           currentMode={densityMode}
           onModeChange={setDensityMode}
-          onClose={() => setDensityPickerOpen(false)}
+          onClose={() => closePanel("densityPicker")}
         />
       )}
-      {shortcutsOpen && (
-        <KeyboardShortcuts onClose={() => setShortcutsOpen(false)} />
+      {panels.shortcuts && (
+        <KeyboardShortcuts onClose={() => closePanel("shortcuts")} />
       )}
-      {cssEditorOpen && (
-        <CustomCSSEditor onClose={() => setCssEditorOpen(false)} />
+      {panels.cssEditor && (
+        <CustomCSSEditor onClose={() => closePanel("cssEditor")} />
       )}
-      {stashManagerOpen && selectedWorktreeId !== null && (
+      {panels.stashManager && selectedWorktreeId !== null && (
         <StashManager
           worktreeId={selectedWorktreeId}
-          onClose={() => setStashManagerOpen(false)}
+          onClose={() => closePanel("stashManager")}
         />
       )}
-      {blameViewOpen && selectedWorktreeId !== null && (
+      {panels.blameView && selectedWorktreeId !== null && (
         <BlameView
           worktreeId={selectedWorktreeId}
           filePath={blameFilePath}
-          onClose={() => setBlameViewOpen(false)}
+          onClose={() => closePanel("blameView")}
         />
       )}
-      {branchCompareOpen && selectedWorktreeId !== null && (
+      {panels.branchCompare && selectedWorktreeId !== null && (
         <BranchCompare
           worktreeId={selectedWorktreeId}
-          onClose={() => setBranchCompareOpen(false)}
+          onClose={() => closePanel("branchCompare")}
         />
       )}
-      {gitHooksOpen && selectedWorktreeId !== null && (
+      {panels.gitHooks && selectedWorktreeId !== null && (
         <GitHooksManager
           worktreeId={selectedWorktreeId}
-          onClose={() => setGitHooksOpen(false)}
+          onClose={() => closePanel("gitHooks")}
         />
       )}
-      {conflictResolverOpen && selectedWorktreeId !== null && (
+      {panels.conflictResolver && selectedWorktreeId !== null && (
         <ConflictResolver
           worktreeId={selectedWorktreeId}
-          onClose={() => setConflictResolverOpen(false)}
+          onClose={() => closePanel("conflictResolver")}
         />
       )}
-      {securityAuditOpen && selectedWorktreePath && (
+      {panels.securityAudit && selectedWorktreePath && (
         <SecurityAudit
           cwd={selectedWorktreePath}
           onClose={() => {
-            setSecurityAuditOpen(false);
+            closePanel("securityAudit");
             setContentTab("terminal");
           }}
         />
       )}
-      {secretScannerOpen && selectedWorktreePath && (
+      {panels.secretScanner && selectedWorktreePath && (
         <SecretScanner
           cwd={selectedWorktreePath}
-          onClose={() => setSecretScannerOpen(false)}
+          onClose={() => closePanel("secretScanner")}
         />
       )}
-      {licenseReportOpen && selectedWorktreePath && (
+      {panels.licenseReport && selectedWorktreePath && (
         <LicenseReport
           cwd={selectedWorktreePath}
-          onClose={() => setLicenseReportOpen(false)}
+          onClose={() => closePanel("licenseReport")}
         />
       )}
-      {securityHeadersOpen && (
-        <SecurityHeaders onClose={() => setSecurityHeadersOpen(false)} />
+      {panels.securityHeaders && (
+        <SecurityHeaders onClose={() => closePanel("securityHeaders")} />
       )}
-      {testRunnerPanelOpen && selectedWorktreePath && (
+      {panels.testRunnerPanel && selectedWorktreePath && (
         <TestRunnerPanel
           cwd={selectedWorktreePath}
           onClose={() => {
-            setTestRunnerPanelOpen(false);
+            closePanel("testRunnerPanel");
             setContentTab("terminal");
           }}
         />
       )}
-      {coverageReportOpen && selectedWorktreePath && (
+      {panels.coverageReport && selectedWorktreePath && (
         <CoverageReport
           cwd={selectedWorktreePath}
-          onClose={() => setCoverageReportOpen(false)}
+          onClose={() => closePanel("coverageReport")}
         />
       )}
-      {benchmarkOpen && selectedWorktreePath && (
+      {panels.benchmark && selectedWorktreePath && (
         <BenchmarkDashboard
           cwd={selectedWorktreePath}
-          onClose={() => setBenchmarkOpen(false)}
+          onClose={() => closePanel("benchmark")}
         />
       )}
-      {dockerOpen && selectedWorktreePath && (
+      {panels.docker && selectedWorktreePath && (
         <DockerPanel
           cwd={selectedWorktreePath}
           onClose={() => {
-            setDockerOpen(false);
+            closePanel("docker");
             setContentTab("terminal");
           }}
         />
       )}
-      {dockerImagesOpen && (
-        <DockerImages onClose={() => setDockerImagesOpen(false)} />
+      {panels.dockerImages && (
+        <DockerImages onClose={() => closePanel("dockerImages")} />
       )}
-      {containerMonitorOpen && (
-        <ContainerMonitor onClose={() => setContainerMonitorOpen(false)} />
+      {panels.containerMonitor && (
+        <ContainerMonitor onClose={() => closePanel("containerMonitor")} />
       )}
-      {flakyTestsOpen && selectedWorktreePath && (
+      {panels.flakyTests && selectedWorktreePath && (
         <FlakyTests
           cwd={selectedWorktreePath}
-          onClose={() => setFlakyTestsOpen(false)}
+          onClose={() => closePanel("flakyTests")}
         />
       )}
       <NotificationCenter
-        open={notificationsOpen}
-        onClose={() => setNotificationsOpen(false)}
+        open={panels.notifications}
+        onClose={() => closePanel("notifications")}
       />
-      {activityTimelineOpen && (
-        <ActivityTimeline onClose={() => setActivityTimelineOpen(false)} />
+      {panels.activityTimeline && (
+        <ActivityTimeline onClose={() => closePanel("activityTimeline")} />
       )}
-      {pluginManagerOpen && (
-        <PluginManager onClose={() => setPluginManagerOpen(false)} />
+      {panels.pluginManager && (
+        <PluginManager onClose={() => closePanel("pluginManager")} />
       )}
-      {backupRestoreOpen && (
-        <BackupRestore onClose={() => setBackupRestoreOpen(false)} />
+      {panels.backupRestore && (
+        <BackupRestore onClose={() => closePanel("backupRestore")} />
       )}
-      {analyticsDashboardOpen && selectedWorktreePath && (
+      {panels.analyticsDashboard && selectedWorktreePath && (
         <AnalyticsDashboard
           cwd={selectedWorktreePath}
-          onClose={() => setAnalyticsDashboardOpen(false)}
+          onClose={() => closePanel("analyticsDashboard")}
         />
       )}
-      <AiChatSidebar open={aiChatOpen} onClose={() => setAiChatOpen(false)} />
+      <AiChatSidebar open={panels.aiChat} onClose={() => closePanel("aiChat")} />
       <UnifiedSearch
-        open={unifiedSearchOpen}
-        onClose={() => setUnifiedSearchOpen(false)}
+        open={panels.unifiedSearch}
+        onClose={() => closePanel("unifiedSearch")}
         onNavigate={(type, _data) => {
-          setUnifiedSearchOpen(false);
-          if (type === "bookmark") setBookmarksOpen(true);
-          else if (type === "setting") setSettingsPageOpen(true);
+          closePanel("unifiedSearch");
+          if (type === "bookmark") openPanel("bookmarks");
+          else if (type === "setting") openPanel("settingsPage");
         }}
       />
-      {settingsPageOpen && (
-        <SettingsPage onClose={() => setSettingsPageOpen(false)} />
+      {panels.settingsPage && (
+        <SettingsPage onClose={() => closePanel("settingsPage")} />
       )}
-      {terminalRecordingOpen && selectedWorktreeId !== null && (
+      {panels.terminalRecording && selectedWorktreeId !== null && (
         <TerminalRecording
           worktreeId={selectedWorktreeId}
-          onClose={() => setTerminalRecordingOpen(false)}
+          onClose={() => closePanel("terminalRecording")}
         />
       )}
-      {doraMetricsOpen && selectedProjectId !== null && (
+      {panels.doraMetrics && selectedProjectId !== null && (
         <DoraMetrics
           projectId={selectedProjectId}
-          onClose={() => setDoraMetricsOpen(false)}
+          onClose={() => closePanel("doraMetrics")}
         />
       )}
-      {webhookEventsOpen && (
-        <WebhookEvents onClose={() => setWebhookEventsOpen(false)} />
+      {panels.webhookEvents && (
+        <WebhookEvents onClose={() => closePanel("webhookEvents")} />
       )}
-      {sshManagerOpen && (
+      {panels.sshManager && (
         <SshManager
-          onClose={() => setSshManagerOpen(false)}
-          onConnect={() => setSshManagerOpen(false)}
+          onClose={() => closePanel("sshManager")}
+          onConnect={() => closePanel("sshManager")}
         />
       )}
-      {gitAnalyticsOpen && selectedWorktreeId !== null && (
+      {panels.gitAnalytics && selectedWorktreeId !== null && (
         <GitAnalytics
           worktreeId={selectedWorktreeId}
-          onClose={() => setGitAnalyticsOpen(false)}
+          onClose={() => closePanel("gitAnalytics")}
         />
       )}
-      {snippetManagerOpen && (
+      {panels.snippetManager && (
         <SnippetManager
           projectId={selectedProjectId}
-          onClose={() => setSnippetManagerOpen(false)}
+          onClose={() => closePanel("snippetManager")}
         />
       )}
-      {envDiffOpen && selectedProjectId !== null && (
+      {panels.envDiff && selectedProjectId !== null && (
         <EnvProfileDiff
           projectId={selectedProjectId}
-          onClose={() => setEnvDiffOpen(false)}
+          onClose={() => closePanel("envDiff")}
         />
       )}
-      {appPerformanceOpen && (
-        <AppPerformance onClose={() => setAppPerformanceOpen(false)} />
+      {panels.appPerformance && (
+        <AppPerformance onClose={() => closePanel("appPerformance")} />
       )}
-      {fileExplorerOpen && selectedWorktreePath && (
+      {panels.fileExplorer && selectedWorktreePath && (
         <FileExplorer
           cwd={selectedWorktreePath}
-          onClose={() => setFileExplorerOpen(false)}
+          onClose={() => closePanel("fileExplorer")}
           onFileSelect={(path) => {
-            setFileExplorerOpen(false);
+            closePanel("fileExplorer");
             setBlameFilePath(path);
-            setBlameViewOpen(true);
+            openPanel("blameView");
           }}
         />
       )}
-      {projectOverviewOpen && selectedProjectId !== null && (
+      {panels.projectOverview && selectedProjectId !== null && (
         <ProjectOverview
           projectId={selectedProjectId}
-          onClose={() => setProjectOverviewOpen(false)}
+          onClose={() => closePanel("projectOverview")}
         />
       )}
-      {webVitalsOpen && <WebVitals onClose={() => setWebVitalsOpen(false)} />}
-      {pluginRuntimeOpen && selectedWorktreePath && (
+      {panels.webVitals && <WebVitals onClose={() => closePanel("webVitals")} />}
+      {panels.pluginRuntime && selectedWorktreePath && (
         <PluginRuntime
           cwd={selectedWorktreePath}
-          onClose={() => setPluginRuntimeOpen(false)}
+          onClose={() => closePanel("pluginRuntime")}
         />
       )}
-      {depAnalyzerOpen && selectedWorktreePath && (
+      {panels.depAnalyzer && selectedWorktreePath && (
         <DependencyAnalyzer
           cwd={selectedWorktreePath}
-          onClose={() => setDepAnalyzerOpen(false)}
+          onClose={() => closePanel("depAnalyzer")}
         />
       )}
-      {portScannerOpen && (
-        <PortScanner onClose={() => setPortScannerOpen(false)} />
+      {panels.portScanner && (
+        <PortScanner onClose={() => closePanel("portScanner")} />
       )}
-      {dirStatsOpen && selectedWorktreePath && (
+      {panels.dirStats && selectedWorktreePath && (
         <DirectoryStats
           cwd={selectedWorktreePath}
-          onClose={() => setDirStatsOpen(false)}
+          onClose={() => closePanel("dirStats")}
         />
       )}
-      {tagManagerOpen && selectedWorktreeId !== null && (
+      {panels.tagManager && selectedWorktreeId !== null && (
         <TagManager
           worktreeId={selectedWorktreeId}
-          onClose={() => setTagManagerOpen(false)}
+          onClose={() => closePanel("tagManager")}
         />
       )}
-      {gitLogOpen && selectedWorktreeId !== null && (
+      {panels.gitLog && selectedWorktreeId !== null && (
         <GitLogViewer
           worktreeId={selectedWorktreeId}
-          onClose={() => setGitLogOpen(false)}
+          onClose={() => closePanel("gitLog")}
         />
       )}
-      {workspaceManagerOpen && (
+      {panels.workspaceManager && (
         <WorkspaceManager
-          onClose={() => setWorkspaceManagerOpen(false)}
-          onLoad={() => setWorkspaceManagerOpen(false)}
+          onClose={() => closePanel("workspaceManager")}
+          onLoad={() => closePanel("workspaceManager")}
         />
       )}
-      {taskSchedulerOpen && (
-        <TaskScheduler onClose={() => setTaskSchedulerOpen(false)} />
+      {panels.taskScheduler && (
+        <TaskScheduler onClose={() => closePanel("taskScheduler")} />
       )}
-      {clipboardHistoryOpen && (
-        <ClipboardHistory onClose={() => setClipboardHistoryOpen(false)} />
+      {panels.clipboardHistory && (
+        <ClipboardHistory onClose={() => closePanel("clipboardHistory")} />
       )}
-      {todoPanelOpen && (
+      {panels.todoPanel && (
         <TodoPanel
           projectId={selectedProjectId}
-          onClose={() => setTodoPanelOpen(false)}
+          onClose={() => closePanel("todoPanel")}
         />
       )}
-      {morningBriefingOpen && selectedProjectId && (
+      {panels.morningBriefing && selectedProjectId && (
         <div
           className="panel-overlay"
-          onClick={() => setMorningBriefingOpen(false)}
+          onClick={() => closePanel("morningBriefing")}
         >
           <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="panel-dialog-header">
               <span>Morning Briefing</span>
               <button
                 className="panel-dialog-close"
-                onClick={() => setMorningBriefingOpen(false)}
+                onClick={() => closePanel("morningBriefing")}
               >
                 &times;
               </button>
@@ -1422,15 +1346,15 @@ function AppContent({
           </div>
         </div>
       )}
-      {onboardingOpen && (
+      {panels.onboarding && (
         <div className="panel-overlay">
           <div className="panel-dialog panel-dialog--wide">
-            <OnboardingWizard onComplete={() => setOnboardingOpen(false)} />
+            <OnboardingWizard onComplete={() => closePanel("onboarding")} />
           </div>
         </div>
       )}
-      {networkTabOpen && (
-        <div className="panel-overlay" onClick={() => setNetworkTabOpen(false)}>
+      {panels.networkTab && (
+        <div className="panel-overlay" onClick={() => closePanel("networkTab")}>
           <div
             className="panel-dialog panel-dialog--wide"
             onClick={(e) => e.stopPropagation()}
@@ -1439,7 +1363,7 @@ function AppContent({
               <span>Network Traffic</span>
               <button
                 className="panel-dialog-close"
-                onClick={() => setNetworkTabOpen(false)}
+                onClick={() => closePanel("networkTab")}
               >
                 &times;
               </button>
@@ -1448,8 +1372,8 @@ function AppContent({
           </div>
         </div>
       )}
-      {prStatusOpen && selectedWorktreeId && (
-        <div className="panel-overlay" onClick={() => setPrStatusOpen(false)}>
+      {panels.prStatus && selectedWorktreeId && (
+        <div className="panel-overlay" onClick={() => closePanel("prStatus")}>
           <div
             className="panel-dialog panel-dialog--wide"
             onClick={(e) => e.stopPropagation()}
@@ -1458,7 +1382,7 @@ function AppContent({
               <span>PR Status</span>
               <button
                 className="panel-dialog-close"
-                onClick={() => setPrStatusOpen(false)}
+                onClick={() => closePanel("prStatus")}
               >
                 &times;
               </button>
@@ -1467,11 +1391,11 @@ function AppContent({
           </div>
         </div>
       )}
-      {gitDiffOpen && selectedWorktreeId && (
+      {panels.gitDiff && selectedWorktreeId && (
         <div
           className="panel-overlay"
           onClick={() => {
-            setGitDiffOpen(false);
+            closePanel("gitDiff");
             setContentTab("terminal");
           }}
         >
@@ -1484,7 +1408,7 @@ function AppContent({
               <button
                 className="panel-dialog-close"
                 onClick={() => {
-                  setGitDiffOpen(false);
+                  closePanel("gitDiff");
                   setContentTab("terminal");
                 }}
               >
@@ -1495,11 +1419,11 @@ function AppContent({
           </div>
         </div>
       )}
-      {createPrOpen && selectedWorktreeId && selectedWorktreeName && (
+      {panels.createPr && selectedWorktreeId && selectedWorktreeName && (
         <div
           className="panel-overlay"
           onClick={() => {
-            setCreatePrOpen(false);
+            closePanel("createPr");
             setContentTab("terminal");
           }}
         >
@@ -1511,8 +1435,8 @@ function AppContent({
           </div>
         </div>
       )}
-      {memoryTabOpen && selectedWorktreeId && (
-        <div className="panel-overlay" onClick={() => setMemoryTabOpen(false)}>
+      {panels.memoryTab && selectedWorktreeId && (
+        <div className="panel-overlay" onClick={() => closePanel("memoryTab")}>
           <div
             className="panel-dialog panel-dialog--wide"
             onClick={(e) => e.stopPropagation()}
@@ -1521,7 +1445,7 @@ function AppContent({
               <span>Memory Notes</span>
               <button
                 className="panel-dialog-close"
-                onClick={() => setMemoryTabOpen(false)}
+                onClick={() => closePanel("memoryTab")}
               >
                 &times;
               </button>
@@ -1530,10 +1454,10 @@ function AppContent({
           </div>
         </div>
       )}
-      {shellHistoryOpen && selectedProjectId && (
+      {panels.shellHistory && selectedProjectId && (
         <div
           className="panel-overlay"
-          onClick={() => setShellHistoryOpen(false)}
+          onClick={() => closePanel("shellHistory")}
         >
           <div
             className="panel-dialog panel-dialog--wide"
@@ -1543,7 +1467,7 @@ function AppContent({
               <span>Shell History</span>
               <button
                 className="panel-dialog-close"
-                onClick={() => setShellHistoryOpen(false)}
+                onClick={() => closePanel("shellHistory")}
               >
                 &times;
               </button>
@@ -1555,14 +1479,14 @@ function AppContent({
           </div>
         </div>
       )}
-      {deadEndsOpen && selectedWorktreeId && (
-        <div className="panel-overlay" onClick={() => setDeadEndsOpen(false)}>
+      {panels.deadEnds && selectedWorktreeId && (
+        <div className="panel-overlay" onClick={() => closePanel("deadEnds")}>
           <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="panel-dialog-header">
               <span>Dead Ends Log</span>
               <button
                 className="panel-dialog-close"
-                onClick={() => setDeadEndsOpen(false)}
+                onClick={() => closePanel("deadEnds")}
               >
                 &times;
               </button>
@@ -1571,8 +1495,8 @@ function AppContent({
           </div>
         </div>
       )}
-      {dbSchemaOpen && selectedWorktreeId && (
-        <div className="panel-overlay" onClick={() => setDbSchemaOpen(false)}>
+      {panels.dbSchema && selectedWorktreeId && (
+        <div className="panel-overlay" onClick={() => closePanel("dbSchema")}>
           <div
             className="panel-dialog panel-dialog--wide"
             onClick={(e) => e.stopPropagation()}
@@ -1581,7 +1505,7 @@ function AppContent({
               <span>Database Schema</span>
               <button
                 className="panel-dialog-close"
-                onClick={() => setDbSchemaOpen(false)}
+                onClick={() => closePanel("dbSchema")}
               >
                 &times;
               </button>
@@ -1590,10 +1514,10 @@ function AppContent({
           </div>
         </div>
       )}
-      {browserEventsOpen && selectedWorktreeId && (
+      {panels.browserEvents && selectedWorktreeId && (
         <div
           className="panel-overlay"
-          onClick={() => setBrowserEventsOpen(false)}
+          onClick={() => closePanel("browserEvents")}
         >
           <div
             className="panel-dialog panel-dialog--wide"
@@ -1601,39 +1525,39 @@ function AppContent({
           >
             <BrowserEvents
               worktreeId={selectedWorktreeId}
-              onClose={() => setBrowserEventsOpen(false)}
+              onClose={() => closePanel("browserEvents")}
             />
           </div>
         </div>
       )}
-      {dbExplorerOpen && selectedWorktreeId && (
-        <div className="panel-overlay" onClick={() => setDbExplorerOpen(false)}>
+      {panels.dbExplorer && selectedWorktreeId && (
+        <div className="panel-overlay" onClick={() => closePanel("dbExplorer")}>
           <div
             className="panel-dialog panel-dialog--wide"
             onClick={(e) => e.stopPropagation()}
           >
             <DatabaseExplorer
               worktreeId={selectedWorktreeId}
-              onClose={() => setDbExplorerOpen(false)}
+              onClose={() => closePanel("dbExplorer")}
             />
           </div>
         </div>
       )}
       <QuickSwitcher
-        open={quickSwitcherOpen}
-        onClose={() => setQuickSwitcherOpen(false)}
+        open={panels.quickSwitcher}
+        onClose={() => closePanel("quickSwitcher")}
         selectedProjectId={selectedProjectId}
         onSwitchProject={(id) => {
           setSelectedProjectId(id);
-          setQuickSwitcherOpen(false);
+          closePanel("quickSwitcher");
         }}
         onSwitchBranch={() => {
-          setQuickSwitcherOpen(false);
+          closePanel("quickSwitcher");
         }}
       />
       <ErrorDiagnosis
-        open={errorDiagnosisOpen}
-        onClose={() => setErrorDiagnosisOpen(false)}
+        open={panels.errorDiagnosis}
+        onClose={() => closePanel("errorDiagnosis")}
       />
       <QuickActions
         worktreeId={selectedWorktreeId}
@@ -1641,13 +1565,13 @@ function AppContent({
         projectId={selectedProjectId}
         onAction={(action) => {
           if (action === "commit") execute("git:commit");
-          else if (action === "stash") setStashManagerOpen(true);
-          else if (action === "diff") setBlameViewOpen(true);
+          else if (action === "stash") openPanel("stashManager");
+          else if (action === "diff") openPanel("blameView");
           else if (action === "blame") {
             setBlameFilePath("");
-            setBlameViewOpen(true);
-          } else if (action === "record") setTerminalRecordingOpen(true);
-          else if (action === "tests") setTestRunnerPanelOpen(true);
+            openPanel("blameView");
+          } else if (action === "record") openPanel("terminalRecording");
+          else if (action === "tests") openPanel("testRunnerPanel");
         }}
       />
     </>
