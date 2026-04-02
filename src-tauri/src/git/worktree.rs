@@ -1,6 +1,7 @@
 use super::WorktreeInfo;
 use crate::db::queries;
 use crate::db::AppDb;
+use crate::validate;
 use git2::{Repository, StatusOptions, WorktreeAddOptions, WorktreePruneOptions};
 use std::path::Path;
 use tauri::State;
@@ -34,6 +35,8 @@ pub fn create_worktree(
     branch_name: String,
     create_new_branch: bool,
 ) -> Result<WorktreeInfo, String> {
+    validate::branch_name(&branch_name)?;
+
     let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
     let project = queries::get_project(&conn, project_id)
         .map_err(|e| format!("DB error: {}", e))?

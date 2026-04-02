@@ -6,6 +6,7 @@ pub mod synthesis;
 
 use crate::db::queries;
 use crate::db::AppDb;
+use crate::validate;
 use serde::Serialize;
 use tauri::State;
 
@@ -26,6 +27,8 @@ pub fn vault_store_env_var(
     key: String,
     value: String,
 ) -> Result<i64, String> {
+    validate::env_key(&key)?;
+    validate::env_value(&value)?;
     let encrypted = crypto::encrypt(&value)?;
     let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
     queries::insert_env_var(&conn, profile_id, &key, Some(&encrypted))
@@ -40,6 +43,8 @@ pub fn vault_update_env_var(
     key: String,
     value: String,
 ) -> Result<(), String> {
+    validate::env_key(&key)?;
+    validate::env_value(&value)?;
     let encrypted = crypto::encrypt(&value)?;
     let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
     queries::update_env_var(&conn, var_id, &key, &encrypted)

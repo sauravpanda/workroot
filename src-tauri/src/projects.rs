@@ -1,6 +1,7 @@
 use crate::db::queries::{self, ProjectRow};
 use crate::db::AppDb;
 use crate::github::{auth, repos};
+use crate::validate;
 use serde::Serialize;
 use std::path::Path;
 use tauri::State;
@@ -42,6 +43,12 @@ pub fn register_project(
     github_url: Option<String>,
     framework: Option<String>,
 ) -> Result<ProjectInfo, String> {
+    validate::project_name(&name)?;
+    validate::path(&local_path, "Project path")?;
+    if let Some(ref url) = github_url {
+        validate::nonempty(url, "GitHub URL")?;
+    }
+
     let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
 
     // Check if already registered
