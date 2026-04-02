@@ -20,7 +20,7 @@ pub async fn list_user_repos() -> Result<Vec<GitHubRepo>, String> {
     let token = auth::get_token()?
         .ok_or_else(|| "Not authenticated. Please sign in with GitHub first.".to_string())?;
 
-    let client = reqwest::Client::new();
+    let client = super::api_client()?;
     let mut all_repos = Vec::new();
     let mut page = 1u32;
 
