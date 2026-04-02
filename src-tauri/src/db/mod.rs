@@ -1,4 +1,5 @@
 use rusqlite::Connection;
+use std::sync::MutexGuard;
 use std::fs;
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
@@ -26,6 +27,24 @@ impl From<DbError> for tauri::Error {
 
 /// Thread-safe wrapper around a SQLite connection for use as Tauri managed state.
 pub struct AppDb(pub Mutex<Connection>);
+
+impl AppDb {
+    /// Acquire the database connection.
+    ///
+    /// If the mutex is poisoned (a previous thread panicked while holding it),
+    /// the inner connection is recovered and reused. SQLite transactions are
+    /// atomic, so any incomplete work from the panicking thread was already
+    /// rolled back, making recovery safe.
+    ///
+    /// Use this in background workers and helpers. For Tauri command handlers
+    /// that already propagate `Result<_, String>`, prefer the explicit
+    /// `db.0.lock().map_err(...)` pattern so the frontend receives a clear error.
+    pub fn conn(&self) -> MutexGuard<Connection> {
+        self.0
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+}
 
 /// Initializes the SQLite database in the app's data directory.
 /// Creates all required tables, indexes, and triggers if they do not already exist.

@@ -39,7 +39,10 @@ impl ClaudeMdWatcher {
 
         // Check if debounce window has elapsed
         let should_run = {
-            let last = self.last_run.lock().unwrap();
+            let last = self
+                .last_run
+                .lock()
+                .unwrap_or_else(|p| p.into_inner());
             last.elapsed() >= debounce
         };
 
@@ -49,7 +52,10 @@ impl ClaudeMdWatcher {
 
         // Take all pending IDs
         let worktree_ids: Vec<i64> = {
-            let mut pending = self.pending.lock().unwrap();
+            let mut pending = self
+                .pending
+                .lock()
+                .unwrap_or_else(|p| p.into_inner());
             let ids: Vec<i64> = pending.drain().collect();
             ids
         };
@@ -60,7 +66,10 @@ impl ClaudeMdWatcher {
 
         // Update last run time
         {
-            let mut last = self.last_run.lock().unwrap();
+            let mut last = self
+                .last_run
+                .lock()
+                .unwrap_or_else(|p| p.into_inner());
             *last = Instant::now();
         }
 
