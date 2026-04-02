@@ -96,6 +96,8 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_pty::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             greet,
             github_start_device_flow,
@@ -112,6 +114,7 @@ pub fn run() {
             projects::register_local_project,
             git::worktree::create_worktree,
             git::worktree::list_project_worktrees,
+            git::worktree::list_worktree_history,
             git::worktree::delete_worktree,
             git::worktree::get_worktree_status,
             git::branch::list_branches,

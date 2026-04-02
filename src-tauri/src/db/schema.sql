@@ -29,8 +29,10 @@ CREATE TABLE IF NOT EXISTS worktrees (
     path        TEXT NOT NULL,
     status      TEXT NOT NULL DEFAULT 'active',
     port        INTEGER,
-    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    deleted_at  TEXT
 );
+
 
 CREATE TABLE IF NOT EXISTS env_profiles (
     id          INTEGER PRIMARY KEY,

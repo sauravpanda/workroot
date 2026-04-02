@@ -72,7 +72,10 @@ pub fn init_db(app: &AppHandle) -> Result<AppDb, DbError> {
 /// so this is safe to call on every startup.
 fn run_migrations(conn: &Connection) -> Result<(), rusqlite::Error> {
     const SCHEMA: &str = include_str!("schema.sql");
-    conn.execute_batch(SCHEMA)
+    conn.execute_batch(SCHEMA)?;
+    // Add deleted_at to existing databases; ignore error if column already exists.
+    let _ = conn.execute_batch("ALTER TABLE worktrees ADD COLUMN deleted_at TEXT DEFAULT NULL;");
+    Ok(())
 }
 
 /// Creates an in-memory database with the full schema applied.
