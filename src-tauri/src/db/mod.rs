@@ -1,7 +1,7 @@
 use rusqlite::Connection;
-use std::sync::MutexGuard;
 use std::fs;
 use std::sync::Mutex;
+use std::sync::MutexGuard;
 use tauri::{AppHandle, Manager};
 use thiserror::Error;
 

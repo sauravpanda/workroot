@@ -85,9 +85,7 @@ pub fn branch_name(name: &str) -> Result<(), String> {
         return Err("Branch name cannot contain '..' or '@{'".into());
     }
 
-    let forbidden: &[char] = &[
-        '\0', ' ', '~', '^', ':', '?', '*', '[', '\\',
-    ];
+    let forbidden: &[char] = &['\0', ' ', '~', '^', ':', '?', '*', '[', '\\'];
     for ch in forbidden {
         if name.contains(*ch) {
             return Err(format!(

@@ -189,7 +189,8 @@ export function usePanels() {
     [],
   );
   const closePanels = useCallback(
-    (panelList: PanelKey[]) => dispatch({ type: "closeMany", panels: panelList }),
+    (panelList: PanelKey[]) =>
+      dispatch({ type: "closeMany", panels: panelList }),
     [],
   );
 

@@ -43,7 +43,13 @@ export function ErrorProvider({ children }: { children: React.ReactNode }) {
       severity: AppError["severity"] = "error",
     ) => {
       const id = `err-${Date.now()}-${++counterRef.current}`;
-      const entry: AppError = { id, message, detail, severity, timestamp: Date.now() };
+      const entry: AppError = {
+        id,
+        message,
+        detail,
+        severity,
+        timestamp: Date.now(),
+      };
       setErrors((prev) => [...prev.slice(-9), entry]); // cap at 10
     },
     [],
@@ -58,7 +64,9 @@ export function ErrorProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ErrorContext.Provider value={{ errors, reportError, dismissError, clearErrors }}>
+    <ErrorContext.Provider
+      value={{ errors, reportError, dismissError, clearErrors }}
+    >
       {children}
     </ErrorContext.Provider>
   );

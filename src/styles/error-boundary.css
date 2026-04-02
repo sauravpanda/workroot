@@ -45,7 +45,9 @@
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .error-boundary-reset:hover {

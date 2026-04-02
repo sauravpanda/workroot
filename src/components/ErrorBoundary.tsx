@@ -42,7 +42,9 @@ export class ErrorBoundary extends Component<Props, State> {
       <div className="error-boundary-fallback">
         <div className="error-boundary-icon">⚠</div>
         <h3 className="error-boundary-title">
-          {this.props.name ? `${this.props.name} failed to render` : "Something went wrong"}
+          {this.props.name
+            ? `${this.props.name} failed to render`
+            : "Something went wrong"}
         </h3>
         <p className="error-boundary-message">{error.message}</p>
         <button className="error-boundary-reset" onClick={this.reset}>

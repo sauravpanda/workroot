@@ -152,14 +152,21 @@ function AppContent({
     return () => clearInterval(id);
   }, []);
 
-  const { panels, openPanel, closePanel, togglePanel, closePanels } = usePanels();
+  const { panels, openPanel, closePanel, togglePanel, closePanels } =
+    usePanels();
   const [blameFilePath, setBlameFilePath] = useState("");
   const [contentTab, setContentTab] = useState("terminal");
 
   // Reset content tab and close tab-launched panels when switching worktrees
   useEffect(() => {
     setContentTab("terminal");
-    closePanels(["gitDiff", "createPr", "securityAudit", "testRunnerPanel", "docker"]);
+    closePanels([
+      "gitDiff",
+      "createPr",
+      "securityAudit",
+      "testRunnerPanel",
+      "docker",
+    ]);
   }, [selectedWorktreeId, closePanels]);
 
   const [densityMode, setDensityMode] = useState<DensityMode>("comfortable");
@@ -930,7 +937,14 @@ function AppContent({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [showRightSidebar, setShowSettings, setSelectedWorktreeId, setSelectedWorktreePath, setSelectedWorktreeName, setShowRightSidebar],
+    [
+      showRightSidebar,
+      setShowSettings,
+      setSelectedWorktreeId,
+      setSelectedWorktreePath,
+      setSelectedWorktreeName,
+      setShowRightSidebar,
+    ],
   );
   useGlobalShortcuts(shortcuts);
 
@@ -1203,7 +1217,10 @@ function AppContent({
           onClose={() => closePanel("analyticsDashboard")}
         />
       )}
-      <AiChatSidebar open={panels.aiChat} onClose={() => closePanel("aiChat")} />
+      <AiChatSidebar
+        open={panels.aiChat}
+        onClose={() => closePanel("aiChat")}
+      />
       <UnifiedSearch
         open={panels.unifiedSearch}
         onClose={() => closePanel("unifiedSearch")}
@@ -1275,7 +1292,9 @@ function AppContent({
           onClose={() => closePanel("projectOverview")}
         />
       )}
-      {panels.webVitals && <WebVitals onClose={() => closePanel("webVitals")} />}
+      {panels.webVitals && (
+        <WebVitals onClose={() => closePanel("webVitals")} />
+      )}
       {panels.pluginRuntime && selectedWorktreePath && (
         <PluginRuntime
           cwd={selectedWorktreePath}
@@ -1592,7 +1611,9 @@ function App() {
         <MainLayout
           onOpenSearch={() => sidebarActionsRef.current.openSearch()}
           onOpenAiChat={() => sidebarActionsRef.current.openAiChat()}
-          onOpenNotifications={() => sidebarActionsRef.current.openNotifications()}
+          onOpenNotifications={() =>
+            sidebarActionsRef.current.openNotifications()
+          }
           onOpenSettings={() => sidebarActionsRef.current.openSettings()}
         >
           <ErrorBoundary name="AppContent">
