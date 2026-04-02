@@ -55,7 +55,7 @@
       "open": true
     },
     "updater": {
-      "pubkey": "PLACEHOLDER_REPLACE_WITH_OUTPUT_OF_tauri_signer_generate",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk4Rjk4MkVCQkUwNzZBRjIKUldUeWFnZSs2NEw1bUd5NnpZbldnUGVWOGNHY3hIdGFKbXl4eWtBcWt6LzBZYmduNW9vUWpwSVIK",
       "endpoints": [
         "https://github.com/sauravpanda/workroot/releases/latest/download/latest.json"
       ],
