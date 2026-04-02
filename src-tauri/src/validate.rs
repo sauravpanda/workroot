@@ -2,7 +2,6 @@
 ///
 /// All functions return `Result<(), String>` so they can be called with `?`
 /// inside any command that returns `Result<T, String>`.
-
 const MAX_NAME_LEN: usize = 255;
 const MAX_PATH_LEN: usize = 4096;
 const MAX_ENV_KEY_LEN: usize = 256;

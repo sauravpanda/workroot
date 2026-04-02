@@ -39,7 +39,7 @@ impl AppDb {
     /// Use this in background workers and helpers. For Tauri command handlers
     /// that already propagate `Result<_, String>`, prefer the explicit
     /// `db.0.lock().map_err(...)` pattern so the frontend receives a clear error.
-    pub fn conn(&self) -> MutexGuard<Connection> {
+    pub fn conn(&self) -> MutexGuard<'_, Connection> {
         self.0
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
