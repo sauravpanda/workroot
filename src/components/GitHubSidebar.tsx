@@ -379,19 +379,43 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
       <div className="gh-sidebar__content">
         {authError ? (
           <div className="gh-sidebar__auth-panel">
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true" style={{ margin: "0 auto 8px", display: "block" }}>
-              <circle cx="14" cy="10" r="4.5" stroke="var(--text-muted)" strokeWidth="1.5"/>
-              <path d="M5 24c0-4.97 4.03-9 9-9s9 4.03 9 9" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round"/>
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 28 28"
+              fill="none"
+              aria-hidden="true"
+              style={{ margin: "0 auto 8px", display: "block" }}
+            >
+              <circle
+                cx="14"
+                cy="10"
+                r="4.5"
+                stroke="var(--text-muted)"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M5 24c0-4.97 4.03-9 9-9s9 4.03 9 9"
+                stroke="var(--text-muted)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
-            <p className="gh-sidebar__auth-msg">Sign in to GitHub to view {activeTab}.</p>
+            <p className="gh-sidebar__auth-msg">
+              Sign in to GitHub to view {activeTab}.
+            </p>
 
             {deviceCode ? (
               <div className="gh-sidebar__device-flow">
                 <p className="gh-sidebar__device-hint">
                   Go to <strong>github.com/login/device</strong> and enter:
                 </p>
-                <div className="gh-sidebar__device-code">{deviceCode.user_code}</div>
-                <p className="gh-sidebar__device-waiting">Waiting for authorization…</p>
+                <div className="gh-sidebar__device-code">
+                  {deviceCode.user_code}
+                </div>
+                <p className="gh-sidebar__device-waiting">
+                  Waiting for authorization…
+                </p>
               </div>
             ) : showPatForm ? (
               <div className="gh-sidebar__pat-form">
@@ -406,7 +430,9 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
                   }}
                   autoFocus
                 />
-                {signInError && <p className="gh-sidebar__auth-error">{signInError}</p>}
+                {signInError && (
+                  <p className="gh-sidebar__auth-error">{signInError}</p>
+                )}
                 <div className="gh-sidebar__pat-actions">
                   <button
                     className="gh-sidebar__signin-btn"
@@ -417,7 +443,10 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
                   </button>
                   <button
                     className="gh-sidebar__signin-btn gh-sidebar__signin-btn--secondary"
-                    onClick={() => { setShowPatForm(false); setSignInError(null); }}
+                    onClick={() => {
+                      setShowPatForm(false);
+                      setSignInError(null);
+                    }}
                   >
                     Cancel
                   </button>
@@ -425,7 +454,9 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
               </div>
             ) : (
               <div className="gh-sidebar__signin-options">
-                {signInError && <p className="gh-sidebar__auth-error">{signInError}</p>}
+                {signInError && (
+                  <p className="gh-sidebar__auth-error">{signInError}</p>
+                )}
                 <button
                   className="gh-sidebar__signin-btn"
                   onClick={handleDeviceFlow}

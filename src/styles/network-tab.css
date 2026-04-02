@@ -71,7 +71,7 @@
   text-transform: uppercase;
   color: var(--text-muted, #888);
   border-bottom: 1px solid var(--border);
-  background: var(--bg-elevated));
+  background: var(--bg-elevated);
 }
 
 .network-col-method {

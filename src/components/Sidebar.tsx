@@ -91,32 +91,50 @@ export function Sidebar({
               <circle cx="10" cy="3.5" r="2" fill="currentColor" />
               {/* Trunk */}
               <line
-                x1="10" y1="5.5"
-                x2="10" y2="11"
+                x1="10"
+                y1="5.5"
+                x2="10"
+                y2="11"
                 stroke="currentColor"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
               {/* Left branch */}
               <line
-                x1="10" y1="11"
-                x2="4" y2="16.5"
+                x1="10"
+                y1="11"
+                x2="4"
+                y2="16.5"
                 stroke="currentColor"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
               {/* Right branch */}
               <line
-                x1="10" y1="11"
-                x2="16" y2="16.5"
+                x1="10"
+                y1="11"
+                x2="16"
+                y2="16.5"
                 stroke="currentColor"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
               {/* Left leaf */}
-              <circle cx="4" cy="16.5" r="2" fill="currentColor" opacity="0.75" />
+              <circle
+                cx="4"
+                cy="16.5"
+                r="2"
+                fill="currentColor"
+                opacity="0.75"
+              />
               {/* Right leaf */}
-              <circle cx="16" cy="16.5" r="2" fill="currentColor" opacity="0.75" />
+              <circle
+                cx="16"
+                cy="16.5"
+                r="2"
+                fill="currentColor"
+                opacity="0.75"
+              />
             </svg>
           </span>
           <span className="sidebar-title">Workroot</span>

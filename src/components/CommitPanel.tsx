@@ -135,8 +135,20 @@ export function CommitPanel({
           title="Generate commit message with AI"
         >
           <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
-            <path d="M6 1l1.2 3.8L11 6 7.2 7.2 6 11l-1.2-3.8L1 6l3.8-1.2z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" fill="currentColor" opacity="0.3" />
-            <path d="M6 1l1.2 3.8L11 6 7.2 7.2 6 11l-1.2-3.8L1 6l3.8-1.2z" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" />
+            <path
+              d="M6 1l1.2 3.8L11 6 7.2 7.2 6 11l-1.2-3.8L1 6l3.8-1.2z"
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeLinejoin="round"
+              fill="currentColor"
+              opacity="0.3"
+            />
+            <path
+              d="M6 1l1.2 3.8L11 6 7.2 7.2 6 11l-1.2-3.8L1 6l3.8-1.2z"
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeLinejoin="round"
+            />
           </svg>
           {generating ? "…" : "AI"}
         </button>
