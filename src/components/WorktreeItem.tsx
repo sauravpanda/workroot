@@ -80,13 +80,45 @@ export function WorktreeItem({ worktree, onDelete }: WorktreeItemProps) {
         aria-selected={isSelected}
         tabIndex={0}
       >
-        <span className="worktree-branch-icon">&#9741;</span>
+        <span className="worktree-branch-icon">
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+            <circle
+              cx="3"
+              cy="3"
+              r="1.8"
+              stroke="currentColor"
+              strokeWidth="1.2"
+            />
+            <circle
+              cx="9"
+              cy="9"
+              r="1.8"
+              stroke="currentColor"
+              strokeWidth="1.2"
+            />
+            <path
+              d="M3 4.8v1.2a3 3 0 003 3h0"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+            />
+          </svg>
+        </span>
         <span className="worktree-branch-name">{worktree.branch_name}</span>
-        <span className={`worktree-status-dot ${statusClass}`} />
-        {worktree.is_dirty && <span className="worktree-dirty-dot" />}
-        {worktree.port && (
-          <span className="worktree-port">:{worktree.port}</span>
-        )}
+        <span className="worktree-indicators">
+          <span
+            className={`worktree-status-dot ${statusClass}`}
+            title={worktree.status}
+          />
+          {worktree.is_dirty && (
+            <span className="worktree-dirty" title="Uncommitted changes">
+              M
+            </span>
+          )}
+          {worktree.port && (
+            <span className="worktree-port">:{worktree.port}</span>
+          )}
+        </span>
       </div>
 
       {contextMenu && (

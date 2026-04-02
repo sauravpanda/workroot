@@ -212,6 +212,27 @@ CREATE TABLE IF NOT EXISTS activity_events (
 CREATE INDEX IF NOT EXISTS idx_activity_events_created ON activity_events(created_at);
 
 -- ============================================================
+-- AI Chat History
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS ai_chat_sessions (
+    id          INTEGER PRIMARY KEY,
+    title       TEXT NOT NULL DEFAULT 'New Chat',
+    project_id  INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS ai_chat_messages (
+    id          INTEGER PRIMARY KEY,
+    session_id  INTEGER NOT NULL REFERENCES ai_chat_sessions(id) ON DELETE CASCADE,
+    role        TEXT NOT NULL CHECK(role IN ('user', 'assistant', 'system')),
+    content     TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_ai_chat_messages_session ON ai_chat_messages(session_id);
+
+-- ============================================================
 -- Ring Buffer Trigger: keep at most 50,000 log rows per process
 -- ============================================================
 
@@ -227,3 +248,157 @@ BEGIN
         LIMIT (SELECT COUNT(*) - 50000 FROM logs WHERE process_id = NEW.process_id)
     );
 END;
+
+-- ============================================================
+-- Terminal Session Recordings
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS terminal_sessions (
+    id          INTEGER PRIMARY KEY,
+    worktree_id INTEGER NOT NULL REFERENCES worktrees(id) ON DELETE CASCADE,
+    title       TEXT NOT NULL DEFAULT 'Recording',
+    status      TEXT NOT NULL DEFAULT 'recording',
+    duration_ms INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_terminal_sessions_worktree ON terminal_sessions(worktree_id);
+
+CREATE TABLE IF NOT EXISTS terminal_events (
+    id          INTEGER PRIMARY KEY,
+    session_id  INTEGER NOT NULL REFERENCES terminal_sessions(id) ON DELETE CASCADE,
+    event_type  TEXT NOT NULL CHECK(event_type IN ('input', 'output')),
+    data        TEXT NOT NULL,
+    timestamp_ms INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_terminal_events_session ON terminal_events(session_id);
+
+-- ============================================================
+-- DORA Metrics / Deployments
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS deployments (
+    id              INTEGER PRIMARY KEY,
+    project_id      INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    version         TEXT NOT NULL,
+    environment     TEXT NOT NULL DEFAULT 'production',
+    status          TEXT NOT NULL CHECK(status IN ('success', 'failure', 'rollback')),
+    lead_time_hours REAL,
+    deployed_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_deployments_project ON deployments(project_id, deployed_at);
+
+-- ============================================================
+-- Webhook Events
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS webhook_events (
+    id          INTEGER PRIMARY KEY,
+    source      TEXT NOT NULL DEFAULT 'unknown',
+    event_type  TEXT NOT NULL DEFAULT 'unknown',
+    payload     TEXT NOT NULL DEFAULT '{}',
+    received_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_webhook_events_received ON webhook_events(received_at);
+
+-- ============================================================
+-- SSH Connections
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS ssh_connections (
+    id          INTEGER PRIMARY KEY,
+    name        TEXT NOT NULL,
+    host        TEXT NOT NULL,
+    port        INTEGER NOT NULL DEFAULT 22,
+    username    TEXT NOT NULL,
+    auth_type   TEXT NOT NULL DEFAULT 'key',
+    key_path    TEXT,
+    jump_host   TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- ============================================================
+-- Code Snippets
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS snippets (
+    id          INTEGER PRIMARY KEY,
+    title       TEXT NOT NULL,
+    language    TEXT NOT NULL DEFAULT 'text',
+    content     TEXT NOT NULL,
+    tags        TEXT NOT NULL DEFAULT '',
+    project_id  INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_snippets_project ON snippets(project_id);
+
+-- ============================================================
+-- Web Vitals / Lighthouse
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS web_vitals (
+    id                INTEGER PRIMARY KEY,
+    url               TEXT NOT NULL,
+    performance_score REAL,
+    fcp_ms            REAL,
+    lcp_ms            REAL,
+    cls               REAL,
+    tbt_ms            REAL,
+    ttfb_ms           REAL,
+    speed_index_ms    REAL,
+    created_at        TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_web_vitals_url ON web_vitals(url, created_at);
+
+-- ============================================================
+-- Workspace Layouts
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS workspace_layouts (
+    id          INTEGER PRIMARY KEY,
+    name        TEXT NOT NULL,
+    config      TEXT NOT NULL DEFAULT '{}',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- ============================================================
+-- Scheduled Tasks
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS scheduled_tasks (
+    id          INTEGER PRIMARY KEY,
+    name        TEXT NOT NULL,
+    command     TEXT NOT NULL,
+    cron_expr   TEXT NOT NULL,
+    cwd         TEXT NOT NULL,
+    enabled     INTEGER NOT NULL DEFAULT 1,
+    last_run    TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- ============================================================
+-- Clipboard History
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS clipboard_history (
+    id          INTEGER PRIMARY KEY,
+    content     TEXT NOT NULL,
+    source      TEXT NOT NULL DEFAULT 'manual',
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- ============================================================
+-- Todos
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS todos (
+    id          INTEGER PRIMARY KEY,
+    project_id  INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+    title       TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    priority    TEXT NOT NULL DEFAULT 'medium' CHECK(priority IN ('low', 'medium', 'high')),
+    status      TEXT NOT NULL DEFAULT 'todo' CHECK(status IN ('todo', 'in_progress', 'done')),
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_todos_project ON todos(project_id);
+CREATE INDEX IF NOT EXISTS idx_todos_status ON todos(status);

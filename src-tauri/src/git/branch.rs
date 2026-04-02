@@ -75,10 +75,16 @@ pub fn create_branch(
         obj.peel_to_commit()
             .map_err(|e| format!("Failed to get commit: {}", e))?
     } else {
-        repo.head()
-            .map_err(|e| format!("Failed to get HEAD: {}", e))?
-            .peel_to_commit()
-            .map_err(|e| format!("Failed to get HEAD commit: {}", e))?
+        match repo.head() {
+            Ok(head) => head
+                .peel_to_commit()
+                .map_err(|e| format!("Failed to get HEAD commit: {}", e))?,
+            Err(_) => {
+                return Err(
+                    "Cannot create a branch: repository has no commits yet. Make an initial commit first.".into(),
+                );
+            }
+        }
     };
 
     let branch = repo

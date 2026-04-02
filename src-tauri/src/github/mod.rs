@@ -6,6 +6,20 @@ pub mod repos;
 
 use serde::{Deserialize, Serialize};
 
+/// Build a `reqwest::Client` pre-configured for GitHub API calls.
+///
+/// - 30 s connect timeout
+/// - 30 s request timeout
+/// - `User-Agent` header required by the GitHub API
+pub(crate) fn api_client() -> Result<reqwest::Client, String> {
+    reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .connect_timeout(std::time::Duration::from_secs(10))
+        .user_agent(concat!("workroot/", env!("CARGO_PKG_VERSION")))
+        .build()
+        .map_err(|e| format!("Failed to build HTTP client: {}", e))
+}
+
 /// Represents the device code flow response from GitHub.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeviceCodeResponse {

@@ -1,28 +1,43 @@
+pub mod ai;
 pub mod backup;
 pub mod bookmarks;
 pub mod browser;
 pub mod claudemd;
+pub mod clipboard;
 pub mod collaboration;
 pub mod db;
 pub mod dbconnect;
+pub mod deps;
 pub mod docker;
+pub mod errors;
 pub mod filewatcher;
 pub mod git;
 pub mod github;
 pub mod mcp;
 pub mod memory;
+pub mod metrics;
 pub mod network;
+pub mod perf;
 pub mod plugins;
 pub mod process;
 pub mod projects;
 pub mod proxy;
+pub mod scheduler;
+pub mod search;
 pub mod security;
 pub mod settings;
 pub mod shell;
+pub mod snippets;
+pub mod ssh;
 pub mod tasks;
+pub mod terminal;
 pub mod testing;
+pub mod todos;
 pub mod tray;
+pub mod validate;
 pub mod vault;
+pub mod webhooks;
+pub mod workspace;
 
 use claudemd::watcher::ClaudeMdWatcher;
 use db::{init_db, AppDb};
@@ -32,6 +47,7 @@ use github::auth;
 use github::{DeviceCodeResponse, GitHubUser};
 use process::lifecycle::ProcessRegistry;
 use proxy::ProxyState;
+use tasks::watch::WatchState;
 use tauri::{Manager, State};
 
 #[tauri::command]
@@ -70,6 +86,11 @@ fn github_logout() -> Result<(), String> {
     auth::delete_token()
 }
 
+#[tauri::command]
+fn github_store_pat(token: String) -> Result<(), String> {
+    auth::store_pat(&token)
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -82,6 +103,7 @@ pub fn run() {
             github_get_user,
             github_check_auth,
             github_logout,
+            github_store_pat,
             projects::register_project,
             projects::list_projects,
             projects::remove_project,
@@ -205,6 +227,8 @@ pub fn run() {
             docker::monitor::container_action,
             testing::flaky::record_test_result,
             testing::flaky::get_flaky_tests,
+            tasks::watch::start_watch_task,
+            tasks::watch::stop_watch_task,
             tasks::watch::get_watched_tasks,
             collaboration::notifications::get_notifications,
             collaboration::notifications::mark_notification_read,
@@ -212,9 +236,75 @@ pub fn run() {
             collaboration::timeline::get_activity_timeline,
             plugins::registry::list_plugins,
             plugins::registry::toggle_plugin,
+            ai::chat::ai_chat_send,
+            ai::chat::ai_chat_list_models,
+            ai::chat::ai_check_health,
+            ai::assist::ai_generate_commit_message,
+            ai::assist::ai_generate_pr_description,
+            ai::assist::ai_diagnose_error,
+            ai::assist::ai_explain_code,
+            search::unified_search,
             backup::export_backup,
             backup::import_backup,
             backup::list_backups,
+            terminal::recording::start_recording,
+            terminal::recording::add_recording_event,
+            terminal::recording::stop_recording,
+            terminal::recording::list_recordings,
+            terminal::recording::get_recording_events,
+            terminal::recording::delete_recording,
+            metrics::dora::record_deployment,
+            metrics::dora::get_dora_metrics,
+            metrics::dora::list_deployments,
+            webhooks::get_webhook_events,
+            webhooks::clear_webhook_events,
+            webhooks::get_webhook_config,
+            ssh::connections::list_ssh_connections,
+            ssh::connections::save_ssh_connection,
+            ssh::connections::delete_ssh_connection,
+            ssh::connections::build_ssh_command,
+            ssh::connections::test_ssh_connection,
+            perf::monitor::get_app_metrics,
+            git::analytics::get_git_analytics,
+            snippets::create_snippet,
+            snippets::list_snippets,
+            snippets::search_snippets,
+            snippets::update_snippet,
+            snippets::delete_snippet,
+            vault::diff::compare_env_profiles,
+            perf::vitals::run_lighthouse_audit,
+            perf::vitals::record_vitals,
+            perf::vitals::get_vitals_history,
+            perf::vitals::clear_vitals_history,
+            plugins::runtime::discover_plugins,
+            plugins::runtime::execute_plugin,
+            plugins::runtime::install_plugin_from_url,
+            deps::analyze::analyze_dependencies,
+            network::ports::scan_local_ports,
+            filewatcher::stats::get_directory_stats,
+            git::tags::list_tags,
+            git::tags::create_tag,
+            git::tags::delete_tag,
+            git::log::get_git_log,
+            git::log::get_commit_detail,
+            git::log::search_git_log,
+            workspace::save_workspace,
+            workspace::list_workspaces,
+            workspace::load_workspace,
+            workspace::delete_workspace,
+            scheduler::create_scheduled_task,
+            scheduler::list_scheduled_tasks,
+            scheduler::toggle_scheduled_task,
+            scheduler::delete_scheduled_task,
+            scheduler::update_task_last_run,
+            clipboard::add_clipboard_entry,
+            clipboard::list_clipboard_entries,
+            clipboard::search_clipboard,
+            clipboard::clear_clipboard_history,
+            todos::create_todo,
+            todos::list_todos,
+            todos::update_todo,
+            todos::delete_todo,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
@@ -225,6 +315,7 @@ pub fn run() {
             app.manage(ClaudeMdWatcher::new());
             app.manage(SchemaCache::new());
             app.manage(FileWatcherRegistry::new());
+            app.manage(WatchState::new());
 
             // Start CLAUDE.md watcher loop
             let watcher_handle = app.handle().clone();
@@ -251,6 +342,12 @@ pub fn run() {
                 .unwrap_or_else(|_| std::path::PathBuf::from("."));
             tauri::async_runtime::spawn(async move {
                 mcp::server::start_mcp_server(mcp_handle, mcp_data_dir).await;
+            });
+
+            // Start the webhook receiver on port 9999
+            let webhook_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                webhooks::start_webhook_server(webhook_handle).await;
             });
 
             tray::setup_tray(app)?;

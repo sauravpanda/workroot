@@ -10,23 +10,23 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border, #333);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .shell-history-search {
   flex: 1;
   padding: 6px 10px;
-  border: 1px solid var(--border, #444);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  background: var(--bg-input, #1a1a2e);
-  color: var(--text, #e0e0e0);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   font-size: 13px;
   outline: none;
 }
 
 .shell-history-search:focus {
-  border-color: var(--accent, #7c5cbf);
+  border-color: var(--accent);
 }
 
 .shell-history-filters {
@@ -36,7 +36,7 @@
 
 .shell-history-filter {
   padding: 4px 10px;
-  border: 1px solid var(--border, #444);
+  border: 1px solid var(--border);
   background: transparent;
   color: var(--text-muted, #888);
   font-size: 12px;
@@ -45,9 +45,9 @@
 }
 
 .shell-history-filter.active {
-  background: var(--accent, #7c5cbf);
+  background: var(--accent);
   color: #fff;
-  border-color: var(--accent, #7c5cbf);
+  border-color: var(--accent);
 }
 
 .shell-history-count {
@@ -72,7 +72,7 @@
 }
 
 .shell-history-entry:hover {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.04));
+  background: var(--bg-hover);
 }
 
 .shell-history-entry-status {
@@ -104,7 +104,7 @@
 .shell-history-command {
   display: block;
   font-size: 13px;
-  color: var(--text, #e0e0e0);
+  color: var(--text-primary);
   white-space: pre-wrap;
   word-break: break-all;
 }

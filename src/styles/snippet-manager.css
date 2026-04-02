@@ -1,0 +1,440 @@
+/* ==========================================================
+   Snippet Manager – Code editor inspired
+   ========================================================== */
+
+.snip-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.snip-panel {
+  position: fixed;
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 820px;
+  max-width: calc(100vw - 40px);
+  max-height: 84vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* -- Header -- */
+
+.snip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.snip-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.snip-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.snip-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Body (two-pane) -- */
+
+.snip-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* -- Sidebar (list) -- */
+
+.snip-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.snip-search-row {
+  padding: 8px 8px 4px;
+}
+
+.snip-search {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.78em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.snip-search:focus {
+  border-color: var(--accent);
+}
+
+.snip-new-btn {
+  margin: 4px 8px 6px;
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--accent);
+  background: none;
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.snip-new-btn:hover {
+  background: var(--accent-muted);
+}
+
+.snip-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 4px 8px;
+  overscroll-behavior: contain;
+}
+
+.snip-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.snip-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.snip-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.snip-empty-list {
+  padding: 16px 8px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.72em;
+}
+
+.snip-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: 7px 8px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.1s;
+}
+
+.snip-list-item:hover {
+  background: var(--bg-hover);
+}
+
+.snip-list-item.active {
+  background: var(--accent-muted);
+}
+
+.snip-list-title {
+  font-size: 0.78em;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.snip-list-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.snip-lang-badge {
+  font-size: 0.6em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(130, 180, 255, 0.12);
+  color: #82b4ff;
+}
+
+.snip-lang-javascript {
+  background: rgba(247, 223, 30, 0.12);
+  color: #f7df1e;
+}
+
+.snip-lang-typescript {
+  background: rgba(49, 120, 198, 0.15);
+  color: #3178c6;
+}
+
+.snip-lang-python {
+  background: rgba(55, 118, 171, 0.15);
+  color: #3776ab;
+}
+
+.snip-lang-rust {
+  background: rgba(222, 165, 132, 0.15);
+  color: #dea584;
+}
+
+.snip-lang-go {
+  background: rgba(0, 173, 216, 0.12);
+  color: #00add8;
+}
+
+.snip-lang-shell {
+  background: rgba(137, 224, 81, 0.12);
+  color: #89e051;
+}
+
+.snip-lang-sql {
+  background: rgba(227, 134, 48, 0.12);
+  color: #e38630;
+}
+
+.snip-lang-html {
+  background: rgba(228, 77, 38, 0.12);
+  color: #e44d26;
+}
+
+.snip-lang-css {
+  background: rgba(86, 61, 124, 0.15);
+  color: #a78bfa;
+}
+
+.snip-lang-json {
+  background: rgba(130, 180, 255, 0.12);
+  color: #82b4ff;
+}
+
+.snip-lang-yaml {
+  background: rgba(203, 23, 30, 0.12);
+  color: #cb171e;
+}
+
+.snip-tag-pill {
+  font-size: 0.58em;
+  color: var(--text-tertiary);
+  background: var(--bg-elevated);
+  border-radius: 8px;
+  padding: 1px 5px;
+}
+
+.snip-list-date {
+  font-size: 0.6em;
+  color: var(--text-muted);
+}
+
+/* -- Editor -- */
+
+.snip-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.snip-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.snip-editor-title {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 0.82em;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.snip-editor-title:focus {
+  border-color: var(--accent);
+}
+
+.snip-lang-select {
+  font-family: var(--font-sans);
+  font-size: 0.78em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 6px;
+  outline: none;
+}
+
+.snip-editor-content {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: #0d1117;
+  border: none;
+  padding: 12px 14px;
+  resize: none;
+  outline: none;
+  tab-size: 2;
+  overflow-y: auto;
+}
+
+.snip-editor-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.snip-editor-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.snip-editor-content::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.snip-editor-tags {
+  padding: 6px 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.snip-tags-input {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.snip-tags-input:focus {
+  border-color: var(--accent);
+}
+
+.snip-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.snip-copy-btn {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  cursor: pointer;
+  transition:
+    color 0.1s,
+    background-color 0.1s;
+  min-width: 56px;
+}
+
+.snip-copy-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.snip-delete-btn {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--danger);
+  background: none;
+  border: 1px solid var(--danger-muted);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.snip-delete-btn:hover {
+  background: var(--danger-muted);
+}
+
+.snip-save-btn {
+  margin-left: auto;
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 14px;
+  cursor: pointer;
+}
+
+.snip-save-btn:hover {
+  background: var(--accent-hover);
+}
+
+.snip-save-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

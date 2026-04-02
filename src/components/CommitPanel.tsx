@@ -24,6 +24,7 @@ export function CommitPanel({
   const [pushStatus, setPushStatus] = useState<PushStatus | null>(null);
   const [committing, setCommitting] = useState(false);
   const [pushing, setPushing] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -85,6 +86,30 @@ export function CommitPanel({
     }
   };
 
+  const handleAiGenerate = async () => {
+    if (stagedCount === 0) return;
+    setGenerating(true);
+    setError(null);
+    try {
+      const diff = await invoke<string>("get_file_diff", {
+        worktreeId,
+        filePath: "",
+        staged: true,
+      });
+      const result = await invoke<string>("ai_generate_commit_message", {
+        model: "",
+        diff,
+      });
+      const lines = result.trim().split("\n");
+      setSubject(lines[0] || "");
+      setBody(lines.slice(2).join("\n").trim());
+    } catch (err) {
+      setError(`AI generation failed: ${err}`);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const canCommit = subject.trim().length > 0 && stagedCount > 0 && !committing;
 
   return (
@@ -103,6 +128,30 @@ export function CommitPanel({
             if (e.key === "Enter" && canCommit) handleCommit(false);
           }}
         />
+        <button
+          className="commit-ai-btn"
+          disabled={stagedCount === 0 || generating}
+          onClick={handleAiGenerate}
+          title="Generate commit message with AI"
+        >
+          <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+            <path
+              d="M6 1l1.2 3.8L11 6 7.2 7.2 6 11l-1.2-3.8L1 6l3.8-1.2z"
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeLinejoin="round"
+              fill="currentColor"
+              opacity="0.3"
+            />
+            <path
+              d="M6 1l1.2 3.8L11 6 7.2 7.2 6 11l-1.2-3.8L1 6l3.8-1.2z"
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeLinejoin="round"
+            />
+          </svg>
+          {generating ? "…" : "AI"}
+        </button>
         <span
           className={`commit-char-count ${subject.length > 50 ? "over" : ""}`}
         >

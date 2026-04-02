@@ -1,0 +1,342 @@
+/* ==========================================================
+   Git Log Viewer – Commit history
+   ========================================================== */
+
+.gitlog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.gitlog-panel {
+  position: fixed;
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 720px;
+  max-width: calc(100vw - 40px);
+  max-height: 84vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* -- Header -- */
+
+.gitlog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.gitlog-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.gitlog-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.gitlog-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- Search -- */
+
+.gitlog-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.gitlog-search {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 0.82em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.gitlog-search:focus {
+  border-color: var(--accent);
+}
+
+.gitlog-search-btn {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.gitlog-search-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* -- List -- */
+
+.gitlog-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 10px 10px;
+  overscroll-behavior: contain;
+}
+
+.gitlog-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.gitlog-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gitlog-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.gitlog-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+/* -- Row with graph -- */
+
+.gitlog-row {
+  display: flex;
+  align-items: stretch;
+}
+
+/* -- Graph lane -- */
+
+.gitlog-graph {
+  width: 24px;
+  flex-shrink: 0;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.gitlog-lane {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--border);
+}
+
+.gitlog-dot {
+  position: relative;
+  z-index: 1;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: 14px;
+  flex-shrink: 0;
+}
+
+.gitlog-dot-merge {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--warning);
+  border: 2px solid var(--bg-surface);
+  margin-top: 13px;
+}
+
+.gitlog-merge-indicator {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  width: 10px;
+  height: 2px;
+  background: var(--warning);
+  transform: translateX(-2px);
+}
+
+/* -- Entry -- */
+
+.gitlog-entry {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.1s;
+}
+
+.gitlog-entry:hover {
+  background: var(--bg-hover);
+}
+
+.gitlog-entry-expanded {
+  background: var(--bg-elevated);
+}
+
+.gitlog-entry-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.gitlog-short-id {
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.gitlog-msg {
+  flex: 1;
+  font-size: 0.78em;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.gitlog-author {
+  font-size: 0.68em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.gitlog-date {
+  font-size: 0.68em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* -- Expanded detail -- */
+
+.gitlog-detail {
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gitlog-detail-row {
+  display: flex;
+  gap: 8px;
+  font-size: 0.72em;
+}
+
+.gitlog-detail-label {
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 52px;
+}
+
+.gitlog-detail-value {
+  color: var(--text-secondary);
+  word-break: break-all;
+}
+
+.gitlog-mono {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+}
+
+.gitlog-detail-msg {
+  font-size: 0.75em;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+  line-height: 1.5;
+}
+
+/* -- Load more -- */
+
+.gitlog-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+}
+
+.gitlog-load-more-btn {
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  font-weight: 500;
+  color: var(--accent);
+  background: none;
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 6px 18px;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.gitlog-load-more-btn:hover {
+  background: var(--accent-muted);
+}
+
+.gitlog-load-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

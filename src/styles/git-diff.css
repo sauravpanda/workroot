@@ -9,13 +9,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border, #333);
+  border-bottom: 1px solid var(--border);
 }
 
 .git-diff-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text, #e0e0e0);
+  color: var(--text-primary);
 }
 
 .git-diff-actions {
@@ -25,7 +25,7 @@
 
 .git-diff-btn {
   padding: 4px 10px;
-  border: 1px solid var(--border, #444);
+  border: 1px solid var(--border);
   background: transparent;
   color: var(--text-muted, #888);
   font-size: 12px;
@@ -34,7 +34,7 @@
 }
 
 .git-diff-btn:hover {
-  color: var(--text, #e0e0e0);
+  color: var(--text-primary);
 }
 
 .git-diff-btn:disabled {
@@ -51,7 +51,7 @@
 /* File list sidebar */
 .git-diff-file-list {
   width: 260px;
-  border-right: 1px solid var(--border, #333);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -63,15 +63,15 @@
   font-weight: 600;
   text-transform: uppercase;
   color: var(--text-muted, #888);
-  background: var(--bg-subtle, rgba(255, 255, 255, 0.02));
-  border-bottom: 1px solid var(--border, #333);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .git-diff-section-count {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.08));
+  background: var(--bg-elevated);
   padding: 1px 6px;
   border-radius: 8px;
   font-size: 10px;
@@ -88,24 +88,24 @@
 }
 
 .git-diff-file-item:hover {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.04));
+  background: var(--bg-hover);
 }
 
 .git-diff-file-item.active {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.06));
-  border-left-color: var(--accent, #7c5cbf);
+  background: var(--bg-hover);
+  border-left-color: var(--accent);
 }
 
 .git-diff-file-checkbox {
   width: 14px;
   height: 14px;
   cursor: pointer;
-  accent-color: var(--accent, #7c5cbf);
+  accent-color: var(--accent);
 }
 
 .git-diff-file-name {
   flex: 1;
-  color: var(--text, #e0e0e0);
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -193,8 +193,8 @@
 
 .diff-viewer-file-header {
   padding: 6px 12px;
-  background: var(--bg-subtle, rgba(255, 255, 255, 0.02));
-  border-bottom: 1px solid var(--border, #333);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
   font-size: 12px;
   color: var(--text-muted, #888);
 }
@@ -207,7 +207,7 @@
 }
 
 .diff-hunk {
-  border-bottom: 1px solid var(--border, #333);
+  border-bottom: 1px solid var(--border);
 }
 
 .diff-hunk-header {
@@ -215,7 +215,7 @@
   background: rgba(96, 165, 250, 0.08);
   color: #60a5fa;
   font-size: 11px;
-  border-bottom: 1px solid var(--border, #333);
+  border-bottom: 1px solid var(--border);
 }
 
 .diff-line {
@@ -238,7 +238,7 @@
   text-align: right;
   color: var(--text-muted, #555);
   user-select: none;
-  border-right: 1px solid var(--border, #333);
+  border-right: 1px solid var(--border);
   font-size: 11px;
   line-height: 20px;
 }
@@ -269,5 +269,5 @@
   white-space: pre-wrap;
   word-break: break-all;
   line-height: 20px;
-  color: var(--text, #e0e0e0);
+  color: var(--text-primary);
 }

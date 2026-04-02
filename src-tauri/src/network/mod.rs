@@ -1,4 +1,5 @@
 pub mod logging;
+pub mod ports;
 pub mod proxy;
 
 use crate::db::AppDb;

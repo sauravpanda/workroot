@@ -58,6 +58,35 @@ export function useAuth() {
     checkAuth();
   }, [checkAuth]);
 
+  const loginWithPat = useCallback(async (token: string) => {
+    setState((prev) => ({ ...prev, error: null, isLoading: true }));
+    try {
+      await invoke("github_store_pat", { token });
+      const user = await invoke<GitHubUser | null>("github_get_user");
+      if (user) {
+        setState((prev) => ({
+          ...prev,
+          isAuthenticated: true,
+          user,
+          isLoading: false,
+          error: null,
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: "Invalid token — could not authenticate with GitHub.",
+        }));
+      }
+    } catch (err: unknown) {
+      setState((prev) => ({
+        ...prev,
+        error: String(err),
+        isLoading: false,
+      }));
+    }
+  }, []);
+
   const startLogin = useCallback(async () => {
     setState((prev) => ({ ...prev, error: null, isLoading: true }));
     try {
@@ -123,6 +152,7 @@ export function useAuth() {
   return {
     ...state,
     startLogin,
+    loginWithPat,
     logout,
   };
 }

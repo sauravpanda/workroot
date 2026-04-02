@@ -79,3 +79,94 @@ pub fn get_setting_value(conn: &rusqlite::Connection, key: &str) -> Option<Strin
     )
     .ok()
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::db::init_test_db;
+    use rusqlite::params;
+
+    use super::{get_setting_value, SettingEntry};
+
+    /// Helper: upsert a setting directly.
+    fn set_setting(conn: &rusqlite::Connection, key: &str, value: &str) {
+        conn.execute(
+            "INSERT INTO settings (key, value) VALUES (?1, ?2)
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            params![key, value],
+        )
+        .unwrap();
+    }
+
+    /// Helper: get all settings.
+    fn get_all(conn: &rusqlite::Connection) -> Vec<SettingEntry> {
+        let mut stmt = conn
+            .prepare("SELECT key, value FROM settings ORDER BY key")
+            .unwrap();
+        stmt.query_map([], |row| {
+            Ok(SettingEntry {
+                key: row.get(0)?,
+                value: row.get(1)?,
+            })
+        })
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap()
+    }
+
+    #[test]
+    fn test_settings_create_and_get() {
+        let conn = init_test_db();
+        set_setting(&conn, "theme", "dark");
+
+        let val = get_setting_value(&conn, "theme");
+        assert_eq!(val, Some("dark".to_string()));
+    }
+
+    #[test]
+    fn test_settings_get_missing_key() {
+        let conn = init_test_db();
+        let val = get_setting_value(&conn, "nonexistent");
+        assert_eq!(val, None);
+    }
+
+    #[test]
+    fn test_settings_upsert_overwrites() {
+        let conn = init_test_db();
+        set_setting(&conn, "lang", "en");
+        set_setting(&conn, "lang", "fr");
+
+        let val = get_setting_value(&conn, "lang");
+        assert_eq!(val, Some("fr".to_string()));
+
+        // Only one row should exist for that key
+        let all = get_all(&conn);
+        assert_eq!(all.len(), 1);
+    }
+
+    #[test]
+    fn test_settings_list_all() {
+        let conn = init_test_db();
+        set_setting(&conn, "editor", "vim");
+        set_setting(&conn, "theme", "light");
+        set_setting(&conn, "autosave", "true");
+
+        let all = get_all(&conn);
+        assert_eq!(all.len(), 3);
+        // Ordered by key
+        assert_eq!(all[0].key, "autosave");
+        assert_eq!(all[1].key, "editor");
+        assert_eq!(all[2].key, "theme");
+    }
+
+    #[test]
+    fn test_settings_delete() {
+        let conn = init_test_db();
+        set_setting(&conn, "temp_key", "temp_val");
+
+        conn.execute("DELETE FROM settings WHERE key = ?1", params!["temp_key"])
+            .unwrap();
+
+        let val = get_setting_value(&conn, "temp_key");
+        assert_eq!(val, None);
+    }
+}

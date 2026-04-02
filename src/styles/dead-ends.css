@@ -9,22 +9,22 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border, #333);
+  border-bottom: 1px solid var(--border);
 }
 
 .dead-ends-search {
   flex: 1;
   padding: 6px 10px;
-  border: 1px solid var(--border, #444);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  background: var(--bg-input, #1a1a2e);
-  color: var(--text, #e0e0e0);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   font-size: 13px;
   outline: none;
 }
 
 .dead-ends-search:focus {
-  border-color: var(--accent, #7c5cbf);
+  border-color: var(--accent);
 }
 
 .dead-ends-add-btn {
@@ -40,7 +40,7 @@
 
 .dead-ends-form {
   padding: 12px;
-  border-bottom: 1px solid var(--border, #333);
+  border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -48,20 +48,20 @@
 
 .dead-ends-input {
   padding: 6px 10px;
-  border: 1px solid var(--border, #444);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  background: var(--bg-input, #1a1a2e);
-  color: var(--text, #e0e0e0);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   font-size: 13px;
   outline: none;
 }
 
 .dead-ends-textarea {
   padding: 6px 10px;
-  border: 1px solid var(--border, #444);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  background: var(--bg-input, #0d0d1a);
-  color: var(--text, #e0e0e0);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   font-size: 13px;
   font-family: var(--font-mono, monospace);
   resize: vertical;
@@ -111,7 +111,7 @@
 }
 
 .dead-end-entry:hover {
-  background: var(--bg-hover, rgba(255, 255, 255, 0.04));
+  background: var(--bg-hover);
 }
 
 .dead-end-header {
@@ -134,7 +134,7 @@
 
 .dead-end-approach {
   font-size: 13px;
-  color: var(--text, #e0e0e0);
+  color: var(--text-primary);
   font-weight: 500;
 }
 

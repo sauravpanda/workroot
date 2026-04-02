@@ -1,0 +1,343 @@
+/* ==========================================================
+   File Explorer — VS Code-like file tree
+   ========================================================== */
+
+.fe-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 9998;
+  animation: cmd-backdrop-in 0.12s ease-out;
+}
+
+.fe-panel {
+  position: fixed;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 520px;
+  max-width: calc(100vw - 40px);
+  max-height: 76vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cmd-palette-in 0.15s ease-out;
+}
+
+/* -- Header -- */
+
+.fe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.fe-title {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.fe-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.1s;
+}
+
+.fe-close:hover {
+  color: var(--text-primary);
+}
+
+/* -- CWD indicator -- */
+
+.fe-cwd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.fe-cwd-label {
+  font-size: 0.68em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.fe-cwd-path {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72em;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* -- Manual path input -- */
+
+.fe-manual {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.fe-manual-input {
+  flex: 1;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.fe-manual-input:focus {
+  border-color: var(--accent);
+}
+
+.fe-manual-btn {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--bg-base);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.fe-manual-btn:hover {
+  background: var(--accent-hover);
+}
+
+.fe-manual-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* -- Filter row -- */
+
+.fe-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.fe-filter-input {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 0.78em;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.fe-filter-input:focus {
+  border-color: var(--accent);
+}
+
+.fe-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color 0.1s,
+    background-color 0.1s;
+}
+
+.fe-refresh-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* -- Body / file list -- */
+
+.fe-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px 8px;
+  overscroll-behavior: contain;
+}
+
+.fe-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.fe-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fe-body::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.fe-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
+}
+
+.fe-error {
+  padding: 10px 16px;
+  font-size: 0.78em;
+  color: var(--danger);
+  background: var(--danger-muted);
+  border-radius: var(--radius-sm);
+  margin: 8px;
+}
+
+/* -- Tree structure -- */
+
+.fe-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fe-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.fe-group-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 0.72em;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+.fe-folder-icon {
+  font-size: 0.9em;
+  color: var(--text-tertiary);
+}
+
+.fe-group-name {
+  font-family: var(--font-mono, monospace);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* -- File row -- */
+
+.fe-file-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 24px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.1s;
+  text-align: left;
+  width: 100%;
+}
+
+.fe-file-row:hover {
+  background-color: var(--bg-hover);
+}
+
+.fe-file-icon {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.64em;
+  font-weight: 700;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+
+.fe-file-name {
+  flex: 1;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78em;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fe-file-status {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.64em;
+  font-weight: 700;
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+  border-radius: 2px;
+  padding: 1px 2px;
+}
+
+.fe-status--modified {
+  color: var(--warning);
+}
+
+.fe-status--added {
+  color: var(--success);
+}
+
+.fe-status--deleted {
+  color: var(--danger);
+}
+
+.fe-status--renamed {
+  color: var(--accent);
+}
+
+.fe-status--untracked {
+  color: var(--text-tertiary);
+}
