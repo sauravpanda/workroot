@@ -112,6 +112,7 @@ pub fn run() {
             projects::register_local_project,
             git::worktree::create_worktree,
             git::worktree::list_project_worktrees,
+            git::worktree::list_worktree_history,
             git::worktree::delete_worktree,
             git::worktree::get_worktree_status,
             git::branch::list_branches,

@@ -25,6 +25,7 @@ pub struct WorktreeRow {
     pub status: String,
     pub port: Option<i64>,
     pub created_at: String,
+    pub deleted_at: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -189,7 +190,7 @@ pub fn insert_worktree(
 
 pub fn get_worktree(conn: &Connection, id: i64) -> Result<Option<WorktreeRow>, rusqlite::Error> {
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, branch_name, path, status, port, created_at
+        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at
          FROM worktrees WHERE id = ?1",
     )?;
     let mut rows = stmt.query_map(params![id], |row| {
@@ -201,6 +202,7 @@ pub fn get_worktree(conn: &Connection, id: i64) -> Result<Option<WorktreeRow>, r
             status: row.get(4)?,
             port: row.get(5)?,
             created_at: row.get(6)?,
+            deleted_at: row.get(7)?,
         })
     })?;
     match rows.next() {
@@ -209,12 +211,37 @@ pub fn get_worktree(conn: &Connection, id: i64) -> Result<Option<WorktreeRow>, r
     }
 }
 
+/// Returns only active (non-archived) worktrees for a project.
 pub fn list_worktrees(
     conn: &Connection,
     project_id: i64,
 ) -> Result<Vec<WorktreeRow>, rusqlite::Error> {
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, branch_name, path, status, port, created_at
+        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at
+         FROM worktrees WHERE project_id = ?1 AND deleted_at IS NULL ORDER BY created_at DESC",
+    )?;
+    let rows = stmt.query_map(params![project_id], |row| {
+        Ok(WorktreeRow {
+            id: row.get(0)?,
+            project_id: row.get(1)?,
+            branch_name: row.get(2)?,
+            path: row.get(3)?,
+            status: row.get(4)?,
+            port: row.get(5)?,
+            created_at: row.get(6)?,
+            deleted_at: row.get(7)?,
+        })
+    })?;
+    rows.collect()
+}
+
+/// Returns all worktrees for a project, including archived ones, ordered newest first.
+pub fn list_all_worktrees(
+    conn: &Connection,
+    project_id: i64,
+) -> Result<Vec<WorktreeRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at
          FROM worktrees WHERE project_id = ?1 ORDER BY created_at DESC",
     )?;
     let rows = stmt.query_map(params![project_id], |row| {
@@ -226,13 +253,19 @@ pub fn list_worktrees(
             status: row.get(4)?,
             port: row.get(5)?,
             created_at: row.get(6)?,
+            deleted_at: row.get(7)?,
         })
     })?;
     rows.collect()
 }
 
-pub fn delete_worktree(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
-    let affected = conn.execute("DELETE FROM worktrees WHERE id = ?1", params![id])?;
+/// Soft-deletes a worktree by recording the deletion timestamp and marking it archived.
+/// The filesystem and git worktree are left untouched.
+pub fn archive_worktree(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute(
+        "UPDATE worktrees SET status = 'archived', deleted_at = datetime('now') WHERE id = ?1 AND deleted_at IS NULL",
+        params![id],
+    )?;
     Ok(affected > 0)
 }
 
@@ -922,9 +955,15 @@ mod tests {
         assert_eq!(trees[0].branch_name, "feature-branch");
         assert_eq!(trees[0].status, "active");
 
-        let deleted = delete_worktree(&conn, wid).unwrap();
-        assert!(deleted);
+        let archived = archive_worktree(&conn, wid).unwrap();
+        assert!(archived);
+        // Active list should be empty after archive
         assert!(list_worktrees(&conn, pid).unwrap().is_empty());
+        // History should still contain the archived worktree
+        let history = list_all_worktrees(&conn, pid).unwrap();
+        assert_eq!(history.len(), 1);
+        assert_eq!(history[0].status, "archived");
+        assert!(history[0].deleted_at.is_some());
     }
 
     #[test]
