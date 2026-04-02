@@ -1,0 +1,171 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+
+    <!-- Background radial gradient: deep dark with a subtle warm center -->
+    <radialGradient id="bgGrad" cx="50%" cy="48%" r="55%" fx="50%" fy="42%">
+      <stop offset="0%"  stop-color="#141B27"/>
+      <stop offset="100%" stop-color="#0D1117"/>
+    </radialGradient>
+
+    <!-- Stroke linear gradient: bright teal at top, blends through cyan, then deep violet at bottom -->
+    <linearGradient id="strokeGrad" x1="512" y1="140" x2="512" y2="884" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#00D4AA"/>
+      <stop offset="42%"  stop-color="#00B8C8"/>
+      <stop offset="72%"  stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#5B1FBB"/>
+    </linearGradient>
+
+    <!-- Node fill gradient: teal → purple, same direction -->
+    <linearGradient id="nodeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#00D4AA"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+
+    <!-- Soft outer glow on strokes -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="14" result="blur1"/>
+      <feGaussianBlur stdDeviation="6"  result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Tighter glow for nodes -->
+    <filter id="nodeGlow" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Ambient background bloom -->
+    <filter id="bgBloom" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="55" result="bloom"/>
+      <feComponentTransfer in="bloom">
+        <feFuncA type="linear" slope="0.18"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+  </defs>
+
+  <!-- ── Background ─────────────────────────────────────────────────────── -->
+  <rect width="1024" height="1024" rx="180" ry="180" fill="url(#bgGrad)"/>
+
+  <!-- Subtle ambient glow pool in the center -->
+  <ellipse cx="512" cy="490" rx="310" ry="280" fill="#00D4AA" opacity="0.045" filter="url(#bgBloom)"/>
+  <ellipse cx="512" cy="560" rx="260" ry="220" fill="#7C3AED" opacity="0.055" filter="url(#bgBloom)"/>
+
+  <!-- ── Tree structure ─────────────────────────────────────────────────── -->
+  <!--
+    Coordinate system:
+      Trunk base:        (512, 580)
+      Trunk top:         (512, 380)
+      Left branch end:   (320, 220)
+      Right branch end:  (704, 220)
+      Root left end:     (310, 790)
+      Root right end:    (714, 790)
+
+    Sub-branches at branch tips:
+      Left tip sub-L:    (210, 148)
+      Left tip sub-R:    (340, 145)
+      Right tip sub-L:   (684, 145)
+      Right tip sub-R:   (814, 148)
+
+    Sub-roots at root tips:
+      Root-L sub-L:      (220, 860)
+      Root-L sub-R:      (345, 850)
+      Root-R sub-L:      (679, 850)
+      Root-R sub-R:      (804, 860)
+  -->
+
+  <g filter="url(#glow)" stroke="url(#strokeGrad)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+
+    <!-- Trunk: straight vertical pillar -->
+    <line x1="512" y1="580" x2="512" y2="380" stroke-width="52"/>
+
+    <!-- Left branch: trunk top → left tip, smooth curve -->
+    <path d="M 512 380 C 512 310, 400 265, 320 220" stroke-width="44"/>
+
+    <!-- Right branch: trunk top → right tip, smooth curve -->
+    <path d="M 512 380 C 512 310, 624 265, 704 220" stroke-width="44"/>
+
+    <!-- Root left: trunk base → root-L tip -->
+    <path d="M 512 580 C 512 650, 400 710, 310 790" stroke-width="44"/>
+
+    <!-- Root right: trunk base → root-R tip -->
+    <path d="M 512 580 C 512 650, 624 710, 714 790" stroke-width="44"/>
+
+    <!-- Sub-branch: left tip → upper-left -->
+    <path d="M 320 220 C 290 192, 248 168, 210 148" stroke-width="28"/>
+
+    <!-- Sub-branch: left tip → upper-right -->
+    <path d="M 320 220 C 326 186, 334 162, 340 145" stroke-width="28"/>
+
+    <!-- Sub-branch: right tip → upper-left -->
+    <path d="M 704 220 C 698 186, 690 162, 684 145" stroke-width="28"/>
+
+    <!-- Sub-branch: right tip → upper-right -->
+    <path d="M 704 220 C 742 192, 776 168, 814 148" stroke-width="28"/>
+
+    <!-- Sub-root: root-L tip → lower-left -->
+    <path d="M 310 790 C 278 812, 244 840, 220 860" stroke-width="28"/>
+
+    <!-- Sub-root: root-L tip → lower-right -->
+    <path d="M 310 790 C 320 820, 332 840, 345 850" stroke-width="28"/>
+
+    <!-- Sub-root: root-R tip → lower-left -->
+    <path d="M 714 790 C 704 820, 692 840, 679 850" stroke-width="28"/>
+
+    <!-- Sub-root: root-R tip → lower-right -->
+    <path d="M 714 790 C 746 812, 780 840, 804 860" stroke-width="28"/>
+
+  </g>
+
+  <!-- ── Node circles at key junction / tip points ─────────────────────── -->
+  <!--
+    Nodes reinforce the "commit node" metaphor of git graphs.
+    Each tip and the trunk top/base get a glowing filled circle.
+  -->
+  <g filter="url(#nodeGlow)">
+
+    <!-- Trunk junctions -->
+    <circle cx="512" cy="380" r="28" fill="url(#nodeGrad)" opacity="0.95"/>
+    <circle cx="512" cy="580" r="28" fill="url(#nodeGrad)" opacity="0.95"/>
+
+    <!-- Branch tips -->
+    <circle cx="320" cy="220" r="22" fill="#00D4AA" opacity="0.9"/>
+    <circle cx="704" cy="220" r="22" fill="#00D4AA" opacity="0.9"/>
+
+    <!-- Root tips -->
+    <circle cx="310" cy="790" r="22" fill="#7C3AED" opacity="0.9"/>
+    <circle cx="714" cy="790" r="22" fill="#7C3AED" opacity="0.9"/>
+
+    <!-- Sub-branch tips -->
+    <circle cx="210" cy="148" r="14" fill="#00D4AA" opacity="0.85"/>
+    <circle cx="340" cy="145" r="14" fill="#00D4AA" opacity="0.85"/>
+    <circle cx="684" cy="145" r="14" fill="#00D4AA" opacity="0.85"/>
+    <circle cx="814" cy="148" r="14" fill="#00D4AA" opacity="0.85"/>
+
+    <!-- Sub-root tips -->
+    <circle cx="220" cy="860" r="14" fill="#7C3AED" opacity="0.85"/>
+    <circle cx="345" cy="850" r="14" fill="#7C3AED" opacity="0.85"/>
+    <circle cx="679" cy="850" r="14" fill="#7C3AED" opacity="0.85"/>
+    <circle cx="804" cy="860" r="14" fill="#7C3AED" opacity="0.85"/>
+
+  </g>
+
+  <!-- ── Specular rim: very subtle inner edge highlight on the card ─────── -->
+  <rect width="1024" height="1024" rx="180" ry="180"
+        fill="none"
+        stroke="url(#strokeGrad)"
+        stroke-width="2"
+        opacity="0.12"/>
+
+</svg>
