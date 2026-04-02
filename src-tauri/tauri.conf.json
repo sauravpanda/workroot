@@ -53,6 +53,16 @@
   "plugins": {
     "shell": {
       "open": true
+    },
+    "updater": {
+      "pubkey": "PLACEHOLDER_REPLACE_WITH_OUTPUT_OF_tauri_signer_generate",
+      "endpoints": [
+        "https://github.com/sauravpanda/workroot/releases/latest/download/latest.json"
+      ],
+      "dialog": true,
+      "windows": {
+        "installerArgs": []
+      }
     }
   }
 }
