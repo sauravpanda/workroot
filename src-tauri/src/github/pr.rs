@@ -85,7 +85,7 @@ pub async fn create_pull_request(
         (owner, repo_name, branch)
     };
 
-    let token = auth::get_token()?.ok_or("Not authenticated. Please sign in with GitHub first.")?;
+    let token = auth::get_token_from_env_or_gh()?.ok_or("Not authenticated. Please sign in with GitHub or the gh CLI.")?;
 
     let client = super::api_client()?;
     let resp = client
@@ -148,7 +148,7 @@ pub async fn get_pr_for_branch(
         (owner, repo_name, branch)
     };
 
-    let token = auth::get_token()?.ok_or("Not authenticated. Please sign in with GitHub first.")?;
+    let token = auth::get_token_from_env_or_gh()?.ok_or("Not authenticated. Please sign in with GitHub or the gh CLI.")?;
 
     let client = super::api_client()?;
     let resp = client
