@@ -25,6 +25,7 @@ pub struct WorktreeRow {
     pub status: String,
     pub port: Option<i64>,
     pub created_at: String,
+    pub deleted_at: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -189,7 +190,7 @@ pub fn insert_worktree(
 
 pub fn get_worktree(conn: &Connection, id: i64) -> Result<Option<WorktreeRow>, rusqlite::Error> {
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, branch_name, path, status, port, created_at
+        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at
          FROM worktrees WHERE id = ?1",
     )?;
     let mut rows = stmt.query_map(params![id], |row| {
@@ -201,6 +202,7 @@ pub fn get_worktree(conn: &Connection, id: i64) -> Result<Option<WorktreeRow>, r
             status: row.get(4)?,
             port: row.get(5)?,
             created_at: row.get(6)?,
+            deleted_at: row.get(7)?,
         })
     })?;
     match rows.next() {
@@ -214,7 +216,30 @@ pub fn list_worktrees(
     project_id: i64,
 ) -> Result<Vec<WorktreeRow>, rusqlite::Error> {
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, branch_name, path, status, port, created_at
+        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at
+         FROM worktrees WHERE project_id = ?1 AND deleted_at IS NULL ORDER BY created_at DESC",
+    )?;
+    let rows = stmt.query_map(params![project_id], |row| {
+        Ok(WorktreeRow {
+            id: row.get(0)?,
+            project_id: row.get(1)?,
+            branch_name: row.get(2)?,
+            path: row.get(3)?,
+            status: row.get(4)?,
+            port: row.get(5)?,
+            created_at: row.get(6)?,
+            deleted_at: row.get(7)?,
+        })
+    })?;
+    rows.collect()
+}
+
+pub fn list_all_worktrees(
+    conn: &Connection,
+    project_id: i64,
+) -> Result<Vec<WorktreeRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at
          FROM worktrees WHERE project_id = ?1 ORDER BY created_at DESC",
     )?;
     let rows = stmt.query_map(params![project_id], |row| {
@@ -226,9 +251,19 @@ pub fn list_worktrees(
             status: row.get(4)?,
             port: row.get(5)?,
             created_at: row.get(6)?,
+            deleted_at: row.get(7)?,
         })
     })?;
     rows.collect()
+}
+
+pub fn archive_worktree(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute(
+        "UPDATE worktrees SET status = 'archived', deleted_at = datetime('now')
+         WHERE id = ?1 AND deleted_at IS NULL",
+        params![id],
+    )?;
+    Ok(affected > 0)
 }
 
 pub fn delete_worktree(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
