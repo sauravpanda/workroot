@@ -112,7 +112,9 @@ export function ProjectGroup({
                 type="text"
                 placeholder="branch name"
                 value={newBranchName}
-                onChange={(e) => setNewBranchName(e.target.value)}
+                onChange={(e) =>
+                  setNewBranchName(e.target.value.replace(/ /g, "-"))
+                }
                 className="new-worktree-input"
                 autoFocus
               />
