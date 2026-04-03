@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
+import { WebglAddon } from "@xterm/addon-webgl";
 import { invoke } from "@tauri-apps/api/core";
 import { spawn } from "tauri-pty";
 import type { IPty } from "tauri-pty";
@@ -311,8 +312,31 @@ function TerminalInstance({
     term.loadAddon(fitAddon);
     term.open(el);
 
+    // GPU-accelerated renderer; fall back silently if WebGL is unavailable.
+    try {
+      const webgl = new WebglAddon();
+      webgl.onContextLoss(() => webgl.dispose());
+      term.loadAddon(webgl);
+    } catch {
+      // WebGL not available — xterm falls back to its canvas renderer.
+    }
+
     termRef.current = term;
     fitAddonRef.current = fitAddon;
+
+    // Prevent WebKit/WKWebView from consuming Backspace/Delete as browser
+    // navigation before xterm can handle them. Capture phase so we run first;
+    // only fires when this terminal container holds focus so other inputs
+    // (search boxes, etc.) are unaffected. xterm still processes the key
+    // through its own listener — preventDefault() only blocks browser defaults.
+    const preventBrowserNav = (e: KeyboardEvent) => {
+      if (e.key === "Backspace" || e.key === "Delete") {
+        if (el.contains(document.activeElement)) {
+          e.preventDefault();
+        }
+      }
+    };
+    window.addEventListener("keydown", preventBrowserNav, true);
 
     // Load settings, fit, spawn
     const initTimer = setTimeout(async () => {
@@ -375,6 +399,7 @@ function TerminalInstance({
     return () => {
       cancelled = true;
       clearTimeout(initTimer);
+      window.removeEventListener("keydown", preventBrowserNav, true);
       try {
         ptyRef.current?.kill();
       } catch {
