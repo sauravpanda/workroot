@@ -336,6 +336,7 @@ function TerminalInstance({
           cols: Math.max(term.cols, 1),
           rows: Math.max(term.rows, 1),
           cwd,
+          env: { TERM: "xterm-256color" },
         });
         ptyRef.current = pty;
 
