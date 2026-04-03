@@ -43,6 +43,7 @@ jobs:
   build-and-upload:
     name: Build (${{ matrix.platform }})
     needs: create-release
+    environment: main
     strategy:
       fail-fast: false
       matrix:
