@@ -433,3 +433,44 @@
   background-color: var(--bg-hover);
   color: var(--text-primary);
 }
+
+.settings-page__btn {
+  padding: 6px 14px;
+  background: var(--accent-muted);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-size: 0.78em;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.12s,
+    opacity 0.12s;
+}
+
+.settings-page__btn:hover:not(:disabled) {
+  background-color: var(--accent);
+  color: var(--bg-base);
+}
+
+.settings-page__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-page__update-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.settings-page__update-ok {
+  font-size: 0.78em;
+  color: var(--accent);
+}
+
+.settings-page__update-error {
+  font-size: 0.78em;
+  color: var(--danger);
+}
