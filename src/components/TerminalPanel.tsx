@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
+import { WebLinksAddon } from "@xterm/addon-web-links";
 import { invoke } from "@tauri-apps/api/core";
 import { spawn } from "tauri-pty";
 import type { IPty } from "tauri-pty";
@@ -310,6 +311,7 @@ function TerminalInstance({
 
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
+    term.loadAddon(new WebLinksAddon());
     term.open(el);
 
     // GPU-accelerated renderer; fall back silently if WebGL is unavailable.
