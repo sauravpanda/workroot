@@ -32,6 +32,8 @@ coverage/
 # Misc
 *.log
 
+# Claude Code
+.claire/
 CLAUDE.md
 *.docx
 PR_PLANS.md
