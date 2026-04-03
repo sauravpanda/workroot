@@ -78,7 +78,7 @@ async fn github_get_user() -> Result<Option<GitHubUser>, String> {
 
 #[tauri::command]
 fn github_check_auth() -> Result<bool, String> {
-    Ok(auth::get_token()?.is_some())
+    Ok(auth::get_token_from_env_or_gh()?.is_some())
 }
 
 #[tauri::command]

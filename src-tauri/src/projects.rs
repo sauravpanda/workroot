@@ -116,9 +116,9 @@ pub async fn clone_and_register(
         return Err(format!("Directory already exists: {}", local_path_str));
     }
 
-    // Get token for clone auth
-    let token = auth::get_token()?
-        .ok_or_else(|| "Not authenticated. Please sign in with GitHub first.".to_string())?;
+    // Get token for clone auth (keychain, env vars, or gh CLI)
+    let token = auth::get_token_from_env_or_gh()?
+        .ok_or_else(|| "Not authenticated. Please sign in with GitHub or the gh CLI.".to_string())?;
 
     // Clone in a blocking task to not block the async runtime
     let clone_url_owned = clone_url.clone();
