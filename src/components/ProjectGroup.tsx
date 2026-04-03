@@ -19,7 +19,8 @@ export function ProjectGroup({
   const [showNewWorktree, setShowNewWorktree] = useState(false);
   const [newBranchName, setNewBranchName] = useState("");
   const [createNew, setCreateNew] = useState(true);
-  const { worktrees, error, createWorktree, deleteWorktree, loadWorktrees } =
+  const [importMsg, setImportMsg] = useState<string | null>(null);
+  const { worktrees, error, createWorktree, deleteWorktree, loadWorktrees, importWorktrees } =
     useWorktrees(expanded ? project.id : null);
 
   useEffect(() => {
@@ -50,6 +51,13 @@ export function ProjectGroup({
     },
     [deleteWorktree],
   );
+
+  const handleImport = useCallback(async () => {
+    const count = await importWorktrees();
+    const msg = count > 0 ? `Imported ${count} worktree${count === 1 ? "" : "s"}` : "No new worktrees found";
+    setImportMsg(msg);
+    setTimeout(() => setImportMsg(null), 3000);
+  }, [importWorktrees]);
 
   return (
     <div className="project-group">
@@ -138,13 +146,23 @@ export function ProjectGroup({
               </div>
             </form>
           ) : (
-            <button
-              className="add-worktree-btn"
-              onClick={() => setShowNewWorktree(true)}
-            >
-              + Worktree
-            </button>
+            <div className="worktree-btn-row">
+              <button
+                className="add-worktree-btn"
+                onClick={() => setShowNewWorktree(true)}
+              >
+                + Worktree
+              </button>
+              <button
+                className="add-worktree-btn"
+                onClick={handleImport}
+                title="Scan .worktrees/ and import any untracked worktrees"
+              >
+                Import
+              </button>
+            </div>
           )}
+          {importMsg && <div className="project-import-msg">{importMsg}</div>}
         </div>
       )}
     </div>

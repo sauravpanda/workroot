@@ -10,6 +10,7 @@ interface WorktreeInfo {
   is_dirty: boolean;
   port: number | null;
   created_at: string;
+  deleted_at: string | null;
 }
 
 interface BranchInfo {
@@ -90,6 +91,38 @@ export function useWorktrees(projectId: number | null) {
     [loadWorktrees],
   );
 
+  const loadWorktreeHistory = useCallback(async (): Promise<WorktreeInfo[]> => {
+    if (projectId === null) return [];
+    try {
+      return await invoke<WorktreeInfo[]>("list_worktree_history", {
+        projectId,
+      });
+    } catch (err: unknown) {
+      setError(String(err));
+      return [];
+    }
+  }, [projectId]);
+
+  const importWorktrees = useCallback(async (): Promise<number> => {
+    if (projectId === null) return 0;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const imported = await invoke<WorktreeInfo[]>("import_existing_worktrees", {
+        projectId,
+      });
+      if (imported.length > 0) {
+        await loadWorktrees();
+      }
+      return imported.length;
+    } catch (err: unknown) {
+      setError(String(err));
+      return 0;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId, loadWorktrees]);
+
   return {
     worktrees,
     branches,
@@ -99,6 +132,8 @@ export function useWorktrees(projectId: number | null) {
     loadBranches,
     createWorktree,
     deleteWorktree,
+    loadWorktreeHistory,
+    importWorktrees,
   };
 }
 

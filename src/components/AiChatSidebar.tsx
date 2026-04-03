@@ -20,7 +20,8 @@ interface ModelInfo {
   name: string;
 }
 
-type ConnectionStatus = "connected" | "disconnected" | "checking";
+type AiProvider = "ollama" | "openai" | "anthropic";
+type ConnectionStatus = "connected" | "disconnected" | "checking" | "no_key";
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
@@ -35,6 +36,10 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
     useState<ConnectionStatus>("checking");
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+
+  const [provider, setProvider] = useState<AiProvider>("ollama");
+  const [apiKey, setApiKey] = useState("");
+  const [apiKeySaved, setApiKeySaved] = useState(false);
   const [endpoint, setEndpoint] = useState("http://localhost:11434");
   const [endpointSaved, setEndpointSaved] = useState(false);
 
@@ -53,36 +58,79 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
     }
   }, [open]);
 
-  const loadModels = useCallback(async () => {
-    try {
-      const result = await invoke<string[]>("ai_chat_list_models");
-      const modelList = result.map((name) => ({ name }));
-      setModels(modelList);
-      if (modelList.length > 0 && !selectedModel) {
-        setSelectedModel(modelList[0].name);
+  // Load saved settings once on mount
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const [savedProvider, savedKey, savedEndpoint] = await Promise.all([
+          invoke<string>("get_setting", { key: "ai_provider" }).catch(
+            () => "ollama",
+          ),
+          invoke<string>("get_setting", { key: "ai_api_key" }).catch(() => ""),
+          invoke<string>("get_setting", { key: "ai_endpoint" }).catch(
+            () => "http://localhost:11434",
+          ),
+        ]);
+        if (savedProvider) setProvider(savedProvider as AiProvider);
+        if (savedKey) setApiKey(savedKey);
+        if (savedEndpoint) setEndpoint(savedEndpoint);
+      } catch {
+        // use defaults
       }
-    } catch {
-      setModels([]);
     }
-  }, [selectedModel]);
+    loadSettings();
+  }, []);
 
-  const checkHealth = useCallback(async () => {
-    setConnectionStatus("checking");
-    try {
-      await invoke("ai_check_health");
-      setConnectionStatus("connected");
-      loadModels();
-    } catch {
-      setConnectionStatus("disconnected");
-      setModels([]);
-    }
-  }, [loadModels]);
+  const loadModels = useCallback(
+    async (prov: AiProvider, key: string, ep: string) => {
+      try {
+        const result = await invoke<string[]>("ai_chat_list_models", {
+          provider: prov,
+          apiKey: key,
+          endpoint: prov === "ollama" ? ep : undefined,
+        });
+        const modelList = result.map((name) => ({ name }));
+        setModels(modelList);
+        if (modelList.length > 0) {
+          setSelectedModel((prev) => prev || modelList[0].name);
+        }
+      } catch {
+        setModels([]);
+      }
+    },
+    [],
+  );
 
-  // Check health and load models when opened
+  const checkHealth = useCallback(
+    async (prov: AiProvider, key: string, ep: string) => {
+      setConnectionStatus("checking");
+      try {
+        await invoke("ai_check_health", {
+          provider: prov,
+          apiKey: key,
+          endpoint: prov === "ollama" ? ep : undefined,
+        });
+        setConnectionStatus("connected");
+        loadModels(prov, key, ep);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("API key required")) {
+          setConnectionStatus("no_key");
+        } else {
+          setConnectionStatus("disconnected");
+        }
+        setModels([]);
+      }
+    },
+    [loadModels],
+  );
+
+  // Check health when sidebar opens or provider/key changes
   useEffect(() => {
     if (!open) return;
-    checkHealth();
-  }, [open, checkHealth]);
+    checkHealth(provider, apiKey, endpoint);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
@@ -105,14 +153,20 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
         content: m.content,
       }));
 
-      const response = await invoke<string>("ai_chat_send", {
-        model: selectedModel,
-        messages: history,
-      });
+      const response = await invoke<{ content: string; model: string }>(
+        "ai_chat_send",
+        {
+          model: selectedModel,
+          messages: history,
+          provider,
+          apiKey,
+          endpoint: provider === "ollama" ? endpoint : undefined,
+        },
+      );
 
       const assistantMessage: ChatMessage = {
         role: "assistant",
-        content: response,
+        content: response.content,
         timestamp: Date.now(),
       };
 
@@ -127,7 +181,16 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
     } finally {
       setLoading(false);
     }
-  }, [input, loading, connectionStatus, messages, selectedModel]);
+  }, [
+    input,
+    loading,
+    connectionStatus,
+    messages,
+    selectedModel,
+    provider,
+    apiKey,
+    endpoint,
+  ]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -139,19 +202,24 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
     [handleSend],
   );
 
-  const handleSaveEndpoint = useCallback(async () => {
+  const handleSaveSettings = useCallback(async () => {
     try {
-      await invoke("set_setting", {
-        key: "ai_endpoint",
-        value: endpoint.trim(),
-      });
+      await Promise.all([
+        invoke("set_setting", { key: "ai_provider", value: provider }),
+        invoke("set_setting", { key: "ai_api_key", value: apiKey.trim() }),
+        invoke("set_setting", { key: "ai_endpoint", value: endpoint.trim() }),
+      ]);
+      setApiKeySaved(true);
       setEndpointSaved(true);
-      setTimeout(() => setEndpointSaved(false), 2000);
-      checkHealth();
+      setTimeout(() => {
+        setApiKeySaved(false);
+        setEndpointSaved(false);
+      }, 2000);
+      checkHealth(provider, apiKey.trim(), endpoint.trim());
     } catch {
       // ignore
     }
-  }, [endpoint, checkHealth]);
+  }, [provider, apiKey, endpoint, checkHealth]);
 
   const handleClearChat = useCallback(() => {
     setMessages([]);
@@ -163,6 +231,8 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
   }, []);
 
   if (!open) return null;
+
+  const isSaved = apiKeySaved || endpointSaved;
 
   return (
     <div className="ai-chat__sidebar">
@@ -196,27 +266,61 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
       {/* Settings panel */}
       {showSettings && (
         <div className="ai-chat__settings">
-          <label className="ai-chat__settings-label">Endpoint URL</label>
-          <div className="ai-chat__settings-row">
-            <input
-              className="ai-chat__settings-input"
-              type="text"
-              value={endpoint}
-              onChange={(e) => setEndpoint(e.target.value)}
-              placeholder="http://localhost:11434"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSaveEndpoint();
-              }}
-            />
-            <button
-              className="ai-chat__settings-save"
-              onClick={handleSaveEndpoint}
-            >
-              {endpointSaved ? "Saved" : "Save"}
-            </button>
-          </div>
-          <button className="ai-chat__settings-reconnect" onClick={checkHealth}>
-            Reconnect
+          <label className="ai-chat__settings-label">Provider</label>
+          <select
+            className="ai-chat__settings-select"
+            value={provider}
+            onChange={(e) => setProvider(e.target.value as AiProvider)}
+          >
+            <option value="ollama">Ollama / LM Studio (local)</option>
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic (Claude)</option>
+          </select>
+
+          {provider === "ollama" && (
+            <>
+              <label className="ai-chat__settings-label" style={{ marginTop: 8 }}>
+                Endpoint URL
+              </label>
+              <input
+                className="ai-chat__settings-input"
+                type="text"
+                value={endpoint}
+                onChange={(e) => setEndpoint(e.target.value)}
+                placeholder="http://localhost:11434"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveSettings();
+                }}
+              />
+            </>
+          )}
+
+          {(provider === "openai" || provider === "anthropic") && (
+            <>
+              <label className="ai-chat__settings-label" style={{ marginTop: 8 }}>
+                API Key
+              </label>
+              <input
+                className="ai-chat__settings-input"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={
+                  provider === "openai" ? "sk-..." : "sk-ant-..."
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveSettings();
+                }}
+              />
+            </>
+          )}
+
+          <button
+            className="ai-chat__settings-save"
+            style={{ marginTop: 8, width: "100%" }}
+            onClick={handleSaveSettings}
+          >
+            {isSaved ? "Saved" : "Save & Connect"}
           </button>
         </div>
       )}
@@ -240,6 +344,27 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
 
       {/* Messages area */}
       <div className="ai-chat__messages">
+        {connectionStatus === "no_key" && (
+          <div className="ai-chat__empty">
+            <div className="ai-chat__empty-icon">
+              <KeyIcon />
+            </div>
+            <h4 className="ai-chat__empty-title">API key required</h4>
+            <p className="ai-chat__empty-subtitle">
+              Open settings and enter your{" "}
+              {provider === "openai" ? "OpenAI" : "Anthropic"} API key to start
+              chatting.
+            </p>
+            <button
+              className="ai-chat__settings-reconnect"
+              style={{ marginTop: 14 }}
+              onClick={() => setShowSettings(true)}
+            >
+              Open Settings
+            </button>
+          </div>
+        )}
+
         {connectionStatus === "disconnected" && messages.length === 0 && (
           <div className="ai-chat__empty">
             <div className="ai-chat__empty-icon">
@@ -255,7 +380,7 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
                 3. Set the endpoint URL in settings (default:{" "}
                 <code>http://localhost:11434</code>)
               </p>
-              <p>4. Click Reconnect</p>
+              <p>4. Click Save & Connect</p>
             </div>
           </div>
         )}
@@ -314,7 +439,9 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
             placeholder={
               connectionStatus === "connected"
                 ? "Send a message..."
-                : "Connect to start chatting"
+                : connectionStatus === "no_key"
+                  ? "Enter API key to start chatting"
+                  : "Connect to start chatting"
             }
             disabled={connectionStatus !== "connected" || loading}
             rows={1}
@@ -386,7 +513,9 @@ function StatusIndicator({ status }: { status: ConnectionStatus }) {
       ? "Connected"
       : status === "checking"
         ? "Checking..."
-        : "Disconnected";
+        : status === "no_key"
+          ? "No API key"
+          : "Disconnected";
 
   return (
     <span className={`ai-chat__status ai-chat__status--${status}`}>
@@ -486,6 +615,20 @@ function ChatIcon() {
       />
       <path
         d="M9 9H15M9 12H13"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function KeyIcon() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+      <circle cx="8" cy="15" r="4" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M12 15H20M17 12V15"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"

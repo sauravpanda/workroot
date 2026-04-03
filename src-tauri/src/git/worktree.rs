@@ -2,7 +2,7 @@ use super::WorktreeInfo;
 use crate::db::queries;
 use crate::db::AppDb;
 use crate::validate;
-use git2::{Repository, StatusOptions, WorktreeAddOptions, WorktreePruneOptions};
+use git2::{Repository, StatusOptions, WorktreeAddOptions};
 use std::path::Path;
 use tauri::State;
 
@@ -25,6 +25,21 @@ fn check_is_dirty(path: &str) -> bool {
     result
 }
 
+fn row_to_info(row: queries::WorktreeRow) -> WorktreeInfo {
+    let is_dirty = check_is_dirty(&row.path);
+    WorktreeInfo {
+        id: row.id,
+        project_id: row.project_id,
+        branch_name: row.branch_name,
+        path: row.path,
+        status: row.status,
+        is_dirty,
+        port: row.port,
+        created_at: row.created_at,
+        deleted_at: row.deleted_at,
+    }
+}
+
 /// Creates a git worktree for the given project and branch.
 /// If `create_new_branch` is true, a new branch is created from HEAD first.
 /// Worktrees are placed in `<project_root>/.worktrees/<branch_name>/`.
@@ -42,7 +57,7 @@ pub fn create_worktree(
         .map_err(|e| format!("DB error: {}", e))?
         .ok_or("Project not found")?;
 
-    // Check if worktree for this branch already exists in DB
+    // Check if an active worktree for this branch already exists in DB
     let existing =
         queries::list_worktrees(&conn, project_id).map_err(|e| format!("DB error: {}", e))?;
     if existing.iter().any(|w| w.branch_name == branch_name) {
@@ -139,19 +154,10 @@ pub fn create_worktree(
         .map_err(|e| format!("DB error: {}", e))?
         .ok_or("Worktree not found after insert")?;
 
-    Ok(WorktreeInfo {
-        id: row.id,
-        project_id: row.project_id,
-        branch_name: row.branch_name,
-        path: row.path.clone(),
-        status: row.status,
-        is_dirty: check_is_dirty(&row.path),
-        port: row.port,
-        created_at: row.created_at,
-    })
+    Ok(row_to_info(row))
 }
 
-/// Lists all worktrees for a project with their current dirty/clean status.
+/// Lists active (non-archived) worktrees for a project with their current dirty/clean status.
 #[tauri::command]
 pub fn list_project_worktrees(
     db: State<'_, AppDb>,
@@ -160,63 +166,112 @@ pub fn list_project_worktrees(
     let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
     let rows =
         queries::list_worktrees(&conn, project_id).map_err(|e| format!("DB error: {}", e))?;
-
-    Ok(rows
-        .into_iter()
-        .map(|row| {
-            let is_dirty = check_is_dirty(&row.path);
-            WorktreeInfo {
-                id: row.id,
-                project_id: row.project_id,
-                branch_name: row.branch_name,
-                path: row.path,
-                status: row.status,
-                is_dirty,
-                port: row.port,
-                created_at: row.created_at,
-            }
-        })
-        .collect())
+    Ok(rows.into_iter().map(row_to_info).collect())
 }
 
-/// Deletes a worktree: prunes from git, removes the directory, and deletes the DB record.
+/// Returns all worktrees for a project, including archived ones, for history display.
+#[tauri::command]
+pub fn list_worktree_history(
+    db: State<'_, AppDb>,
+    project_id: i64,
+) -> Result<Vec<WorktreeInfo>, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    let rows =
+        queries::list_all_worktrees(&conn, project_id).map_err(|e| format!("DB error: {}", e))?;
+    Ok(rows.into_iter().map(row_to_info).collect())
+}
+
+/// Archives a worktree: marks it as deleted in the DB but leaves all files on disk intact.
 #[tauri::command]
 pub fn delete_worktree(db: State<'_, AppDb>, worktree_id: i64) -> Result<bool, String> {
     let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
-    let row = queries::get_worktree(&conn, worktree_id)
-        .map_err(|e| format!("DB error: {}", e))?
-        .ok_or("Worktree not found")?;
+    queries::archive_worktree(&conn, worktree_id).map_err(|e| format!("DB error: {}", e))
+}
 
-    let project = queries::get_project(&conn, row.project_id)
+/// Scans the project's `.worktrees/` directory and imports any git worktrees
+/// that are not yet tracked in the database.
+#[tauri::command]
+pub fn import_existing_worktrees(
+    db: State<'_, AppDb>,
+    project_id: i64,
+) -> Result<Vec<WorktreeInfo>, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    let project = queries::get_project(&conn, project_id)
         .map_err(|e| format!("DB error: {}", e))?
         .ok_or("Project not found")?;
-    drop(conn);
 
-    // Try to prune the git worktree
-    let repo = Repository::open(&project.local_path)
-        .map_err(|e| format!("Failed to open repository: {}", e))?;
+    let existing =
+        queries::list_worktrees(&conn, project_id).map_err(|e| format!("DB error: {}", e))?;
 
-    if let Ok(wt) = repo.find_worktree(&row.branch_name) {
-        let mut prune_opts = WorktreePruneOptions::new();
-        prune_opts.valid(true).working_tree(true);
-        let _ = wt.prune(Some(&mut prune_opts));
+    let existing_paths: std::collections::HashSet<String> =
+        existing.iter().map(|w| w.path.clone()).collect();
+    let existing_branches: std::collections::HashSet<String> =
+        existing.iter().map(|w| w.branch_name.clone()).collect();
+
+    let worktrees_dir = Path::new(&project.local_path).join(".worktrees");
+    if !worktrees_dir.exists() {
+        return Ok(Vec::new());
     }
 
-    // Remove the worktree directory if it still exists
-    let wt_path = Path::new(&row.path);
-    if wt_path.exists() {
-        std::fs::remove_dir_all(wt_path)
-            .map_err(|e| format!("Failed to remove worktree directory: {}", e))?;
+    let entries = std::fs::read_dir(&worktrees_dir)
+        .map_err(|e| format!("Failed to read .worktrees/: {}", e))?;
+
+    let mut imported = Vec::new();
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+
+        let path_str = match path.to_str() {
+            Some(s) => s.to_string(),
+            None => continue,
+        };
+
+        if existing_paths.contains(&path_str) {
+            continue;
+        }
+
+        // Open as a git repo to validate and get branch name
+        let branch_name = match Repository::open(&path) {
+            Ok(repo) => match repo.head() {
+                Ok(head) => head
+                    .shorthand()
+                    .unwrap_or_else(|| {
+                        path.file_name()
+                            .and_then(|n| n.to_str())
+                            .unwrap_or("unknown")
+                    })
+                    .to_string(),
+                Err(_) => continue,
+            },
+            Err(_) => continue,
+        };
+
+        if existing_branches.contains(&branch_name) {
+            continue;
+        }
+
+        match queries::insert_worktree(&conn, project_id, &branch_name, &path_str) {
+            Ok(id) => {
+                if let Ok(Some(row)) = queries::get_worktree(&conn, id) {
+                    imported.push(row_to_info(row));
+                }
+            }
+            Err(_) => continue,
+        }
     }
 
-    // Remove from DB
-    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
-    queries::delete_worktree(&conn, worktree_id).map_err(|e| format!("DB error: {}", e))
+    Ok(imported)
 }
 
 /// Gets the current status of a worktree (dirty/clean, exists on disk).
 #[tauri::command]
-pub fn get_worktree_status(db: State<'_, AppDb>, worktree_id: i64) -> Result<WorktreeInfo, String> {
+pub fn get_worktree_status(
+    db: State<'_, AppDb>,
+    worktree_id: i64,
+) -> Result<WorktreeInfo, String> {
     let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
     let row = queries::get_worktree(&conn, worktree_id)
         .map_err(|e| format!("DB error: {}", e))?
@@ -240,5 +295,6 @@ pub fn get_worktree_status(db: State<'_, AppDb>, worktree_id: i64) -> Result<Wor
         is_dirty,
         port: row.port,
         created_at: row.created_at,
+        deleted_at: row.deleted_at,
     })
 }
