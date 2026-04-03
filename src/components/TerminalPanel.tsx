@@ -48,72 +48,120 @@ function makeTab(label: string, cwd: string): TerminalTab {
   };
 }
 
+// Per-path tab state — persists across worktree switches so terminals stay alive.
+interface PathTabState {
+  worktreeName: string;
+  tabs: TerminalTab[];
+  activeTabId: string;
+  focusedPaneId: string | null;
+}
+
+function makeInitialPathState(
+  worktreeName: string,
+  cwd: string,
+): PathTabState {
+  const firstTab = makeTab(worktreeName, cwd);
+  return {
+    worktreeName,
+    tabs: [firstTab],
+    activeTabId: firstTab.id,
+    focusedPaneId:
+      firstTab.paneTree.type === "leaf" ? firstTab.paneTree.id : null,
+  };
+}
+
 export function TerminalPanel({
   cwd,
   worktreeName,
   themeId,
 }: TerminalPanelProps) {
-  const [tabs, setTabs] = useState<TerminalTab[]>(() => [
-    makeTab(worktreeName, cwd),
-  ]);
-  const [activeTabId, setActiveTabId] = useState(tabs[0].id);
-  const [focusedPaneId, setFocusedPaneId] = useState<string | null>(
-    tabs[0].paneTree.type === "leaf" ? tabs[0].paneTree.id : null,
+  // All per-worktree tab states, keyed by cwd path.
+  const [pathStates, setPathStates] = useState<Record<string, PathTabState>>(
+    () => ({ [cwd]: makeInitialPathState(worktreeName, cwd) }),
   );
+  // Which cwd is currently visible.
+  const [activeCwd, setActiveCwd] = useState(cwd);
 
-  // When worktree changes, reset to a single tab for the new cwd
-  const prevCwd = useRef(cwd);
+  // When the cwd prop changes (user switches worktree), create a new path state
+  // if one doesn't exist yet — but never destroy existing states so PTY
+  // processes on other paths stay alive.
   useEffect(() => {
-    if (cwd !== prevCwd.current) {
-      prevCwd.current = cwd;
-      const newTab = makeTab(worktreeName, cwd);
-      setTabs([newTab]);
-      setActiveTabId(newTab.id);
-      setFocusedPaneId(
-        newTab.paneTree.type === "leaf" ? newTab.paneTree.id : null,
-      );
-    }
+    setActiveCwd(cwd);
+    setPathStates((prev) => {
+      if (prev[cwd]) return prev;
+      return { ...prev, [cwd]: makeInitialPathState(worktreeName, cwd) };
+    });
   }, [cwd, worktreeName]);
 
+  // Convenience: current path's state + derived values.
+  const currentState = pathStates[activeCwd];
+  const tabs = currentState?.tabs ?? [];
+  const activeTabId = currentState?.activeTabId ?? "";
+  const focusedPaneId = currentState?.focusedPaneId ?? null;
+
+  const updateCurrentPath = useCallback(
+    (updater: (s: PathTabState) => PathTabState) => {
+      setPathStates((prev) => {
+        const s = prev[activeCwd];
+        if (!s) return prev;
+        return { ...prev, [activeCwd]: updater(s) };
+      });
+    },
+    [activeCwd],
+  );
+
   const addTab = useCallback(() => {
-    const newTab = makeTab(`Shell`, cwd);
-    setTabs((prev) => [...prev, newTab]);
-    setActiveTabId(newTab.id);
-    setFocusedPaneId(
-      newTab.paneTree.type === "leaf" ? newTab.paneTree.id : null,
-    );
-  }, [cwd]);
+    const newTab = makeTab("Shell", activeCwd);
+    updateCurrentPath((s) => ({
+      ...s,
+      tabs: [...s.tabs, newTab],
+      activeTabId: newTab.id,
+      focusedPaneId:
+        newTab.paneTree.type === "leaf" ? newTab.paneTree.id : null,
+    }));
+  }, [activeCwd, updateCurrentPath]);
 
   const closeTab = useCallback(
     (id: string) => {
-      setTabs((prev) => {
-        const next = prev.filter((t) => t.id !== id);
-        if (next.length === 0) return prev;
-        if (activeTabId === id) {
-          const idx = prev.findIndex((t) => t.id === id);
-          const newActive = next[Math.min(idx, next.length - 1)];
-          setActiveTabId(newActive.id);
+      updateCurrentPath((s) => {
+        const next = s.tabs.filter((t) => t.id !== id);
+        if (next.length === 0) return s;
+        let newActiveTabId = s.activeTabId;
+        if (s.activeTabId === id) {
+          const idx = s.tabs.findIndex((t) => t.id === id);
+          newActiveTabId = next[Math.min(idx, next.length - 1)].id;
         }
-        return next;
+        return { ...s, tabs: next, activeTabId: newActiveTabId };
       });
     },
-    [activeTabId],
+    [updateCurrentPath],
   );
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
   const updatePaneTree = useCallback(
     (newTree: PaneNode) => {
-      setTabs((prev) =>
-        prev.map((t) =>
-          t.id === activeTabId ? { ...t, paneTree: newTree } : t,
+      updateCurrentPath((s) => ({
+        ...s,
+        tabs: s.tabs.map((t) =>
+          t.id === s.activeTabId ? { ...t, paneTree: newTree } : t,
         ),
-      );
+      }));
     },
-    [activeTabId],
+    [updateCurrentPath],
   );
 
-  // Split the focused pane
+  const setActiveTabId = useCallback(
+    (id: string) => updateCurrentPath((s) => ({ ...s, activeTabId: id })),
+    [updateCurrentPath],
+  );
+
+  const setFocusedPaneId = useCallback(
+    (id: string | null) =>
+      updateCurrentPath((s) => ({ ...s, focusedPaneId: id })),
+    [updateCurrentPath],
+  );
+
   const handleSplitH = useCallback(() => {
     if (!focusedPaneId || !activeTab) return;
     const newId = newPaneId();
@@ -125,7 +173,7 @@ export function TerminalPanel({
     );
     updatePaneTree(newTree);
     setFocusedPaneId(newId);
-  }, [focusedPaneId, activeTab, updatePaneTree]);
+  }, [focusedPaneId, activeTab, updatePaneTree, setFocusedPaneId]);
 
   const handleSplitV = useCallback(() => {
     if (!focusedPaneId || !activeTab) return;
@@ -138,37 +186,20 @@ export function TerminalPanel({
     );
     updatePaneTree(newTree);
     setFocusedPaneId(newId);
-  }, [focusedPaneId, activeTab, updatePaneTree]);
+  }, [focusedPaneId, activeTab, updatePaneTree, setFocusedPaneId]);
 
-  // Close the focused pane (remove from tree)
   const handleClosePane = useCallback(() => {
     if (!focusedPaneId || !activeTab) return;
     const leafIds = collectLeafIds(activeTab.paneTree);
-    if (leafIds.length <= 1) return; // Don't close the last pane
+    if (leafIds.length <= 1) return;
     const newTree = removeLeaf(activeTab.paneTree, focusedPaneId);
     if (newTree) {
       updatePaneTree(newTree);
-      const remaining = collectLeafIds(newTree);
-      setFocusedPaneId(remaining[0] ?? null);
+      setFocusedPaneId(collectLeafIds(newTree)[0] ?? null);
     }
-  }, [focusedPaneId, activeTab, updatePaneTree]);
+  }, [focusedPaneId, activeTab, updatePaneTree, setFocusedPaneId]);
 
   useSplitPaneShortcuts(handleSplitH, handleSplitV, handleClosePane);
-
-  // Per-tab renderLeaf so inactive tabs can stay mounted (visibility:hidden)
-  // without being confused about active/visible state.
-  const makeRenderLeaf = useCallback(
-    (tabId: string) => (paneId: string, isFocused: boolean) => (
-      <TerminalInstance
-        key={paneId}
-        cwd={cwd}
-        active={tabId === activeTabId && isFocused}
-        visible={tabId === activeTabId}
-        themeId={themeId}
-      />
-    ),
-    [cwd, activeTabId, themeId],
-  );
 
   return (
     <div className="terminal-fullscreen">
@@ -216,29 +247,59 @@ export function TerminalPanel({
         )}
       </div>
       <div className="terminal-tab-content">
-        {tabs.map((tab) => (
-          <div
-            key={tab.id}
-            className={`terminal-instance ${tab.id === activeTabId ? "terminal-instance-active" : ""}`}
-          >
-            <SplitPane
-              node={tab.paneTree}
-              onUpdateNode={
-                tab.id === activeTabId
-                  ? updatePaneTree
-                  : (newTree) =>
-                      setTabs((prev) =>
-                        prev.map((t) =>
-                          t.id === tab.id ? { ...t, paneTree: newTree } : t,
-                        ),
-                      )
-              }
-              renderLeaf={makeRenderLeaf(tab.id)}
-              focusedId={tab.id === activeTabId ? focusedPaneId : null}
-              onFocusLeaf={tab.id === activeTabId ? setFocusedPaneId : () => {}}
-            />
-          </div>
-        ))}
+        {/* Render ALL paths' tabs so their TerminalInstance components stay
+            mounted and PTY processes survive worktree switches. Only the
+            active path + active tab is made visible. */}
+        {Object.entries(pathStates).flatMap(([path, state]) =>
+          state.tabs.map((tab) => {
+            const isActivePathAndTab =
+              path === activeCwd && tab.id === state.activeTabId;
+            return (
+              <div
+                key={tab.id}
+                className={`terminal-instance ${isActivePathAndTab ? "terminal-instance-active" : ""}`}
+              >
+                <SplitPane
+                  node={tab.paneTree}
+                  onUpdateNode={(newTree) =>
+                    setPathStates((prev) => {
+                      const s = prev[path];
+                      if (!s) return prev;
+                      return {
+                        ...prev,
+                        [path]: {
+                          ...s,
+                          tabs: s.tabs.map((t) =>
+                            t.id === tab.id ? { ...t, paneTree: newTree } : t,
+                          ),
+                        },
+                      };
+                    })
+                  }
+                  renderLeaf={(paneId, isFocused) => (
+                    <TerminalInstance
+                      key={paneId}
+                      cwd={path}
+                      active={isActivePathAndTab && isFocused}
+                      visible={isActivePathAndTab}
+                      themeId={themeId}
+                    />
+                  )}
+                  focusedId={
+                    path === activeCwd && tab.id === activeTabId
+                      ? focusedPaneId
+                      : null
+                  }
+                  onFocusLeaf={
+                    path === activeCwd && tab.id === activeTabId
+                      ? setFocusedPaneId
+                      : () => {}
+                  }
+                />
+              </div>
+            );
+          }),
+        )}
       </div>
     </div>
   );
