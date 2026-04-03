@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { check } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -56,6 +58,11 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+  const [updateStatus, setUpdateStatus] = useState<
+    "idle" | "checking" | "up-to-date" | "available" | "downloading" | "error"
+  >("idle");
+  const [updateVersion, setUpdateVersion] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   // Load all settings on mount
   useEffect(() => {
@@ -121,6 +128,26 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
         delete next[key];
         return next;
       });
+    }
+  }, []);
+
+  const handleCheckUpdate = useCallback(async () => {
+    setUpdateStatus("checking");
+    setUpdateError(null);
+    try {
+      const update = await check();
+      if (update?.available) {
+        setUpdateVersion(update.version ?? null);
+        setUpdateStatus("available");
+        setUpdateStatus("downloading");
+        await update.downloadAndInstall();
+        await relaunch();
+      } else {
+        setUpdateStatus("up-to-date");
+      }
+    } catch (e) {
+      setUpdateError(String(e));
+      setUpdateStatus("error");
     }
   }, []);
 
@@ -235,6 +262,44 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               label: "Check for updates automatically",
               description: "Periodically check for new versions of Workroot.",
             })}
+
+            <div className="settings-page__field">
+              <div className="settings-page__field-label">Software Update</div>
+              <p className="settings-page__field-desc">
+                Manually check for a new version of Workroot.
+              </p>
+              <div className="settings-page__update-row">
+                <button
+                  className="settings-page__btn"
+                  onClick={handleCheckUpdate}
+                  disabled={
+                    updateStatus === "checking" ||
+                    updateStatus === "downloading"
+                  }
+                >
+                  {updateStatus === "checking"
+                    ? "Checking…"
+                    : updateStatus === "downloading"
+                      ? "Installing…"
+                      : "Check for Updates"}
+                </button>
+                {updateStatus === "up-to-date" && (
+                  <span className="settings-page__update-ok">
+                    You're up to date.
+                  </span>
+                )}
+                {updateStatus === "available" && updateVersion && (
+                  <span className="settings-page__update-ok">
+                    v{updateVersion} found — installing…
+                  </span>
+                )}
+                {updateStatus === "error" && (
+                  <span className="settings-page__update-error">
+                    {updateError ?? "Update check failed."}
+                  </span>
+                )}
+              </div>
+            </div>
 
             {renderTextField({
               key: "editor_command",
