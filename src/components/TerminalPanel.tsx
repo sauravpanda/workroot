@@ -56,10 +56,7 @@ interface PathTabState {
   focusedPaneId: string | null;
 }
 
-function makeInitialPathState(
-  worktreeName: string,
-  cwd: string,
-): PathTabState {
+function makeInitialPathState(worktreeName: string, cwd: string): PathTabState {
   const firstTab = makeTab(worktreeName, cwd);
   return {
     worktreeName,
