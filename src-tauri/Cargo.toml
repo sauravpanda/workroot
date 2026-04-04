@@ -36,5 +36,8 @@ tauri-plugin-pty = "0.2.1"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
 
+# Pin libz-sys to avoid Windows build failure in 1.1.25+ (missing zlib source files)
+libz-sys = "=1.1.24"
+
 [target.'cfg(unix)'.dependencies]
 nix = { version = "0.29", features = ["signal", "process"] }

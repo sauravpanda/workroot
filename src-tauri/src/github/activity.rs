@@ -206,7 +206,8 @@ pub async fn list_repo_pulls(
     project_id: i64,
 ) -> Result<Vec<RepoPull>, String> {
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
-    let token = auth::get_token_from_env_or_gh()?.ok_or("Not authenticated. Please sign in with GitHub or the gh CLI.")?;
+    let token = auth::get_token_from_env_or_gh()?
+        .ok_or("Not authenticated. Please sign in with GitHub or the gh CLI.")?;
 
     let client = super::api_client()?;
     let url = format!(
@@ -239,7 +240,8 @@ pub async fn list_repo_issues(
     project_id: i64,
 ) -> Result<Vec<RepoIssue>, String> {
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
-    let token = auth::get_token_from_env_or_gh()?.ok_or("Not authenticated. Please sign in with GitHub or the gh CLI.")?;
+    let token = auth::get_token_from_env_or_gh()?
+        .ok_or("Not authenticated. Please sign in with GitHub or the gh CLI.")?;
 
     let client = super::api_client()?;
     let url = format!(
@@ -279,7 +281,8 @@ pub async fn get_repo_activity(
     project_id: i64,
 ) -> Result<Vec<RepoEvent>, String> {
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
-    let token = auth::get_token_from_env_or_gh()?.ok_or("Not authenticated. Please sign in with GitHub or the gh CLI.")?;
+    let token = auth::get_token_from_env_or_gh()?
+        .ok_or("Not authenticated. Please sign in with GitHub or the gh CLI.")?;
 
     let client = super::api_client()?;
     let url = format!(
