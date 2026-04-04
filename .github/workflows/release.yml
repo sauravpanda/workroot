@@ -28,6 +28,7 @@ jobs:
         id: create-release
         uses: actions/github-script@v7
         with:
+          result-encoding: string
           script: |
             const { data } = await github.rest.repos.createRelease({
               owner: context.repo.owner,
@@ -38,7 +39,7 @@ jobs:
               draft: true,
               prerelease: false
             });
-            return data.id;
+            return String(data.id);
 
   build-and-upload:
     name: Build (${{ matrix.platform }})
