@@ -1,6 +1,39 @@
+@import "tailwindcss";
+
 /* ==========================================================
    Design System — Workroot
    ========================================================== */
+
+@theme {
+  --color-bg-base: #0c0c0e;
+  --color-bg-surface: #131316;
+  --color-bg-elevated: #1b1b1f;
+  --color-bg-hover: #242429;
+
+  --color-border-subtle: #1f1f24;
+  --color-border-default: #2a2a30;
+  --color-border-strong: #3a3a42;
+
+  --color-text-primary: #ededef;
+  --color-text-secondary: #8e8e96;
+  --color-text-muted: #5c5c66;
+
+  --color-accent: #10b981;
+  --color-accent-hover: #34d399;
+  --color-accent-muted: rgba(16, 185, 129, 0.12);
+
+  --color-danger: #ef4444;
+  --color-danger-muted: rgba(239, 68, 68, 0.12);
+  --color-warning: #f59e0b;
+  --color-success: #22c55e;
+
+  --font-sans: "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Menlo", "Monaco", monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+}
 
 :root {
   /* Background layers (darkest → lightest) */
