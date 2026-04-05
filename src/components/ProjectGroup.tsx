@@ -1,8 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
+import { ChevronRight } from "lucide-react";
 import type { ProjectInfo } from "../hooks/useProjects";
 import { useWorktrees } from "../hooks/useWorktrees";
 import { useUiStore } from "../stores/uiStore";
 import { WorktreeItem } from "./WorktreeItem";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./ui/collapsible";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 interface ProjectGroupProps {
   project: ProjectInfo;
@@ -58,108 +66,107 @@ export function ProjectGroup({
   );
 
   return (
-    <div className="project-group">
-      <div
-        className={`project-header ${isSelected ? "project-selected" : ""}`}
-        onClick={toggleExpanded}
-        role="treeitem"
-        aria-expanded={expanded}
-        tabIndex={0}
-      >
-        <span className={`project-chevron ${expanded ? "expanded" : ""}`}>
-          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-            <path
-              d="M2.5 1.5l4 3-4 3"
-              stroke="currentColor"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+    <Collapsible open={expanded} onOpenChange={toggleExpanded}>
+      <div className="project-group">
+        <CollapsibleTrigger asChild>
+          <div
+            className={`project-header ${isSelected ? "project-selected" : ""}`}
+            role="treeitem"
+            aria-expanded={expanded}
+            tabIndex={0}
+          >
+            <ChevronRight
+              className={`size-3 shrink-0 text-text-muted transition-transform duration-200 ease-in-out ${expanded ? "rotate-90 text-text-secondary" : ""}`}
             />
-          </svg>
-        </span>
-        <span className="project-info">
-          <span className="project-name-row">
-            <span className="project-name">{project.name}</span>
-          </span>
-          <span className="project-path">
-            {project.local_path.replace(/^\/Users\/[^/]+/, "~")}
-          </span>
-        </span>
-        <span className="project-badges">
-          {project.framework && (
-            <span className="project-framework">{project.framework}</span>
-          )}
-          {expanded && worktrees.length > 0 && (
-            <span className="project-wt-count">{worktrees.length}</span>
-          )}
-          {!project.exists_locally && (
-            <span className="project-missing">missing</span>
-          )}
-        </span>
-      </div>
-
-      {expanded && (
-        <div className="project-children">
-          {error && <div className="project-error">{error}</div>}
-
-          {worktrees.length === 0 && !showNewWorktree && (
-            <div className="project-empty">No worktrees</div>
-          )}
-
-          <div className="worktree-list" role="group">
-            {worktrees.map((wt) => (
-              <WorktreeItem
-                key={wt.id}
-                worktree={wt}
-                onDelete={handleDelete}
-                onCheckWarnings={checkDeleteWarnings}
-              />
-            ))}
+            <span className="project-info">
+              <span className="project-name-row">
+                <span className="project-name">{project.name}</span>
+              </span>
+              <span className="project-path">
+                {project.local_path.replace(/^\/Users\/[^/]+/, "~")}
+              </span>
+            </span>
+            <span className="project-badges">
+              {project.framework && (
+                <span className="project-framework">{project.framework}</span>
+              )}
+              {expanded && worktrees.length > 0 && (
+                <span className="project-wt-count">{worktrees.length}</span>
+              )}
+              {!project.exists_locally && (
+                <span className="project-missing">missing</span>
+              )}
+            </span>
           </div>
+        </CollapsibleTrigger>
 
-          {showNewWorktree ? (
-            <form className="new-worktree-form" onSubmit={handleCreateWorktree}>
-              <input
-                type="text"
-                placeholder="branch name"
-                value={newBranchName}
-                onChange={(e) =>
-                  setNewBranchName(e.target.value.replace(/ /g, "-"))
-                }
-                className="new-worktree-input"
-                autoFocus
-              />
-              <label className="new-worktree-checkbox">
-                <input
-                  type="checkbox"
-                  checked={createNew}
-                  onChange={(e) => setCreateNew(e.target.checked)}
+        <CollapsibleContent>
+          <div className="project-children">
+            {error && <div className="project-error">{error}</div>}
+
+            {worktrees.length === 0 && !showNewWorktree && (
+              <div className="project-empty">No worktrees</div>
+            )}
+
+            <div className="worktree-list" role="group">
+              {worktrees.map((wt) => (
+                <WorktreeItem
+                  key={wt.id}
+                  worktree={wt}
+                  onDelete={handleDelete}
+                  onCheckWarnings={checkDeleteWarnings}
                 />
-                New branch
-              </label>
-              <div className="new-worktree-actions">
-                <button type="submit" className="new-worktree-btn">
-                  Create
-                </button>
-                <button
-                  type="button"
-                  className="new-worktree-cancel"
-                  onClick={() => setShowNewWorktree(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          ) : (
-            <button
-              className="add-worktree-btn"
-              onClick={() => setShowNewWorktree(true)}
-            >
-              + Worktree
-            </button>
-          )}
-        </div>
-      )}
-    </div>
+              ))}
+            </div>
+
+            {showNewWorktree ? (
+              <form
+                className="new-worktree-form"
+                onSubmit={handleCreateWorktree}
+              >
+                <Input
+                  type="text"
+                  placeholder="branch name"
+                  value={newBranchName}
+                  onChange={(e) =>
+                    setNewBranchName(e.target.value.replace(/ /g, "-"))
+                  }
+                  className="h-7 font-mono text-xs bg-bg-elevated border-border-default focus-visible:border-accent focus-visible:ring-accent-muted"
+                  autoFocus
+                />
+                <label className="new-worktree-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={createNew}
+                    onChange={(e) => setCreateNew(e.target.checked)}
+                  />
+                  New branch
+                </label>
+                <div className="new-worktree-actions">
+                  <Button type="submit" size="xs">
+                    Create
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={() => setShowNewWorktree(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <button
+                className="add-worktree-btn"
+                onClick={() => setShowNewWorktree(true)}
+              >
+                + Worktree
+              </button>
+            )}
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
   );
 }
