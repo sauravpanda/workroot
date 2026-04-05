@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import "../styles/content-toolbar.css";
 
 interface ContentToolbarProps {
@@ -119,12 +120,56 @@ const TABS = [
   },
 ] as const;
 
+const SCROLL_AMOUNT = 120;
+
 export function ContentToolbar({
   activeTab,
   onTabChange,
   worktreeName,
   projectName,
 }: ContentToolbarProps) {
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollState = useCallback(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  }, []);
+
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    updateScrollState();
+    const ro = new ResizeObserver(updateScrollState);
+    ro.observe(el);
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", updateScrollState);
+    };
+  }, [updateScrollState]);
+
+  // Scroll active tab into view when activeTab changes
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const activeEl = el.querySelector(
+      ".content-toolbar__tab--active",
+    ) as HTMLElement | null;
+    activeEl?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [activeTab]);
+
+  const scrollLeft = () => {
+    tabsRef.current?.scrollBy({ left: -SCROLL_AMOUNT, behavior: "smooth" });
+  };
+
+  const scrollRight = () => {
+    tabsRef.current?.scrollBy({ left: SCROLL_AMOUNT, behavior: "smooth" });
+  };
+
   return (
     <div className="content-toolbar">
       <div className="content-toolbar__breadcrumb">
@@ -143,18 +188,60 @@ export function ContentToolbar({
 
       <div className="content-toolbar__divider" />
 
-      <div className="content-toolbar__tabs">
-        {TABS.map((tab) => (
+      <div className="content-toolbar__tabs-wrapper">
+        {canScrollLeft && (
           <button
-            key={tab.id}
-            className={`content-toolbar__tab${activeTab === tab.id ? " content-toolbar__tab--active" : ""}`}
-            onClick={() => onTabChange(tab.id)}
+            className="content-toolbar__scroll-btn content-toolbar__scroll-btn--left"
+            onClick={scrollLeft}
             type="button"
+            aria-label="Scroll tabs left"
           >
-            <span className="content-toolbar__tab-icon">{tab.icon}</span>
-            <span className="content-toolbar__tab-label">{tab.label}</span>
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M10 12L6 8l4-4" />
+            </svg>
           </button>
-        ))}
+        )}
+
+        <div className="content-toolbar__tabs" ref={tabsRef}>
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              className={`content-toolbar__tab${activeTab === tab.id ? " content-toolbar__tab--active" : ""}`}
+              onClick={() => onTabChange(tab.id)}
+              type="button"
+            >
+              <span className="content-toolbar__tab-icon">{tab.icon}</span>
+              <span className="content-toolbar__tab-label">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {canScrollRight && (
+          <button
+            className="content-toolbar__scroll-btn content-toolbar__scroll-btn--right"
+            onClick={scrollRight}
+            type="button"
+            aria-label="Scroll tabs right"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M6 4l4 4-4 4" />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   );
