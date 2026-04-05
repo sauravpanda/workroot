@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/command-bookmarks.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface Bookmark {
   id: number;
@@ -171,8 +172,13 @@ export function CommandBookmarks({
   const projectBookmarks = filtered.filter((b) => b.project_id !== null);
 
   return (
-    <div className="bookmarks-backdrop" onClick={onClose}>
-      <div className="bookmarks-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="bookmarks-panel">
         <div className="bookmarks-header">
           <h3 className="bookmarks-title">Command Bookmarks</h3>
           <div className="bookmarks-header-actions">
@@ -314,8 +320,8 @@ export function CommandBookmarks({
             </>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

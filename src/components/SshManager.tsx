@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/ssh-manager.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface SshConnection {
   id: number;
@@ -159,8 +160,13 @@ export function SshManager({ onClose, onConnect }: SshManagerProps) {
   );
 
   return (
-    <div className="ssh-backdrop" onClick={onClose}>
-      <div className="ssh-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="ssh-panel">
         <div className="ssh-header">
           <h3 className="ssh-title">SSH Connection Manager</h3>
           <div className="ssh-header-actions">
@@ -354,7 +360,7 @@ export function SshManager({ onClose, onConnect }: SshManagerProps) {
             })
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

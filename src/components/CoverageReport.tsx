@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/coverage-report.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface CoverageEntry {
   file: string;
@@ -52,8 +53,13 @@ export function CoverageReport({ cwd, onClose }: CoverageReportProps) {
   }, [entries]);
 
   return (
-    <div className="coverage-backdrop" onClick={onClose}>
-      <div className="coverage-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="coverage-panel">
         <div className="coverage-header">
           <h3 className="coverage-title">Coverage Report</h3>
           <div className="coverage-header-actions">
@@ -143,7 +149,7 @@ export function CoverageReport({ cwd, onClose }: CoverageReportProps) {
             </>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

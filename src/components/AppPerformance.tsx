@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/app-performance.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface AppMetrics {
   db_size_bytes: number;
@@ -81,8 +82,13 @@ export function AppPerformance({ onClose }: AppPerformanceProps) {
     : [];
 
   return (
-    <div className="appperf-backdrop" onClick={onClose}>
-      <div className="appperf-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="appperf-panel">
         <div className="appperf-header">
           <h3 className="appperf-title">App Performance</h3>
           <div className="appperf-header-actions">
@@ -116,7 +122,7 @@ export function AppPerformance({ onClose }: AppPerformanceProps) {
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

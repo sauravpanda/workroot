@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface PluginDetail {
   name: string;
@@ -105,8 +106,13 @@ export function PluginRuntime({ cwd, onClose }: PluginRuntimeProps) {
   }, [cwd, installUrl, loadPlugins]);
 
   return (
-    <div className="plrt-backdrop" onClick={onClose}>
-      <div className="plrt-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="plrt-panel">
         <div className="plrt-header">
           <h3 className="plrt-title">Plugin Runtime</h3>
           <div className="plrt-header-actions">
@@ -257,7 +263,7 @@ export function PluginRuntime({ cwd, onClose }: PluginRuntimeProps) {
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

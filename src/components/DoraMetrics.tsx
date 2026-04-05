@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -186,8 +187,13 @@ export function DoraMetrics({ projectId, onClose }: DoraMetricsProps) {
   const maxWeekly = metrics ? Math.max(...metrics.weekly_deployments, 1) : 1;
 
   return (
-    <div className="dora-backdrop" onClick={onClose}>
-      <div className="dora-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="dora-panel">
         {/* Header */}
         <div className="dora-header">
           <h3 className="dora-title">DORA Metrics</h3>
@@ -390,7 +396,7 @@ export function DoraMetrics({ projectId, onClose }: DoraMetricsProps) {
             <div className="dora-empty">No metrics data available.</div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

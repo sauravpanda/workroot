@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface CommitEntry {
   id: string;
@@ -122,8 +123,13 @@ export function GitLogViewer({ worktreeId, onClose }: GitLogViewerProps) {
   }, []);
 
   return (
-    <div className="gitlog-backdrop" onClick={onClose}>
-      <div className="gitlog-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="gitlog-panel">
         <div className="gitlog-header">
           <h3 className="gitlog-title">Git Log</h3>
           <button className="gitlog-close" onClick={onClose}>
@@ -232,7 +238,7 @@ export function GitLogViewer({ worktreeId, onClose }: GitLogViewerProps) {
             </>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -3,6 +3,7 @@ import { BUILTIN_THEMES, getAppThemeById } from "../themes/builtin";
 import { applyTheme, saveThemeId } from "../themes/engine";
 import type { AppTheme } from "../themes/engine";
 import "../styles/app-theme-picker.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface AppThemePickerProps {
   currentThemeId: string;
@@ -41,14 +42,16 @@ export function AppThemePicker({
   );
 
   return (
-    <div
-      className="app-theme-backdrop"
-      onClick={() => {
-        applyTheme(getAppThemeById(currentThemeId));
-        onClose();
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) {
+          applyTheme(getAppThemeById(currentThemeId));
+          onClose();
+        }
       }}
     >
-      <div className="app-theme-panel" onClick={(e) => e.stopPropagation()}>
+      <DialogContent className="app-theme-panel">
         <div className="app-theme-header">
           <h3 className="app-theme-title">App Theme</h3>
           <button
@@ -74,8 +77,8 @@ export function AppThemePicker({
             />
           ))}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

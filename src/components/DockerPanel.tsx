@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/docker-panel.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface ContainerInfo {
   id: string;
@@ -76,8 +77,13 @@ export function DockerPanel({ cwd, onClose }: DockerPanelProps) {
   };
 
   return (
-    <div className="docker-backdrop" onClick={onClose}>
-      <div className="docker-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="docker-panel">
         <div className="docker-header">
           <h3 className="docker-title">Docker</h3>
           <div className="docker-header-actions">
@@ -173,7 +179,7 @@ export function DockerPanel({ cwd, onClose }: DockerPanelProps) {
             </>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
