@@ -169,10 +169,7 @@ export function WorktreeItem({
 
       {deleteConfirm && (
         <>
-          <div
-            className="context-menu-backdrop"
-            onClick={handleCancelDelete}
-          />
+          <div className="context-menu-backdrop" onClick={handleCancelDelete} />
           <div className="delete-confirm-dialog">
             <div className="delete-confirm-title">Delete worktree?</div>
             <div className="delete-confirm-warnings">
