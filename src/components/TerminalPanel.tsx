@@ -417,10 +417,15 @@ function TerminalInstance({
 
       try {
         const pty = spawn(settings.shell, [], {
+          name: "xterm-256color",
           cols: Math.max(term.cols, 1),
           rows: Math.max(term.rows, 1),
           cwd,
-          env: { TERM: "xterm-256color" },
+          env: {
+            TERM: "xterm-256color",
+            TERM_PROGRAM: "workroot",
+            COLORTERM: "truecolor",
+          },
         });
         ptyRef.current = pty;
 
