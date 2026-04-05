@@ -10,6 +10,7 @@ pub mod dbconnect;
 pub mod deps;
 pub mod docker;
 pub mod errors;
+pub mod fileview;
 pub mod filewatcher;
 pub mod git;
 pub mod github;
@@ -309,6 +310,10 @@ pub fn run() {
             todos::list_todos,
             todos::update_todo,
             todos::delete_todo,
+            fileview::list_dir,
+            fileview::get_worktree_file_statuses,
+            fileview::read_file_content,
+            fileview::open_file_in_editor,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
