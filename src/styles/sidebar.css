@@ -178,6 +178,69 @@
 
 /* ---- Header actions (now uses shadcn Button with Tailwind classes) ---- */
 
+/* ---- Search / filter bar ---- */
+
+.sidebar-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.sidebar-search-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.sidebar-search-input {
+  flex: 1;
+  font-family: var(--font-sans);
+  font-size: 0.75em;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  min-width: 0;
+}
+
+.sidebar-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.sidebar-search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.1s;
+}
+
+.sidebar-search-clear:hover {
+  color: var(--text-primary);
+}
+
+/* Match highlight inside worktree branch names */
+
+.wt-match-highlight {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--accent);
+  border-radius: 2px;
+  padding: 0 1px;
+  font-style: normal;
+}
+
 /* ---- Scrollable content (now uses shadcn ScrollArea) ---- */
 
 .sidebar-error {
