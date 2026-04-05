@@ -17,9 +17,7 @@ pub struct DirEntry {
 pub fn list_dir(dir_path: String) -> Result<Vec<DirEntry>, String> {
     let mut entries: Vec<DirEntry> = Vec::new();
 
-    for item in std::fs::read_dir(&dir_path)
-        .map_err(|e| format!("Cannot read directory: {}", e))?
-    {
+    for item in std::fs::read_dir(&dir_path).map_err(|e| format!("Cannot read directory: {}", e))? {
         let item = item.map_err(|e| format!("Directory entry error: {}", e))?;
         let name = item.file_name().to_string_lossy().to_string();
 
@@ -95,8 +93,8 @@ pub fn get_worktree_file_statuses(
 pub fn read_file_content(file_path: String) -> Result<String, String> {
     const MAX_BYTES: u64 = 512 * 1024;
 
-    let metadata = std::fs::metadata(&file_path)
-        .map_err(|e| format!("Cannot access file: {}", e))?;
+    let metadata =
+        std::fs::metadata(&file_path).map_err(|e| format!("Cannot access file: {}", e))?;
 
     if metadata.len() > MAX_BYTES {
         return Err(format!(
@@ -105,8 +103,7 @@ pub fn read_file_content(file_path: String) -> Result<String, String> {
         ));
     }
 
-    let bytes =
-        std::fs::read(&file_path).map_err(|e| format!("Cannot read file: {}", e))?;
+    let bytes = std::fs::read(&file_path).map_err(|e| format!("Cannot read file: {}", e))?;
 
     // Heuristic binary check: look for null bytes in the first 8 KB.
     let check_len = bytes.len().min(8192);
@@ -114,8 +111,7 @@ pub fn read_file_content(file_path: String) -> Result<String, String> {
         return Err("Binary file — preview not available.".to_string());
     }
 
-    String::from_utf8(bytes)
-        .map_err(|_| "File contains non-UTF-8 content.".to_string())
+    String::from_utf8(bytes).map_err(|_| "File contains non-UTF-8 content.".to_string())
 }
 
 /// Open a file using the OS default application (editor, viewer, etc.).

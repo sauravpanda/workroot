@@ -1,6 +1,5 @@
 pub mod ai;
 pub mod backup;
-pub mod fileview;
 pub mod bookmarks;
 pub mod browser;
 pub mod claudemd;
@@ -11,6 +10,7 @@ pub mod dbconnect;
 pub mod deps;
 pub mod docker;
 pub mod errors;
+pub mod fileview;
 pub mod filewatcher;
 pub mod git;
 pub mod github;
