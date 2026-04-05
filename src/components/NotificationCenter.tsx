@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/notification-center.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface Notification {
   id: string;
@@ -70,9 +71,13 @@ export function NotificationCenter({ open, onClose }: NotificationCenterProps) {
   if (!open) return null;
 
   return (
-    <>
-      <div className="notif-backdrop" onClick={onClose} />
-      <div className="notif-panel">
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="notif-panel">
         <div className="notif-header">
           <h3 className="notif-title">
             Notifications
@@ -123,7 +128,7 @@ export function NotificationCenter({ open, onClose }: NotificationCenterProps) {
             </div>
           )}
         </div>
-      </div>
-    </>
+      </DialogContent>
+    </Dialog>
   );
 }

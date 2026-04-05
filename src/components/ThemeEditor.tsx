@@ -4,6 +4,7 @@ import { applyTheme } from "../themes/engine";
 import type { AppTheme } from "../themes/engine";
 import { loadCustomThemes, saveCustomThemes } from "../lib/customThemes";
 import "../styles/theme-editor.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface ThemeEditorProps {
   currentThemeId: string;
@@ -209,8 +210,13 @@ export function ThemeEditor({
   );
 
   return (
-    <div className="theme-editor-backdrop" onClick={handleCancel}>
-      <div className="theme-editor-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) handleCancel();
+      }}
+    >
+      <DialogContent className="theme-editor-panel">
         {/* Header */}
         <div className="theme-editor-header">
           <h3 className="theme-editor-title">Theme Editor</h3>
@@ -415,8 +421,8 @@ export function ThemeEditor({
             Save
           </button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

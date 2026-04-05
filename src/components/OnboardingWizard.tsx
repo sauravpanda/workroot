@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/onboarding.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface OnboardingWizardProps {
   onComplete: () => void;
@@ -55,8 +56,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   return (
-    <div className="onboarding-overlay">
-      <div className="onboarding-card">
+    <Dialog open>
+      <DialogContent className="onboarding-card">
         {step === "welcome" && (
           <>
             <h2 className="onboarding-title">Welcome to Workroot</h2>
@@ -162,7 +163,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             />
           ))}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

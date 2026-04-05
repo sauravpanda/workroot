@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import type { Command } from "../hooks/useCommandRegistry";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -99,9 +100,13 @@ export function CommandPalette({
   let flatIndex = 0;
 
   return (
-    <>
-      <div className="cmd-palette-backdrop" onClick={onClose} />
-      <div className="cmd-palette" role="dialog" aria-label="Command palette">
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="cmd-palette" aria-label="Command palette">
         <div className="cmd-palette-input-wrap">
           <SearchIcon />
           <input
@@ -158,8 +163,8 @@ export function CommandPalette({
             ))
           )}
         </div>
-      </div>
-    </>
+      </DialogContent>
+    </Dialog>
   );
 }
 

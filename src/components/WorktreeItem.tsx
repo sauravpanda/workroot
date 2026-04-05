@@ -1,6 +1,12 @@
 import { useState, useCallback } from "react";
 import type { WorktreeInfo, DeleteWarnings } from "../hooks/useWorktrees";
 import { useUiStore } from "../stores/uiStore";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "./ui/alert-dialog";
 
 interface WorktreeItemProps {
   worktree: WorktreeInfo;
@@ -177,11 +183,15 @@ export function WorktreeItem({
         </>
       )}
 
-      {deleteConfirm && (
-        <>
-          <div className="context-menu-backdrop" onClick={handleCancelDelete} />
-          <div className="delete-confirm-dialog">
-            <div className="delete-confirm-title">Delete worktree?</div>
+      <AlertDialog
+        open={!!deleteConfirm}
+        onOpenChange={(open) => {
+          if (!open) handleCancelDelete();
+        }}
+      >
+        <AlertDialogContent className="delete-confirm-dialog">
+          <div className="delete-confirm-title">Delete worktree?</div>
+          {deleteConfirm && (
             <div className="delete-confirm-warnings">
               {deleteConfirm.warnings.is_dirty && (
                 <div className="delete-confirm-warning">
@@ -197,23 +207,23 @@ export function WorktreeItem({
                 </div>
               )}
             </div>
-            <div className="delete-confirm-actions">
-              <button
-                className="delete-confirm-btn cancel"
-                onClick={handleCancelDelete}
-              >
-                Cancel
-              </button>
-              <button
-                className="delete-confirm-btn confirm"
-                onClick={handleConfirmDelete}
-              >
-                Delete Anyway
-              </button>
-            </div>
+          )}
+          <div className="delete-confirm-actions">
+            <AlertDialogCancel
+              className="delete-confirm-btn cancel"
+              onClick={handleCancelDelete}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="delete-confirm-btn confirm"
+              onClick={handleConfirmDelete}
+            >
+              Delete Anyway
+            </AlertDialogAction>
           </div>
-        </>
-      )}
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface ClipboardEntry {
   id: number;
@@ -94,8 +95,13 @@ export function ClipboardHistory({ onClose }: ClipboardHistoryProps) {
   }, []);
 
   return (
-    <div className="cliph-backdrop" onClick={onClose}>
-      <div className="cliph-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="cliph-panel">
         <div className="cliph-header">
           <h3 className="cliph-title">Clipboard History</h3>
           <div className="cliph-header-actions">
@@ -189,7 +195,7 @@ export function ClipboardHistory({ onClose }: ClipboardHistoryProps) {
             })
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

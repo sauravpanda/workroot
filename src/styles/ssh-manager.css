@@ -2,15 +2,6 @@
    SSH Connection Manager – Terminal/server admin aesthetic
    ========================================================== */
 
-.ssh-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  z-index: 9998;
-  animation: cmd-backdrop-in 0.12s ease-out;
-}
-
 .ssh-panel {
   position: fixed;
   top: 8%;

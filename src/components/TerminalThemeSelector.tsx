@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { TERMINAL_THEMES, getThemeById } from "../lib/terminalThemes";
 import "../styles/terminal-themes.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface TerminalThemeSelectorProps {
   currentThemeId: string;
@@ -37,11 +38,13 @@ export function TerminalThemeSelector({
   );
 
   return (
-    <div className="theme-selector-backdrop" onClick={onClose}>
-      <div
-        className="theme-selector-panel"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="theme-selector-panel">
         <div className="theme-selector-header">
           <h3 className="theme-selector-title">Terminal Theme</h3>
           <button className="theme-selector-close" onClick={onClose}>
@@ -178,7 +181,7 @@ export function TerminalThemeSelector({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

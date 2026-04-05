@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/flaky-tests.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface FlakyTest {
   test_name: string;
@@ -51,8 +52,13 @@ export function FlakyTests({ cwd, onClose }: FlakyTestsProps) {
   };
 
   return (
-    <div className="flaky-backdrop" onClick={onClose}>
-      <div className="flaky-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="flaky-panel">
         <div className="flaky-header">
           <h3 className="flaky-title">Flaky Tests</h3>
           <div className="flaky-header-actions">
@@ -113,7 +119,7 @@ export function FlakyTests({ cwd, onClose }: FlakyTestsProps) {
             </table>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

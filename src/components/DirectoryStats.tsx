@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface ExtensionStat {
   extension: string;
@@ -89,8 +90,13 @@ export function DirectoryStats({ cwd, onClose }: DirectoryStatsProps) {
   }, [stats]);
 
   return (
-    <div className="dirstats-backdrop" onClick={onClose}>
-      <div className="dirstats-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="dirstats-panel">
         <div className="dirstats-header">
           <h3 className="dirstats-title">Directory Stats</h3>
           <div className="dirstats-header-actions">
@@ -200,7 +206,7 @@ export function DirectoryStats({ cwd, onClose }: DirectoryStatsProps) {
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

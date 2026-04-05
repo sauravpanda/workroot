@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -594,13 +595,13 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   }
 
   return (
-    <div className="settings-page__backdrop" onClick={onClose}>
-      <div
-        className="settings-page__panel"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-label="Settings"
-      >
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="settings-page__panel" aria-label="Settings">
         {/* Header */}
         <div className="settings-page__header">
           <h2 className="settings-page__title">Settings</h2>
@@ -633,8 +634,8 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           {/* Content area */}
           <div className="settings-page__content">{renderContent()}</div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

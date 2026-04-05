@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface ScheduledTask {
   id: number;
@@ -117,8 +118,13 @@ export function TaskScheduler({ onClose }: TaskSchedulerProps) {
   );
 
   return (
-    <div className="tasksched-backdrop" onClick={onClose}>
-      <div className="tasksched-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="tasksched-panel">
         <div className="tasksched-header">
           <h3 className="tasksched-title">Task Scheduler</h3>
           <button className="tasksched-close" onClick={onClose}>
@@ -256,7 +262,7 @@ export function TaskScheduler({ onClose }: TaskSchedulerProps) {
             ))
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

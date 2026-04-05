@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface DependencyInfo {
   name: string;
@@ -121,8 +122,13 @@ export function DependencyAnalyzer({ cwd, onClose }: DependencyAnalyzerProps) {
   ];
 
   return (
-    <div className="depan-backdrop" onClick={onClose}>
-      <div className="depan-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="depan-panel">
         <div className="depan-header">
           <h3 className="depan-title">Dependencies</h3>
           <div className="depan-header-actions">
@@ -226,7 +232,7 @@ export function DependencyAnalyzer({ cwd, onClose }: DependencyAnalyzerProps) {
             <div className="depan-empty">Unable to analyze dependencies.</div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/task-runner.css";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface TaskDefinition {
   name: string;
@@ -75,8 +76,13 @@ export function TaskRunner({ cwd, onRunCommand, onClose }: TaskRunnerProps) {
   }, [filtered]);
 
   return (
-    <div className="taskrunner-backdrop" onClick={onClose}>
-      <div className="taskrunner-panel" onClick={(e) => e.stopPropagation()}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent className="taskrunner-panel">
         <div className="taskrunner-header">
           <h3 className="taskrunner-title">Task Runner</h3>
           <div className="taskrunner-header-actions">
@@ -146,7 +152,7 @@ export function TaskRunner({ cwd, onRunCommand, onClose }: TaskRunnerProps) {
             ))
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
