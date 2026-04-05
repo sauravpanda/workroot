@@ -20,6 +20,7 @@ import { ThemeEditor } from "./components/ThemeEditor";
 import { DensityPicker } from "./components/DensityPicker";
 import { CustomCSSEditor } from "./components/CustomCSSEditor";
 import { StashManager } from "./components/StashManager";
+import { CheckpointPanel } from "./components/CheckpointPanel";
 import { BlameView } from "./components/BlameView";
 import { BranchCompare } from "./components/BranchCompare";
 import { GitHooksManager } from "./components/GitHooksManager";
@@ -407,6 +408,14 @@ function AppContent({
         icon: "\u2193",
         enabled: () => selectedWorktreeId !== null,
         action: () => openPanel("stashManager"),
+      },
+      {
+        id: "git:checkpoints",
+        label: "Checkpoints",
+        category: "Git",
+        icon: "\u23F1",
+        enabled: () => selectedWorktreeId !== null,
+        action: () => openPanel("checkpointManager"),
       },
       {
         id: "git:blame",
@@ -1138,6 +1147,12 @@ function AppContent({
         <StashManager
           worktreeId={selectedWorktreeId}
           onClose={() => closePanel("stashManager")}
+        />
+      )}
+      {panels.checkpointManager && selectedWorktreeId !== null && (
+        <CheckpointPanel
+          worktreeId={selectedWorktreeId}
+          onClose={() => closePanel("checkpointManager")}
         />
       )}
       {panels.blameView && selectedWorktreeId !== null && (

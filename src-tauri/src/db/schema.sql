@@ -404,3 +404,17 @@ CREATE TABLE IF NOT EXISTS todos (
 );
 CREATE INDEX IF NOT EXISTS idx_todos_project ON todos(project_id);
 CREATE INDEX IF NOT EXISTS idx_todos_status ON todos(status);
+
+-- ============================================================
+-- Checkpoints (Issue #70)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS checkpoints (
+    id          INTEGER PRIMARY KEY,
+    worktree_id INTEGER NOT NULL REFERENCES worktrees(id) ON DELETE CASCADE,
+    label       TEXT NOT NULL,
+    head_sha    TEXT NOT NULL,
+    stash_oid   TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_checkpoints_worktree_id ON checkpoints(worktree_id);

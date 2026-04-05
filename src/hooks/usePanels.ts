@@ -70,7 +70,8 @@ export type PanelKey =
   | "deadEnds"
   | "dbSchema"
   | "browserEvents"
-  | "dbExplorer";
+  | "dbExplorer"
+  | "checkpointManager";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -145,6 +146,7 @@ const INITIAL_STATE: PanelState = {
   dbSchema: false,
   browserEvents: false,
   dbExplorer: false,
+  checkpointManager: false,
 };
 
 // ─── Reducer ─────────────────────────────────────────────────────────────────
