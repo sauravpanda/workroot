@@ -1,6 +1,14 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Plus, Settings, Search, MessageCircle, Bell, Sun } from "lucide-react";
+import {
+  Plus,
+  Settings,
+  Search,
+  MessageCircle,
+  Bell,
+  Sun,
+  X,
+} from "lucide-react";
 import { useProjects } from "../hooks/useProjects";
 import { useUiStore } from "../stores/uiStore";
 import { ProjectGroup } from "./ProjectGroup";
@@ -29,6 +37,7 @@ export function Sidebar({
   onOpenSettings,
 }: SidebarProps) {
   const { projects, registerLocal, error } = useProjects();
+  const [filter, setFilter] = useState("");
   const {
     showSettings,
     setShowSettings,
@@ -164,6 +173,30 @@ export function Sidebar({
 
       {error && <div className="sidebar-error">{error}</div>}
 
+      {/* Search / filter input */}
+      <div className="sidebar-search">
+        <Search className="sidebar-search-icon" />
+        <input
+          className="sidebar-search-input"
+          type="text"
+          placeholder="Filter worktrees…"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          onKeyDown={(e) => e.key === "Escape" && setFilter("")}
+          spellCheck={false}
+          aria-label="Filter worktrees"
+        />
+        {filter && (
+          <button
+            className="sidebar-search-clear"
+            onClick={() => setFilter("")}
+            aria-label="Clear filter"
+          >
+            <X className="size-3" />
+          </button>
+        )}
+      </div>
+
       <ScrollArea className="flex-1">
         <div className="py-1" role="tree">
           {projects.length === 0 ? (
@@ -175,7 +208,11 @@ export function Sidebar({
             </div>
           ) : (
             projects.map((project) => (
-              <ProjectGroup key={project.id} project={project} />
+              <ProjectGroup
+                key={project.id}
+                project={project}
+                filter={filter}
+              />
             ))
           )}
         </div>

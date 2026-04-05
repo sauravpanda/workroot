@@ -4,13 +4,37 @@ import { useUiStore } from "../stores/uiStore";
 
 interface WorktreeItemProps {
   worktree: WorktreeInfo;
+  highlight?: string;
   onDelete: (id: number) => void;
   onHide: (id: number) => void;
   onCheckWarnings: (id: number) => Promise<DeleteWarnings | null>;
 }
 
+/** Render `text` with the first occurrence of `query` wrapped in a highlight mark. */
+function HighlightedText({
+  text,
+  query,
+}: {
+  text: string;
+  query: string;
+}): React.ReactNode {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="wt-match-highlight">
+        {text.slice(idx, idx + query.length)}
+      </mark>
+      {text.slice(idx + query.length)}
+    </>
+  );
+}
+
 export function WorktreeItem({
   worktree,
+  highlight = "",
   onDelete,
   onHide,
   onCheckWarnings,
@@ -133,7 +157,9 @@ export function WorktreeItem({
             />
           </svg>
         </span>
-        <span className="worktree-branch-name">{worktree.branch_name}</span>
+        <span className="worktree-branch-name">
+          <HighlightedText text={worktree.branch_name} query={highlight} />
+        </span>
         <span className="worktree-indicators">
           <span
             className={`worktree-status-dot ${statusClass}`}

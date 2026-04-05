@@ -16,11 +16,13 @@ import { Input } from "./ui/input";
 interface ProjectGroupProps {
   project: ProjectInfo;
   defaultExpanded?: boolean;
+  filter?: string;
 }
 
 export function ProjectGroup({
   project,
   defaultExpanded = false,
+  filter = "",
 }: ProjectGroupProps) {
   const {
     selectedProjectId,
@@ -54,6 +56,18 @@ export function ProjectGroup({
       loadWorktrees();
     }
   }, [expanded, loadWorktrees]);
+
+  // Auto-expand when a filter is active so worktrees load and can be searched.
+  useEffect(() => {
+    if (filter && !expanded) {
+      setExpanded(true);
+    }
+  }, [filter, expanded]);
+
+  const q = filter.trim().toLowerCase();
+  const filteredWorktrees = q
+    ? worktrees.filter((wt) => wt.branch_name.toLowerCase().includes(q))
+    : worktrees;
 
   const toggleExpanded = useCallback(() => {
     setExpanded((prev) => !prev);
@@ -142,7 +156,11 @@ export function ProjectGroup({
                 <span className="project-framework">{project.framework}</span>
               )}
               {expanded && worktrees.length > 0 && (
-                <span className="project-wt-count">{worktrees.length}</span>
+                <span className="project-wt-count">
+                  {q && filteredWorktrees.length !== worktrees.length
+                    ? `${filteredWorktrees.length}/${worktrees.length}`
+                    : worktrees.length}
+                </span>
               )}
               {!project.exists_locally && (
                 <span className="project-missing">missing</span>
@@ -155,15 +173,18 @@ export function ProjectGroup({
           <div className="project-children">
             {error && <div className="project-error">{error}</div>}
 
-            {worktrees.length === 0 && !showNewWorktree && (
-              <div className="project-empty">No worktrees</div>
+            {filteredWorktrees.length === 0 && !showNewWorktree && (
+              <div className="project-empty">
+                {q ? "No matches" : "No worktrees"}
+              </div>
             )}
 
             <div className="worktree-list" role="group">
-              {worktrees.map((wt) => (
+              {filteredWorktrees.map((wt) => (
                 <WorktreeItem
                   key={wt.id}
                   worktree={wt}
+                  highlight={filter}
                   onDelete={handleDelete}
                   onHide={handleHide}
                   onCheckWarnings={checkDeleteWarnings}
