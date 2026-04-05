@@ -403,7 +403,21 @@ function TerminalInstance({
 
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
-    term.loadAddon(new WebLinksAddon());
+    term.loadAddon(
+      new WebLinksAddon((_event, url) => {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const tauri = (window as any).__TAURI__;
+          if (tauri?.shell?.open) {
+            tauri.shell.open(url);
+            return;
+          }
+        } catch {
+          // ignore
+        }
+        window.open(url, "_blank", "noopener");
+      }),
+    );
     term.open(el);
 
     // GPU-accelerated renderer; fall back silently if WebGL is unavailable.
@@ -451,10 +465,15 @@ function TerminalInstance({
 
       try {
         const pty = spawn(settings.shell, [], {
+          name: "xterm-256color",
           cols: Math.max(term.cols, 1),
           rows: Math.max(term.rows, 1),
           cwd,
-          env: { TERM: "xterm-256color" },
+          env: {
+            TERM: "xterm-256color",
+            TERM_PROGRAM: "workroot",
+            COLORTERM: "truecolor",
+          },
         });
         ptyRef.current = pty;
 

@@ -27,8 +27,14 @@ export function ProjectGroup({
   const [showNewWorktree, setShowNewWorktree] = useState(false);
   const [newBranchName, setNewBranchName] = useState("");
   const [createNew, setCreateNew] = useState(true);
-  const { worktrees, error, createWorktree, deleteWorktree, loadWorktrees } =
-    useWorktrees(expanded ? project.id : null);
+  const {
+    worktrees,
+    error,
+    createWorktree,
+    deleteWorktree,
+    checkDeleteWarnings,
+    loadWorktrees,
+  } = useWorktrees(expanded ? project.id : null);
 
   useEffect(() => {
     if (expanded) {
@@ -108,6 +114,7 @@ export function ProjectGroup({
                   key={wt.id}
                   worktree={wt}
                   onDelete={handleDelete}
+                  onCheckWarnings={checkDeleteWarnings}
                 />
               ))}
             </div>

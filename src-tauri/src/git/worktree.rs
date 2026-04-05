@@ -1,4 +1,4 @@
-use super::WorktreeInfo;
+use super::{DeleteWarnings, WorktreeInfo};
 use crate::db::queries;
 use crate::db::AppDb;
 use crate::validate;
@@ -186,6 +186,71 @@ pub fn list_worktree_history(
 pub fn delete_worktree(db: State<'_, AppDb>, worktree_id: i64) -> Result<bool, String> {
     let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
     queries::archive_worktree(&conn, worktree_id).map_err(|e| format!("DB error: {}", e))
+}
+
+/// Counts commits on the local branch that have not been pushed to its upstream remote.
+fn count_unpushed_commits(path: &str) -> u32 {
+    let repo = match Repository::open(path) {
+        Ok(r) => r,
+        Err(_) => return 0,
+    };
+
+    let head = match repo.head() {
+        Ok(h) => h,
+        Err(_) => return 0,
+    };
+
+    let local_oid = match head.target() {
+        Some(oid) => oid,
+        None => return 0,
+    };
+
+    let branch_name = match head.shorthand() {
+        Some(name) => name.to_string(),
+        None => return 0,
+    };
+
+    let upstream_ref = format!("refs/remotes/origin/{}", branch_name);
+    let remote_oid = match repo.refname_to_id(&upstream_ref) {
+        Ok(oid) => oid,
+        Err(_) => {
+            // No upstream tracking branch — all local commits are "unpushed"
+            let mut count = 0u32;
+            let mut revwalk = match repo.revwalk() {
+                Ok(rw) => rw,
+                Err(_) => return 0,
+            };
+            let _ = revwalk.push(local_oid);
+            for _ in revwalk {
+                count += 1;
+            }
+            return count;
+        }
+    };
+
+    let (ahead, _) = match repo.graph_ahead_behind(local_oid, remote_oid) {
+        Ok(counts) => counts,
+        Err(_) => return 0,
+    };
+    ahead as u32
+}
+
+/// Returns warnings about uncommitted changes and unpushed commits for a worktree,
+/// so the frontend can show a confirmation dialog before deletion.
+#[tauri::command]
+pub fn get_worktree_delete_warnings(
+    db: State<'_, AppDb>,
+    worktree_id: i64,
+) -> Result<DeleteWarnings, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    let row = queries::get_worktree(&conn, worktree_id)
+        .map_err(|e| format!("DB error: {}", e))?
+        .ok_or("Worktree not found")?;
+
+    Ok(DeleteWarnings {
+        is_dirty: check_is_dirty(&row.path),
+        unpushed_commits: count_unpushed_commits(&row.path),
+    })
 }
 
 /// Gets the current status of a worktree (dirty/clean, exists on disk).
