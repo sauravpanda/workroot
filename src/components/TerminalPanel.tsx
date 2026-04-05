@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useReducer } from "react";
+import { createPortal } from "react-dom";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
@@ -78,6 +79,15 @@ export function TerminalPanel({
   );
   // Which cwd is currently visible.
   const [activeCwd, setActiveCwd] = useState(cwd);
+
+  // Stable per-pane DOM containers. Each pane gets one div that is NEVER
+  // recreated — it is physically moved into the SplitPane slot via the slot
+  // ref callback.  Because the container is stable, the React portal inside it
+  // (which holds the TerminalInstance) never unmounts when the split tree is
+  // restructured, so the PTY process survives the split.
+  const paneContainersRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  // Bumped whenever a new container is registered so that portals re-render.
+  const [, triggerUpdate] = useReducer((n: number) => n + 1, 0);
 
   // When the cwd prop changes (user switches worktree), create a new path state
   // if one doesn't exist yet — but never destroy existing states so PTY
@@ -302,13 +312,30 @@ export function TerminalPanel({
                       };
                     })
                   }
-                  renderLeaf={(paneId, isFocused) => (
-                    <TerminalInstance
-                      key={paneId}
-                      cwd={path}
-                      active={isActivePathAndTab && isFocused}
-                      visible={isActivePathAndTab}
-                      themeId={themeId}
+                  renderLeaf={(paneId) => (
+                    // Each leaf renders a thin slot div.  The ref callback
+                    // places (or moves) the stable per-pane container into this
+                    // slot so the terminal content appears in the right place.
+                    <div
+                      style={{ width: "100%", height: "100%" }}
+                      ref={(slotEl) => {
+                        if (!slotEl) return;
+                        // Create a stable container for this pane on first use.
+                        if (!paneContainersRef.current.has(paneId)) {
+                          const div = document.createElement("div");
+                          div.style.cssText = "width:100%;height:100%;";
+                          paneContainersRef.current.set(paneId, div);
+                          triggerUpdate();
+                        }
+                        const container =
+                          paneContainersRef.current.get(paneId)!;
+                        // Move the container into this slot if it isn't already
+                        // there (e.g. after a split restructures the tree).
+                        if (!slotEl.contains(container)) {
+                          slotEl.replaceChildren(container);
+                          triggerUpdate();
+                        }
+                      }}
                     />
                   )}
                   focusedId={
@@ -327,6 +354,28 @@ export function TerminalPanel({
                   }
                   onSplitLeaf={isActivePathAndTab ? handleSplitLeaf : undefined}
                 />
+                {/* Render TerminalInstances via portals into the stable per-pane
+                    containers. The portal key (paneId) and container object are
+                    both stable across splits, so React never unmounts an existing
+                    TerminalInstance — the PTY process is preserved. */}
+                {collectLeafIds(tab.paneTree).map((paneId) => {
+                  const container = paneContainersRef.current.get(paneId);
+                  if (!container) return null;
+                  const isFocusedPane =
+                    path === activeCwd &&
+                    tab.id === state.activeTabId &&
+                    paneId === focusedPaneId;
+                  return createPortal(
+                    <TerminalInstance
+                      cwd={path}
+                      active={isActivePathAndTab && isFocusedPane}
+                      visible={isActivePathAndTab}
+                      themeId={themeId}
+                    />,
+                    container,
+                    paneId,
+                  );
+                })}
               </div>
             );
           }),
