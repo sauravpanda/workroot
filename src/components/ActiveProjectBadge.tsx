@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import "../styles/active-badge.css";
 
 interface ActiveProjectInfo {
   worktree_id: number;
@@ -53,31 +52,37 @@ export function ActiveProjectBadge() {
 
   if (!proxyInfo?.running) {
     return (
-      <div className="active-badge inactive">
-        <span className="badge-dot offline" />
-        <span className="badge-label">Proxy offline</span>
+      <div className="inline-flex select-none items-center gap-1.5 rounded-[var(--radius)] border border-[rgba(239,68,68,0.2)] bg-[var(--danger-muted)] px-2.5 py-1 font-mono text-[0.78em] text-[#fca5a5]">
+        <span className="size-1.5 shrink-0 rounded-full bg-[var(--danger)]" />
+        <span className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
+          Proxy offline
+        </span>
       </div>
     );
   }
 
   if (!activeProject) {
     return (
-      <div className="active-badge idle">
-        <span className="badge-dot idle" />
-        <span className="badge-label">:3000 idle</span>
+      <div className="inline-flex select-none items-center gap-1.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 py-1 font-mono text-[0.78em] text-[var(--text-muted)]">
+        <span className="size-1.5 shrink-0 rounded-full bg-[var(--text-muted)]" />
+        <span className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
+          :3000 idle
+        </span>
       </div>
     );
   }
 
   return (
-    <div className="active-badge active">
-      <span className="badge-dot online" />
-      <span className="badge-label">
+    <div className="inline-flex select-none items-center gap-1.5 rounded-[var(--radius)] border border-[rgba(16,185,129,0.25)] bg-[var(--accent-muted)] px-2.5 py-1 font-mono text-[0.78em] text-[var(--accent-hover)]">
+      <span className="size-1.5 shrink-0 rounded-full bg-[var(--success)] shadow-[0_0_4px_rgba(34,197,94,0.4)]" />
+      <span className="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap">
         :3000 &rarr; {activeProject.project_name}/{activeProject.branch_name}
       </span>
-      <span className="badge-port">:{activeProject.port}</span>
+      <span className="text-[0.9em] text-[var(--text-muted)]">
+        :{activeProject.port}
+      </span>
       <button
-        className="badge-clear"
+        className="cursor-pointer border-none bg-transparent px-0.5 py-0 text-[13px] leading-none text-[var(--text-muted)] transition-colors duration-150 hover:text-[var(--danger)]"
         onClick={handleClear}
         title="Stop routing"
       >
