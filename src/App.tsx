@@ -139,6 +139,7 @@ function AppContent({
     setSelectedWorktreeName,
     showRightSidebar,
     setShowRightSidebar,
+    markAgentDone,
   } = useUiStore();
 
   const [isGitHubConnected, setIsGitHubConnected] = useState(false);
@@ -156,6 +157,37 @@ function AppContent({
     usePanels();
   const [blameFilePath, setBlameFilePath] = useState("");
   const [contentTab, setContentTab] = useState("terminal");
+  const [agentDoneToast, setAgentDoneToast] = useState<string | null>(null);
+
+  // Request notification permission once on mount.
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
+  // Stable refs so the callback doesn't need to be in dependency arrays.
+  const selectedWorktreeIdRef = useRef(selectedWorktreeId);
+  const selectedWorktreeNameRef = useRef(selectedWorktreeName);
+  selectedWorktreeIdRef.current = selectedWorktreeId;
+  selectedWorktreeNameRef.current = selectedWorktreeName;
+
+  const handleAgentComplete = useCallback(() => {
+    const id = selectedWorktreeIdRef.current;
+    const name = selectedWorktreeNameRef.current ?? "Terminal";
+    if (id !== null) markAgentDone(id);
+    if (!document.hasFocus()) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Agent completed", {
+          body: `${name} is ready for review`,
+          silent: false,
+        });
+      }
+    } else {
+      setAgentDoneToast(name);
+      setTimeout(() => setAgentDoneToast(null), 5000);
+    }
+  }, [markAgentDone]);
 
   // Reset content tab and close tab-launched panels when switching worktrees
   useEffect(() => {
@@ -1023,6 +1055,7 @@ function AppContent({
             cwd={selectedWorktreePath}
             worktreeName={selectedWorktreeName ?? "Shell"}
             themeId={terminalThemeId}
+            onAgentComplete={handleAgentComplete}
           />
         </>
       ) : (
@@ -1593,6 +1626,32 @@ function AppContent({
           else if (action === "tests") openPanel("testRunnerPanel");
         }}
       />
+      {agentDoneToast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "48px",
+            right: "16px",
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--accent-muted)",
+            borderLeft: "3px solid var(--accent)",
+            borderRadius: "6px",
+            padding: "10px 14px",
+            fontSize: "12.5px",
+            color: "var(--text-primary)",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+            zIndex: 9999,
+            maxWidth: "280px",
+            pointerEvents: "none",
+          }}
+        >
+          <span style={{ color: "var(--accent)", marginRight: "8px" }}>✓</span>
+          Agent done in{" "}
+          <strong style={{ color: "var(--text-primary)" }}>
+            {agentDoneToast}
+          </strong>
+        </div>
+      )}
     </>
   );
 }
