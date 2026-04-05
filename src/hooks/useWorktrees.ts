@@ -11,6 +11,7 @@ interface WorktreeInfo {
   port: number | null;
   created_at: string;
   deleted_at: string | null;
+  hidden_at: string | null;
 }
 
 interface DeleteWarnings {
@@ -121,6 +122,44 @@ export function useWorktrees(projectId: number | null) {
     }
   }, [projectId]);
 
+  const hideWorktree = useCallback(
+    async (worktreeId: number) => {
+      setError(null);
+      try {
+        await invoke<boolean>("hide_worktree", { worktreeId });
+        await loadWorktrees();
+      } catch (err: unknown) {
+        setError(String(err));
+      }
+    },
+    [loadWorktrees],
+  );
+
+  const unhideWorktree = useCallback(
+    async (worktreeId: number) => {
+      setError(null);
+      try {
+        await invoke<boolean>("unhide_worktree", { worktreeId });
+        await loadWorktrees();
+      } catch (err: unknown) {
+        setError(String(err));
+      }
+    },
+    [loadWorktrees],
+  );
+
+  const loadHiddenWorktrees = useCallback(async (): Promise<WorktreeInfo[]> => {
+    if (projectId === null) return [];
+    try {
+      return await invoke<WorktreeInfo[]>("list_hidden_worktrees", {
+        projectId,
+      });
+    } catch (err: unknown) {
+      setError(String(err));
+      return [];
+    }
+  }, [projectId]);
+
   return {
     worktrees,
     branches,
@@ -130,6 +169,9 @@ export function useWorktrees(projectId: number | null) {
     loadBranches,
     createWorktree,
     deleteWorktree,
+    hideWorktree,
+    unhideWorktree,
+    loadHiddenWorktrees,
     checkDeleteWarnings,
     loadWorktreeHistory,
   };

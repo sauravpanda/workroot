@@ -30,6 +30,7 @@ pub struct WorktreeInfo {
     pub port: Option<i64>,
     pub created_at: String,
     pub deleted_at: Option<String>,
+    pub hidden_at: Option<String>,
 }
 
 #[derive(Debug, Serialize)]

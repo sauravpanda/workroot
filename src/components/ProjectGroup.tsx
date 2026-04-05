@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ProjectInfo } from "../hooks/useProjects";
+import type { WorktreeInfo } from "../hooks/useWorktrees";
 import { useWorktrees } from "../hooks/useWorktrees";
 import { useUiStore } from "../stores/uiStore";
 import { WorktreeItem } from "./WorktreeItem";
@@ -19,11 +20,16 @@ export function ProjectGroup({
   const [showNewWorktree, setShowNewWorktree] = useState(false);
   const [newBranchName, setNewBranchName] = useState("");
   const [createNew, setCreateNew] = useState(true);
+  const [showHidden, setShowHidden] = useState(false);
+  const [hiddenWorktrees, setHiddenWorktrees] = useState<WorktreeInfo[]>([]);
   const {
     worktrees,
     error,
     createWorktree,
     deleteWorktree,
+    hideWorktree,
+    unhideWorktree,
+    loadHiddenWorktrees,
     checkDeleteWarnings,
     loadWorktrees,
   } = useWorktrees(expanded ? project.id : null);
@@ -55,6 +61,30 @@ export function ProjectGroup({
       await deleteWorktree(id);
     },
     [deleteWorktree],
+  );
+
+  const handleHide = useCallback(
+    async (id: number) => {
+      await hideWorktree(id);
+    },
+    [hideWorktree],
+  );
+
+  const handleToggleHidden = useCallback(async () => {
+    if (!showHidden) {
+      const hidden = await loadHiddenWorktrees();
+      setHiddenWorktrees(hidden);
+    }
+    setShowHidden((prev) => !prev);
+  }, [showHidden, loadHiddenWorktrees]);
+
+  const handleUnhide = useCallback(
+    async (id: number) => {
+      await unhideWorktree(id);
+      const hidden = await loadHiddenWorktrees();
+      setHiddenWorktrees(hidden);
+    },
+    [unhideWorktree, loadHiddenWorktrees],
   );
 
   return (
@@ -112,10 +142,35 @@ export function ProjectGroup({
                 key={wt.id}
                 worktree={wt}
                 onDelete={handleDelete}
+                onHide={handleHide}
                 onCheckWarnings={checkDeleteWarnings}
               />
             ))}
           </div>
+
+          <button className="show-hidden-btn" onClick={handleToggleHidden}>
+            {showHidden ? "Hide hidden worktrees" : "Show hidden worktrees"}
+          </button>
+
+          {showHidden && hiddenWorktrees.length === 0 && (
+            <div className="project-empty">No hidden worktrees</div>
+          )}
+
+          {showHidden && hiddenWorktrees.length > 0 && (
+            <div className="worktree-list worktree-list-hidden" role="group">
+              {hiddenWorktrees.map((wt) => (
+                <div key={wt.id} className="worktree-hidden-row">
+                  <span className="worktree-branch-name">{wt.branch_name}</span>
+                  <button
+                    className="unhide-btn"
+                    onClick={() => handleUnhide(wt.id)}
+                  >
+                    Unhide
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {showNewWorktree ? (
             <form className="new-worktree-form" onSubmit={handleCreateWorktree}>

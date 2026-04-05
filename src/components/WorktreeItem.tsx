@@ -5,12 +5,14 @@ import { useUiStore } from "../stores/uiStore";
 interface WorktreeItemProps {
   worktree: WorktreeInfo;
   onDelete: (id: number) => void;
+  onHide: (id: number) => void;
   onCheckWarnings: (id: number) => Promise<DeleteWarnings | null>;
 }
 
 export function WorktreeItem({
   worktree,
   onDelete,
+  onHide,
   onCheckWarnings,
 }: WorktreeItemProps) {
   const {
@@ -65,6 +67,11 @@ export function WorktreeItem({
   const closeContextMenu = useCallback(() => {
     setContextMenu(null);
   }, []);
+
+  const handleHideClick = useCallback(() => {
+    setContextMenu(null);
+    onHide(worktree.id);
+  }, [worktree.id, onHide]);
 
   const handleDeleteClick = useCallback(async () => {
     setContextMenu(null);
@@ -157,6 +164,9 @@ export function WorktreeItem({
               Stop
             </button>
             <div className="context-menu-separator" />
+            <button className="context-menu-item" onClick={handleHideClick}>
+              Hide
+            </button>
             <button
               className="context-menu-item destructive"
               onClick={handleDeleteClick}
