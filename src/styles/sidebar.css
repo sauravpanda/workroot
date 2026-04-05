@@ -605,6 +605,67 @@
    New Worktree Form
    ========================================================== */
 
+.show-hidden-btn {
+  display: block;
+  width: calc(100% - 1.2em);
+  margin: 0.1em 0.6em 0.1em;
+  padding: 0.15em;
+  font-size: 0.65em;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+  opacity: 0.6;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
+}
+
+.show-hidden-btn:hover {
+  opacity: 1;
+  color: var(--text-secondary);
+}
+
+.worktree-list-hidden {
+  opacity: 0.65;
+}
+
+.worktree-hidden-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.2em 0.6em 0.2em 1.8em;
+  font-size: 0.72em;
+  color: var(--text-muted);
+}
+
+.worktree-hidden-row .worktree-branch-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unhide-btn {
+  background: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.75em;
+  padding: 0.1em 0.4em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.unhide-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .add-worktree-btn {
   display: block;
   width: calc(100% - 1.2em);
