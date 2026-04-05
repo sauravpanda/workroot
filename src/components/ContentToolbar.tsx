@@ -156,7 +156,9 @@ export function ContentToolbar({
   useEffect(() => {
     const el = tabsRef.current;
     if (!el) return;
-    const activeEl = el.querySelector(".content-toolbar__tab--active") as HTMLElement | null;
+    const activeEl = el.querySelector(
+      ".content-toolbar__tab--active",
+    ) as HTMLElement | null;
     activeEl?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [activeTab]);
 
@@ -194,7 +196,14 @@ export function ContentToolbar({
             type="button"
             aria-label="Scroll tabs left"
           >
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M10 12L6 8l4-4" />
             </svg>
           </button>
@@ -221,7 +230,14 @@ export function ContentToolbar({
             type="button"
             aria-label="Scroll tabs right"
           >
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M6 4l4 4-4 4" />
             </svg>
           </button>
