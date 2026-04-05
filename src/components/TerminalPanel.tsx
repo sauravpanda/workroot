@@ -31,6 +31,7 @@ interface TerminalPanelProps {
   cwd: string;
   worktreeName: string;
   themeId?: string;
+  onAgentComplete?: () => void;
 }
 
 let paneCounter = 0;
@@ -72,6 +73,7 @@ export function TerminalPanel({
   cwd,
   worktreeName,
   themeId,
+  onAgentComplete,
 }: TerminalPanelProps) {
   // All per-worktree tab states, keyed by cwd path.
   const [pathStates, setPathStates] = useState<Record<string, PathTabState>>(
@@ -371,6 +373,9 @@ export function TerminalPanel({
                       active={isActivePathAndTab && isFocusedPane}
                       visible={isActivePathAndTab}
                       themeId={themeId}
+                      onAgentComplete={
+                        isActivePathAndTab ? onAgentComplete : undefined
+                      }
                     />,
                     container,
                     paneId,
@@ -390,6 +395,7 @@ interface TerminalInstanceProps {
   active: boolean;
   visible?: boolean;
   themeId?: string;
+  onAgentComplete?: () => void;
 }
 
 async function loadTerminalSettings(): Promise<{
@@ -421,16 +427,26 @@ async function loadTerminalSettings(): Promise<{
   }
 }
 
+// Minimum bytes of PTY output to count as "agent activity" before we watch for idle.
+const ACTIVITY_THRESHOLD_BYTES = 500;
+// How long the terminal must be idle (ms) after activity before we fire onAgentComplete.
+const IDLE_TIMEOUT_MS = 4000;
+
 function TerminalInstance({
   cwd,
   active,
   visible = true,
   themeId,
+  onAgentComplete,
 }: TerminalInstanceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const ptyRef = useRef<IPty | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const activityBytesRef = useRef(0);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onAgentCompleteRef = useRef(onAgentComplete);
+  onAgentCompleteRef.current = onAgentComplete;
 
   // Create xterm + PTY on mount, destroy on unmount
   useEffect(() => {
@@ -528,10 +544,27 @@ function TerminalInstance({
 
         pty.onData((data: Uint8Array) => {
           term.write(data);
+          // Activity tracking for agent-complete detection.
+          activityBytesRef.current += data.length;
+          if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+          if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
+            idleTimerRef.current = setTimeout(() => {
+              idleTimerRef.current = null;
+              if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
+                onAgentCompleteRef.current?.();
+              }
+              activityBytesRef.current = 0;
+            }, IDLE_TIMEOUT_MS);
+          }
         });
 
         pty.onExit(() => {
           term.write("\r\n\x1b[90m[Process exited]\x1b[0m\r\n");
+          if (idleTimerRef.current) {
+            clearTimeout(idleTimerRef.current);
+            idleTimerRef.current = null;
+          }
+          activityBytesRef.current = 0;
         });
 
         term.onData((data: string) => {
@@ -561,6 +594,11 @@ function TerminalInstance({
     return () => {
       cancelled = true;
       clearTimeout(initTimer);
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+        idleTimerRef.current = null;
+      }
+      activityBytesRef.current = 0;
       window.removeEventListener("keydown", preventBrowserNav, true);
       try {
         ptyRef.current?.kill();

@@ -21,8 +21,11 @@ export function WorktreeItem({
     setSelectedWorktreePath,
     setSelectedWorktreeName,
     setShowSettings,
+    agentDoneWorktreeIds,
+    clearAgentDone,
   } = useUiStore();
   const isSelected = selectedWorktreeId === worktree.id;
+  const isAgentDone = agentDoneWorktreeIds.has(worktree.id);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -36,6 +39,7 @@ export function WorktreeItem({
     setSelectedWorktreePath(worktree.path);
     setSelectedWorktreeName(worktree.branch_name);
     setShowSettings(false);
+    clearAgentDone(worktree.id);
   }, [
     worktree.id,
     worktree.path,
@@ -44,6 +48,7 @@ export function WorktreeItem({
     setSelectedWorktreePath,
     setSelectedWorktreeName,
     setShowSettings,
+    clearAgentDone,
   ]);
 
   const handleContextMenu = useCallback(
@@ -135,6 +140,9 @@ export function WorktreeItem({
         </span>
         <span className="worktree-branch-name">{worktree.branch_name}</span>
         <span className="worktree-indicators">
+          {isAgentDone && (
+            <span className="worktree-agent-done" title="Agent completed" />
+          )}
           <span
             className={`worktree-status-dot ${statusClass}`}
             title={worktree.status}

@@ -13,6 +13,9 @@ interface UiContextValue {
   setShowSettings: (show: boolean) => void;
   showRightSidebar: boolean;
   setShowRightSidebar: (show: boolean) => void;
+  agentDoneWorktreeIds: Set<number>;
+  markAgentDone: (id: number) => void;
+  clearAgentDone: (id: number) => void;
 }
 
 export const UiContext = createContext<UiContextValue>({
@@ -28,6 +31,9 @@ export const UiContext = createContext<UiContextValue>({
   setShowSettings: () => {},
   showRightSidebar: true,
   setShowRightSidebar: () => {},
+  agentDoneWorktreeIds: new Set(),
+  markAgentDone: () => {},
+  clearAgentDone: () => {},
 });
 
 export function useUiStore() {

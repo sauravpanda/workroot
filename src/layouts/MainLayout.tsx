@@ -72,6 +72,22 @@ export function MainLayout({
   >(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showRightSidebar, setShowRightSidebar] = useState(true);
+  const [agentDoneWorktreeIds, setAgentDoneWorktreeIds] = useState<Set<number>>(
+    () => new Set(),
+  );
+
+  const markAgentDone = useCallback((id: number) => {
+    setAgentDoneWorktreeIds((prev) => new Set(prev).add(id));
+  }, []);
+
+  const clearAgentDone = useCallback((id: number) => {
+    setAgentDoneWorktreeIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
   const dragging = useRef(false);
   const draggingRight = useRef(false);
 
@@ -156,6 +172,9 @@ export function MainLayout({
         setShowSettings,
         showRightSidebar,
         setShowRightSidebar,
+        agentDoneWorktreeIds,
+        markAgentDone,
+        clearAgentDone,
       }}
     >
       <div className="main-layout">
