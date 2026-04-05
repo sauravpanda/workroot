@@ -1,5 +1,6 @@
 pub mod ai;
 pub mod backup;
+pub mod fileview;
 pub mod bookmarks;
 pub mod browser;
 pub mod claudemd;
@@ -309,6 +310,10 @@ pub fn run() {
             todos::list_todos,
             todos::update_todo,
             todos::delete_todo,
+            fileview::list_dir,
+            fileview::get_worktree_file_statuses,
+            fileview::read_file_content,
+            fileview::open_file_in_editor,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

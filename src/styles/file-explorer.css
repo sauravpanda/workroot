@@ -1,6 +1,8 @@
 /* ==========================================================
-   File Explorer — VS Code-like file tree
+   File Explorer — two-pane file tree + preview
    ========================================================== */
+
+/* ── Backdrop ── */
 
 .fe-backdrop {
   position: fixed;
@@ -10,6 +12,8 @@
   z-index: 9998;
   animation: cmd-backdrop-in 0.12s ease-out;
 }
+
+/* ── Panel ── */
 
 .fe-panel {
   position: fixed;
@@ -32,14 +36,35 @@
   animation: cmd-palette-in 0.15s ease-out;
 }
 
-/* -- Header -- */
+/* Wide variant for two-pane layout */
+.fe-panel--wide {
+  width: min(960px, 92vw);
+  max-height: 82vh;
+}
+
+/* ── Header ── */
 
 .fe-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px 10px;
+  padding: 12px 16px 10px;
   border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.fe-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fe-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .fe-title {
@@ -47,6 +72,51 @@
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
+  white-space: nowrap;
+}
+
+.fe-cwd-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72em;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.fe-action-btn {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.1s;
+  background: var(--accent);
+  color: var(--bg-base);
+}
+
+.fe-action-btn:hover {
+  background: var(--accent-hover, var(--accent));
+  opacity: 0.9;
+}
+
+.fe-action-btn--secondary {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.fe-action-btn--secondary:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .fe-close {
@@ -70,94 +140,37 @@
   color: var(--text-primary);
 }
 
-/* -- CWD indicator -- */
+/* ── Two-pane body ── */
 
-.fe-cwd {
+.fe-body-container {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border-subtle);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.fe-cwd-label {
-  font-size: 0.68em;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-tertiary);
+/* ── Left: tree pane ── */
+
+.fe-tree-pane {
+  display: flex;
+  flex-direction: column;
+  width: 260px;
+  min-width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.fe-search-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
 }
 
-.fe-cwd-path {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.72em;
-  color: var(--text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* -- Manual path input -- */
-
-.fe-manual {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.fe-manual-input {
-  flex: 1;
-  font-family: var(--font-mono, monospace);
-  font-size: 0.78em;
-  color: var(--text-primary);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  padding: 5px 10px;
-  outline: none;
-  transition: border-color 0.15s;
-}
-
-.fe-manual-input:focus {
-  border-color: var(--accent);
-}
-
-.fe-manual-btn {
-  font-family: var(--font-sans);
-  font-size: 0.72em;
-  font-weight: 500;
-  color: var(--bg-base);
-  background: var(--accent);
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 5px 12px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.fe-manual-btn:hover {
-  background: var(--accent-hover);
-}
-
-.fe-manual-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* -- Filter row -- */
-
-.fe-filter-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.fe-filter-input {
+.fe-search-input {
   flex: 1;
   font-family: var(--font-sans);
   font-size: 0.78em;
@@ -165,179 +178,299 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  padding: 5px 10px;
+  padding: 5px 9px;
   outline: none;
   transition: border-color 0.15s;
+  min-width: 0;
 }
 
-.fe-filter-input:focus {
+.fe-search-input:focus {
   border-color: var(--accent);
 }
 
-.fe-refresh-btn {
+.fe-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.fe-clear-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   font-size: 14px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
+  background: none;
+  border: none;
   border-radius: var(--radius-sm);
-  color: var(--text-secondary);
+  color: var(--text-muted);
   cursor: pointer;
-  transition:
-    color 0.1s,
-    background-color 0.1s;
+  flex-shrink: 0;
+  transition: color 0.1s;
 }
 
-.fe-refresh-btn:hover {
+.fe-clear-btn:hover {
   color: var(--text-primary);
-  background: var(--bg-hover);
 }
 
-/* -- Body / file list -- */
-
-.fe-body {
+.fe-tree-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 4px 8px 8px;
+  padding: 4px 0 8px;
   overscroll-behavior: contain;
 }
 
-.fe-body::-webkit-scrollbar {
-  width: 5px;
+.fe-tree-scroll::-webkit-scrollbar {
+  width: 4px;
 }
 
-.fe-body::-webkit-scrollbar-track {
+.fe-tree-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.fe-body::-webkit-scrollbar-thumb {
+.fe-tree-scroll::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 3px;
 }
 
-.fe-empty {
-  padding: 24px 16px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.82em;
-}
+/* ── Tree nodes ── */
 
-.fe-error {
-  padding: 10px 16px;
-  font-size: 0.78em;
-  color: var(--danger);
-  background: var(--danger-muted);
-  border-radius: var(--radius-sm);
-  margin: 8px;
-}
-
-/* -- Tree structure -- */
-
-.fe-tree {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.fe-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.fe-group-header {
+.fe-tree-node {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  font-size: 0.72em;
-  font-weight: 600;
-  color: var(--text-tertiary);
+  gap: 6px;
+  padding-right: 10px;
+  height: 26px;
+  cursor: pointer;
   user-select: none;
+  border-radius: 0;
+  transition: background-color 0.08s;
 }
 
-.fe-folder-icon {
-  font-size: 0.9em;
+.fe-tree-node:hover {
+  background-color: var(--bg-hover);
+}
+
+.fe-tree-node--selected {
+  background-color: var(--accent);
+}
+
+.fe-tree-node--selected:hover {
+  background-color: var(--accent);
+  opacity: 0.92;
+}
+
+.fe-tree-node--selected .fe-tree-name {
+  color: var(--bg-base);
+}
+
+.fe-tree-node--selected .fe-file-status {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.fe-tree-arrow {
+  font-size: 0.7em;
   color: var(--text-tertiary);
+  width: 14px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
-.fe-group-name {
+.fe-tree-node--dir > .fe-tree-arrow {
+  color: var(--text-secondary);
+}
+
+.fe-tree-name {
+  flex: 1;
   font-family: var(--font-mono, monospace);
+  font-size: 0.78em;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* -- File row -- */
-
-.fe-file-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px 4px 24px;
-  background: none;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background-color 0.1s;
-  text-align: left;
-  width: 100%;
+.fe-tree-node--dir > .fe-tree-name {
+  font-weight: 500;
 }
 
-.fe-file-row:hover {
-  background-color: var(--bg-hover);
-}
+/* ── File icon (in tree) ── */
 
 .fe-file-icon {
   font-family: var(--font-mono, monospace);
-  font-size: 0.64em;
+  font-size: 0.62em;
   font-weight: 700;
-  width: 22px;
+  width: 18px;
   text-align: center;
   flex-shrink: 0;
   letter-spacing: -0.02em;
 }
 
-.fe-file-name {
-  flex: 1;
-  font-family: var(--font-mono, monospace);
-  font-size: 0.78em;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+/* ── Git status badge ── */
 
 .fe-file-status {
   font-family: var(--font-mono, monospace);
-  font-size: 0.64em;
+  font-size: 0.62em;
   font-weight: 700;
-  width: 16px;
+  width: 14px;
   text-align: center;
   flex-shrink: 0;
-  border-radius: 2px;
-  padding: 1px 2px;
 }
 
-.fe-status--modified {
-  color: var(--warning);
+.fe-status--modified  { color: var(--warning); }
+.fe-status--added     { color: var(--success); }
+.fe-status--deleted   { color: var(--danger); }
+.fe-status--renamed   { color: var(--accent); }
+.fe-status--untracked { color: var(--text-tertiary); }
+
+/* ── Right: preview pane ── */
+
+.fe-preview-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg-base);
 }
 
-.fe-status--added {
-  color: var(--success);
+/* Empty / placeholder state */
+
+.fe-preview-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px;
+  color: var(--text-muted);
 }
 
-.fe-status--deleted {
+.fe-preview-placeholder--error {
   color: var(--danger);
 }
 
-.fe-status--renamed {
-  color: var(--accent);
+.fe-preview-placeholder-icon {
+  font-size: 2em;
+  opacity: 0.3;
 }
 
-.fe-status--untracked {
-  color: var(--text-tertiary);
+.fe-preview-placeholder-text {
+  font-size: 0.82em;
+  text-align: center;
+}
+
+.fe-preview-error {
+  font-size: 0.82em;
+  color: var(--danger);
+  text-align: center;
+  max-width: 340px;
+}
+
+/* File bar (filename + meta) */
+
+.fe-preview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.fe-preview-filename {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.76em;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.fe-preview-meta {
+  font-size: 0.68em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Code display */
+
+.fe-preview-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fe-code-scroll {
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.fe-code-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.fe-code-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fe-code-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.fe-code {
+  display: block;
+  margin: 0;
+  padding: 8px 0;
+  font-family: var(--font-mono, "Menlo", "Consolas", monospace);
+  font-size: 0.8em;
+  line-height: 1.6;
+  white-space: pre;
+  color: var(--text-primary);
+  background: transparent;
+}
+
+.fe-code-line {
+  display: flex;
+  align-items: baseline;
+  min-height: 1.6em;
+}
+
+.fe-code-line:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.fe-line-num {
+  display: inline-block;
+  min-width: 40px;
+  padding: 0 12px 0 8px;
+  color: var(--text-muted);
+  font-size: 0.88em;
+  text-align: right;
+  user-select: none;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border-subtle);
+  margin-right: 12px;
+}
+
+.fe-line-content {
+  flex: 1;
+  padding-right: 16px;
+}
+
+/* ── Generic empty message ── */
+
+.fe-empty {
+  padding: 20px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82em;
 }
