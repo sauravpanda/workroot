@@ -63,19 +63,24 @@ export function useWorktrees(projectId: number | null) {
   }, [projectId, loadWorktrees]);
 
   const createWorktree = useCallback(
-    async (branchName: string, createNewBranch: boolean) => {
-      if (projectId === null) return;
+    async (
+      branchName: string,
+      createNewBranch: boolean,
+    ): Promise<WorktreeInfo | null> => {
+      if (projectId === null) return null;
       setIsLoading(true);
       setError(null);
       try {
-        await invoke<WorktreeInfo>("create_worktree", {
+        const newWorktree = await invoke<WorktreeInfo>("create_worktree", {
           projectId,
           branchName,
           createNewBranch,
         });
         await loadWorktrees();
+        return newWorktree;
       } catch (err: unknown) {
         setError(String(err));
+        return null;
       } finally {
         setIsLoading(false);
       }
