@@ -10,6 +10,11 @@ import { EnvPanel } from "./components/EnvPanel";
 import { ActiveProjectBadge } from "./components/ActiveProjectBadge";
 import { SettingsTab } from "./components/SettingsTab";
 import { TerminalPanel } from "./components/TerminalPanel";
+import {
+  AgentDoneToast,
+  type AgentDoneToastItem,
+} from "./components/AgentDoneToast";
+import { useAgentStore } from "./stores/agentStore";
 import { CommandPalette } from "./components/CommandPalette";
 import { CommandBookmarks } from "./components/CommandBookmarks";
 import { TerminalThemeSelector } from "./components/TerminalThemeSelector";
@@ -141,6 +146,10 @@ function AppContent({
     setShowRightSidebar,
   } = useUiStore();
 
+  // Agent-done notifications — state declared early so hook order is stable.
+  const { markDone, clearDone } = useAgentStore();
+  const [agentToasts, setAgentToasts] = useState<AgentDoneToastItem[]>([]);
+
   const [isGitHubConnected, setIsGitHubConnected] = useState(false);
   useEffect(() => {
     const check = () =>
@@ -231,6 +240,59 @@ function AppContent({
     }
     loadSwitcherData();
   }, [selectedProjectId, selectedWorktreeId]);
+
+  // Agent-done callbacks — declared after allWorktrees to avoid TDZ.
+  const handleAgentDone = useCallback(
+    (cwd: string) => {
+      markDone(cwd);
+      if (cwd === selectedWorktreePath) return;
+      const wt = allWorktrees.find((w) => w.path === cwd);
+      const name = wt?.branch_name ?? cwd.split("/").pop() ?? cwd;
+      const id = `${cwd}-${Date.now()}`;
+      setAgentToasts((prev) => [
+        ...prev,
+        { id, worktreeName: name, cwd, timestamp: Date.now() },
+      ]);
+      if ("Notification" in window) {
+        const fire = () =>
+          new Notification("Agent done", { body: name, silent: false });
+        if (Notification.permission === "granted") {
+          fire();
+        } else if (Notification.permission === "default") {
+          Notification.requestPermission().then((p) => {
+            if (p === "granted") fire();
+          });
+        }
+      }
+    },
+    [markDone, selectedWorktreePath, allWorktrees, setAgentToasts],
+  );
+
+  const handleDismissToast = useCallback((id: string) => {
+    setAgentToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const handleJumpToast = useCallback(
+    (cwd: string) => {
+      const wt = allWorktrees.find((w) => w.path === cwd);
+      if (wt) {
+        setSelectedProjectId(wt.project_id);
+        setSelectedWorktreeId(wt.id);
+        setSelectedWorktreePath(wt.path);
+        setSelectedWorktreeName(wt.branch_name);
+      }
+      clearDone(cwd);
+      setAgentToasts((prev) => prev.filter((t) => t.cwd !== cwd));
+    },
+    [
+      allWorktrees,
+      clearDone,
+      setSelectedProjectId,
+      setSelectedWorktreeId,
+      setSelectedWorktreePath,
+      setSelectedWorktreeName,
+    ],
+  );
 
   // Stable refs for worktree selection actions
   const selectWorktree = useCallback(
@@ -1023,6 +1085,7 @@ function AppContent({
             cwd={selectedWorktreePath}
             worktreeName={selectedWorktreeName ?? "Shell"}
             themeId={terminalThemeId}
+            onAgentDone={handleAgentDone}
           />
         </>
       ) : (
@@ -1592,6 +1655,11 @@ function AppContent({
           } else if (action === "record") openPanel("terminalRecording");
           else if (action === "tests") openPanel("testRunnerPanel");
         }}
+      />
+      <AgentDoneToast
+        toasts={agentToasts}
+        onDismiss={handleDismissToast}
+        onJump={handleJumpToast}
       />
     </>
   );

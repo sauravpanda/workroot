@@ -601,6 +601,13 @@
   line-height: 1.7;
 }
 
+.worktree-agent-done {
+  font-size: 0.65em;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+
 /* ==========================================================
    New Worktree Form
    ========================================================== */

@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { GitHubSidebar } from "../components/GitHubSidebar";
 import { UiContext } from "../stores/uiStore";
+import { AgentContext, useAgentStoreProvider } from "../stores/agentStore";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 
 const SIDEBAR_MIN = 200;
@@ -72,6 +73,7 @@ export function MainLayout({
   >(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showRightSidebar, setShowRightSidebar] = useState(true);
+  const agentStore = useAgentStoreProvider();
   const dragging = useRef(false);
   const draggingRight = useRef(false);
 
@@ -142,49 +144,51 @@ export function MainLayout({
   }, [rightSidebarWidth]);
 
   return (
-    <UiContext.Provider
-      value={{
-        selectedProjectId,
-        setSelectedProjectId,
-        selectedWorktreeId,
-        setSelectedWorktreeId,
-        selectedWorktreePath,
-        setSelectedWorktreePath,
-        selectedWorktreeName,
-        setSelectedWorktreeName,
-        showSettings,
-        setShowSettings,
-        showRightSidebar,
-        setShowRightSidebar,
-      }}
-    >
-      <div className="main-layout">
-        <div className="sidebar-panel" style={{ width: sidebarWidth }}>
-          <ErrorBoundary name="Sidebar">
-            <Sidebar
-              onOpenSearch={onOpenSearch}
-              onOpenAiChat={onOpenAiChat}
-              onOpenNotifications={onOpenNotifications}
-              onOpenSettings={onOpenSettings}
-            />
-          </ErrorBoundary>
+    <AgentContext.Provider value={agentStore}>
+      <UiContext.Provider
+        value={{
+          selectedProjectId,
+          setSelectedProjectId,
+          selectedWorktreeId,
+          setSelectedWorktreeId,
+          selectedWorktreePath,
+          setSelectedWorktreePath,
+          selectedWorktreeName,
+          setSelectedWorktreeName,
+          showSettings,
+          setShowSettings,
+          showRightSidebar,
+          setShowRightSidebar,
+        }}
+      >
+        <div className="main-layout">
+          <div className="sidebar-panel" style={{ width: sidebarWidth }}>
+            <ErrorBoundary name="Sidebar">
+              <Sidebar
+                onOpenSearch={onOpenSearch}
+                onOpenAiChat={onOpenAiChat}
+                onOpenNotifications={onOpenNotifications}
+                onOpenSettings={onOpenSettings}
+              />
+            </ErrorBoundary>
+          </div>
+          <div className="resize-handle" onMouseDown={handleMouseDown} />
+          <div className="content-area">{children}</div>
+          {showRightSidebar && (
+            <>
+              <div
+                className="resize-handle resize-handle--right"
+                onMouseDown={handleRightMouseDown}
+              />
+              <div style={{ width: rightSidebarWidth, flexShrink: 0 }}>
+                <ErrorBoundary name="GitHub Sidebar">
+                  <GitHubSidebar projectId={selectedProjectId} />
+                </ErrorBoundary>
+              </div>
+            </>
+          )}
         </div>
-        <div className="resize-handle" onMouseDown={handleMouseDown} />
-        <div className="content-area">{children}</div>
-        {showRightSidebar && (
-          <>
-            <div
-              className="resize-handle resize-handle--right"
-              onMouseDown={handleRightMouseDown}
-            />
-            <div style={{ width: rightSidebarWidth, flexShrink: 0 }}>
-              <ErrorBoundary name="GitHub Sidebar">
-                <GitHubSidebar projectId={selectedProjectId} />
-              </ErrorBoundary>
-            </div>
-          </>
-        )}
-      </div>
-    </UiContext.Provider>
+      </UiContext.Provider>
+    </AgentContext.Provider>
   );
 }

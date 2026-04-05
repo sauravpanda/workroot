@@ -31,6 +31,7 @@ interface TerminalPanelProps {
   cwd: string;
   worktreeName: string;
   themeId?: string;
+  onAgentDone?: (cwd: string) => void;
 }
 
 let paneCounter = 0;
@@ -72,6 +73,7 @@ export function TerminalPanel({
   cwd,
   worktreeName,
   themeId,
+  onAgentDone,
 }: TerminalPanelProps) {
   // All per-worktree tab states, keyed by cwd path.
   const [pathStates, setPathStates] = useState<Record<string, PathTabState>>(
@@ -371,6 +373,9 @@ export function TerminalPanel({
                       active={isActivePathAndTab && isFocusedPane}
                       visible={isActivePathAndTab}
                       themeId={themeId}
+                      onAgentDone={
+                        onAgentDone ? () => onAgentDone(path) : undefined
+                      }
                     />,
                     container,
                     paneId,
@@ -390,6 +395,7 @@ interface TerminalInstanceProps {
   active: boolean;
   visible?: boolean;
   themeId?: string;
+  onAgentDone?: () => void;
 }
 
 async function loadTerminalSettings(): Promise<{
@@ -426,11 +432,21 @@ function TerminalInstance({
   active,
   visible = true,
   themeId,
+  onAgentDone,
 }: TerminalInstanceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const ptyRef = useRef<IPty | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+
+  // Agent-done detection: fires onAgentDone after >500 bytes of output
+  // followed by 2 seconds of silence since the last user keystroke.
+  const outputSinceInputRef = useRef(0);
+  const agentDoneTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onAgentDoneRef = useRef(onAgentDone);
+  useEffect(() => {
+    onAgentDoneRef.current = onAgentDone;
+  }, [onAgentDone]);
 
   // Create xterm + PTY on mount, destroy on unmount
   useEffect(() => {
@@ -528,6 +544,17 @@ function TerminalInstance({
 
         pty.onData((data: Uint8Array) => {
           term.write(data);
+          // Agent-done detection: accumulate output bytes since last user input.
+          outputSinceInputRef.current += data.length;
+          if (outputSinceInputRef.current > 500) {
+            if (agentDoneTimerRef.current)
+              clearTimeout(agentDoneTimerRef.current);
+            agentDoneTimerRef.current = setTimeout(() => {
+              agentDoneTimerRef.current = null;
+              outputSinceInputRef.current = 0;
+              onAgentDoneRef.current?.();
+            }, 2000);
+          }
         });
 
         pty.onExit(() => {
@@ -536,6 +563,12 @@ function TerminalInstance({
 
         term.onData((data: string) => {
           pty.write(data);
+          // User typed — reset activity so short commands don't trigger notification.
+          outputSinceInputRef.current = 0;
+          if (agentDoneTimerRef.current) {
+            clearTimeout(agentDoneTimerRef.current);
+            agentDoneTimerRef.current = null;
+          }
         });
 
         term.onResize((e) => {
@@ -561,6 +594,7 @@ function TerminalInstance({
     return () => {
       cancelled = true;
       clearTimeout(initTimer);
+      if (agentDoneTimerRef.current) clearTimeout(agentDoneTimerRef.current);
       window.removeEventListener("keydown", preventBrowserNav, true);
       try {
         ptyRef.current?.kill();

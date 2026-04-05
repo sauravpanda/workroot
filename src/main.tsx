@@ -71,6 +71,7 @@ import "./styles/database-explorer.css";
 import "./styles/dashboard.css";
 import "./styles/status-bar.css";
 import "./styles/content-toolbar.css";
+import "./styles/agent-toast.css";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

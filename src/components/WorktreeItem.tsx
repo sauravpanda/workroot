@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import type { WorktreeInfo, DeleteWarnings } from "../hooks/useWorktrees";
 import { useUiStore } from "../stores/uiStore";
+import { useAgentStore } from "../stores/agentStore";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -28,6 +29,7 @@ export function WorktreeItem({
     setSelectedWorktreeName,
     setShowSettings,
   } = useUiStore();
+  const { donePaths, clearDone } = useAgentStore();
   const isSelected = selectedWorktreeId === worktree.id;
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -42,6 +44,7 @@ export function WorktreeItem({
     setSelectedWorktreePath(worktree.path);
     setSelectedWorktreeName(worktree.branch_name);
     setShowSettings(false);
+    if (worktree.path) clearDone(worktree.path);
   }, [
     worktree.id,
     worktree.path,
@@ -50,6 +53,7 @@ export function WorktreeItem({
     setSelectedWorktreePath,
     setSelectedWorktreeName,
     setShowSettings,
+    clearDone,
   ]);
 
   const handleContextMenu = useCallback(
@@ -105,6 +109,8 @@ export function WorktreeItem({
         ? "wt-status-missing"
         : "wt-status-stopped";
 
+  const agentDone = worktree.path ? donePaths.has(worktree.path) : false;
+
   return (
     <>
       <div
@@ -152,6 +158,11 @@ export function WorktreeItem({
           )}
           {worktree.port && (
             <span className="worktree-port">:{worktree.port}</span>
+          )}
+          {agentDone && !isSelected && (
+            <span className="worktree-agent-done" title="Agent finished">
+              ✓
+            </span>
           )}
         </span>
       </div>
