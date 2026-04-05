@@ -1,5 +1,4 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import "../styles/error-boundary.css";
 
 interface Props {
   children: ReactNode;
@@ -39,15 +38,20 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     return (
-      <div className="error-boundary-fallback">
-        <div className="error-boundary-icon">⚠</div>
-        <h3 className="error-boundary-title">
+      <div className="flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-[var(--radius-lg)] border border-[var(--danger-muted)] bg-[var(--bg-surface)] p-8 text-center text-[var(--text-secondary)]">
+        <div className="text-2xl leading-none text-[var(--danger)]">⚠</div>
+        <h3 className="m-0 text-[13px] font-semibold text-[var(--text-primary)]">
           {this.props.name
             ? `${this.props.name} failed to render`
             : "Something went wrong"}
         </h3>
-        <p className="error-boundary-message">{error.message}</p>
-        <button className="error-boundary-reset" onClick={this.reset}>
+        <p className="m-0 max-w-[420px] break-words font-mono text-[11px] text-[var(--text-muted)]">
+          {error.message}
+        </p>
+        <button
+          className="mt-2 cursor-pointer rounded-sm border border-[var(--border)] bg-[var(--bg-elevated)] px-[14px] py-[5px] font-sans text-xs text-[var(--text-primary)] transition-[border-color,background] duration-150 hover:border-[var(--border-strong)] hover:bg-[var(--bg-hover)]"
+          onClick={this.reset}
+        >
           Try again
         </button>
       </div>
