@@ -14,6 +14,12 @@ pub mod worktree;
 use serde::Serialize;
 
 #[derive(Debug, Serialize)]
+pub struct DeleteWarnings {
+    pub is_dirty: bool,
+    pub unpushed_commits: u32,
+}
+
+#[derive(Debug, Serialize)]
 pub struct WorktreeInfo {
     pub id: i64,
     pub project_id: i64,

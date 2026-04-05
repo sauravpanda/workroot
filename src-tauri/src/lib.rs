@@ -116,6 +116,7 @@ pub fn run() {
             git::worktree::list_project_worktrees,
             git::worktree::list_worktree_history,
             git::worktree::delete_worktree,
+            git::worktree::get_worktree_delete_warnings,
             git::worktree::get_worktree_status,
             git::branch::list_branches,
             git::branch::create_branch,

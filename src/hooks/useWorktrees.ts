@@ -13,6 +13,11 @@ interface WorktreeInfo {
   deleted_at: string | null;
 }
 
+interface DeleteWarnings {
+  is_dirty: boolean;
+  unpushed_commits: number;
+}
+
 interface BranchInfo {
   name: string;
   is_head: boolean;
@@ -91,6 +96,19 @@ export function useWorktrees(projectId: number | null) {
     [loadWorktrees],
   );
 
+  const checkDeleteWarnings = useCallback(
+    async (worktreeId: number): Promise<DeleteWarnings | null> => {
+      try {
+        return await invoke<DeleteWarnings>("get_worktree_delete_warnings", {
+          worktreeId,
+        });
+      } catch {
+        return null;
+      }
+    },
+    [],
+  );
+
   const loadWorktreeHistory = useCallback(async (): Promise<WorktreeInfo[]> => {
     if (projectId === null) return [];
     try {
@@ -112,8 +130,9 @@ export function useWorktrees(projectId: number | null) {
     loadBranches,
     createWorktree,
     deleteWorktree,
+    checkDeleteWarnings,
     loadWorktreeHistory,
   };
 }
 
-export type { WorktreeInfo, BranchInfo };
+export type { WorktreeInfo, DeleteWarnings, BranchInfo };

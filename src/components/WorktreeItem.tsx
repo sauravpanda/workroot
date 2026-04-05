@@ -1,13 +1,18 @@
 import { useState, useCallback } from "react";
-import type { WorktreeInfo } from "../hooks/useWorktrees";
+import type { WorktreeInfo, DeleteWarnings } from "../hooks/useWorktrees";
 import { useUiStore } from "../stores/uiStore";
 
 interface WorktreeItemProps {
   worktree: WorktreeInfo;
   onDelete: (id: number) => void;
+  onCheckWarnings: (id: number) => Promise<DeleteWarnings | null>;
 }
 
-export function WorktreeItem({ worktree, onDelete }: WorktreeItemProps) {
+export function WorktreeItem({
+  worktree,
+  onDelete,
+  onCheckWarnings,
+}: WorktreeItemProps) {
   const {
     selectedWorktreeId,
     setSelectedWorktreeId,
@@ -19,6 +24,9 @@ export function WorktreeItem({ worktree, onDelete }: WorktreeItemProps) {
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
+  } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    warnings: DeleteWarnings;
   } | null>(null);
 
   const handleClick = useCallback(() => {
@@ -58,10 +66,24 @@ export function WorktreeItem({ worktree, onDelete }: WorktreeItemProps) {
     setContextMenu(null);
   }, []);
 
-  const handleDelete = useCallback(() => {
+  const handleDeleteClick = useCallback(async () => {
     setContextMenu(null);
+    const warnings = await onCheckWarnings(worktree.id);
+    if (warnings && (warnings.is_dirty || warnings.unpushed_commits > 0)) {
+      setDeleteConfirm({ warnings });
+    } else {
+      onDelete(worktree.id);
+    }
+  }, [worktree.id, onDelete, onCheckWarnings]);
+
+  const handleConfirmDelete = useCallback(() => {
+    setDeleteConfirm(null);
     onDelete(worktree.id);
   }, [worktree.id, onDelete]);
+
+  const handleCancelDelete = useCallback(() => {
+    setDeleteConfirm(null);
+  }, []);
 
   const statusClass =
     worktree.status === "active"
@@ -137,10 +159,48 @@ export function WorktreeItem({ worktree, onDelete }: WorktreeItemProps) {
             <div className="context-menu-separator" />
             <button
               className="context-menu-item destructive"
-              onClick={handleDelete}
+              onClick={handleDeleteClick}
             >
               Delete Worktree
             </button>
+          </div>
+        </>
+      )}
+
+      {deleteConfirm && (
+        <>
+          <div className="context-menu-backdrop" onClick={handleCancelDelete} />
+          <div className="delete-confirm-dialog">
+            <div className="delete-confirm-title">Delete worktree?</div>
+            <div className="delete-confirm-warnings">
+              {deleteConfirm.warnings.is_dirty && (
+                <div className="delete-confirm-warning">
+                  Has uncommitted changes
+                </div>
+              )}
+              {deleteConfirm.warnings.unpushed_commits > 0 && (
+                <div className="delete-confirm-warning">
+                  {deleteConfirm.warnings.unpushed_commits} unpushed{" "}
+                  {deleteConfirm.warnings.unpushed_commits === 1
+                    ? "commit"
+                    : "commits"}
+                </div>
+              )}
+            </div>
+            <div className="delete-confirm-actions">
+              <button
+                className="delete-confirm-btn cancel"
+                onClick={handleCancelDelete}
+              >
+                Cancel
+              </button>
+              <button
+                className="delete-confirm-btn confirm"
+                onClick={handleConfirmDelete}
+              >
+                Delete Anyway
+              </button>
+            </div>
           </div>
         </>
       )}
