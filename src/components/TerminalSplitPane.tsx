@@ -1,4 +1,10 @@
-import { useCallback, useRef, useEffect, type ReactNode } from "react";
+import {
+  useCallback,
+  useRef,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 
 export type SplitDirection = "horizontal" | "vertical";
 
@@ -23,6 +29,9 @@ interface SplitPaneProps {
   renderLeaf: (id: string, isFocused: boolean) => ReactNode;
   focusedId: string | null;
   onFocusLeaf: (id: string) => void;
+  leafCount: number;
+  onCloseLeaf?: (id: string) => void;
+  onSplitLeaf?: (id: string, direction: SplitDirection) => void;
 }
 
 const MIN_RATIO = 0.15;
@@ -34,14 +43,75 @@ export function SplitPane({
   renderLeaf,
   focusedId,
   onFocusLeaf,
+  leafCount,
+  onCloseLeaf,
+  onSplitLeaf,
 }: SplitPaneProps) {
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    paneId: string;
+  } | null>(null);
+
+  // Close context menu on click anywhere or Escape
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = () => setContextMenu(null);
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    document.addEventListener("click", close);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("click", close);
+      document.removeEventListener("keydown", handleKey);
+    };
+  }, [contextMenu]);
+
   if (node.type === "leaf") {
     return (
       <div
         className={`split-leaf ${focusedId === node.id ? "split-leaf-focused" : ""}`}
         onClick={() => onFocusLeaf(node.id)}
+        onContextMenu={(e) => {
+          if (!onCloseLeaf && !onSplitLeaf) return;
+          e.preventDefault();
+          setContextMenu({ x: e.clientX, y: e.clientY, paneId: node.id });
+        }}
       >
+        {leafCount > 1 && onCloseLeaf && (
+          <button
+            className="split-leaf-close"
+            title="Close pane (⌘⇧W)"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCloseLeaf(node.id);
+            }}
+          >
+            ×
+          </button>
+        )}
         {renderLeaf(node.id, focusedId === node.id)}
+        {contextMenu && contextMenu.paneId === node.id && (
+          <PaneContextMenu
+            x={contextMenu.x}
+            y={contextMenu.y}
+            canClose={leafCount > 1}
+            canSplit={leafCount < 4}
+            onClose={() => {
+              onCloseLeaf?.(node.id);
+              setContextMenu(null);
+            }}
+            onSplitH={() => {
+              onSplitLeaf?.(node.id, "vertical");
+              setContextMenu(null);
+            }}
+            onSplitV={() => {
+              onSplitLeaf?.(node.id, "horizontal");
+              setContextMenu(null);
+            }}
+          />
+        )}
       </div>
     );
   }
@@ -58,6 +128,9 @@ export function SplitPane({
           renderLeaf={renderLeaf}
           focusedId={focusedId}
           onFocusLeaf={onFocusLeaf}
+          leafCount={leafCount}
+          onCloseLeaf={onCloseLeaf}
+          onSplitLeaf={onSplitLeaf}
         />
       }
       second={
@@ -67,6 +140,9 @@ export function SplitPane({
           renderLeaf={renderLeaf}
           focusedId={focusedId}
           onFocusLeaf={onFocusLeaf}
+          leafCount={leafCount}
+          onCloseLeaf={onCloseLeaf}
+          onSplitLeaf={onSplitLeaf}
         />
       }
     />
@@ -200,6 +276,56 @@ export function removeLeaf(root: PaneNode, leafId: string): PaneNode | null {
   if (newSecond === null) return newFirst;
 
   return { ...root, first: newFirst, second: newSecond };
+}
+
+// Context menu for individual panes
+function PaneContextMenu({
+  x,
+  y,
+  canClose,
+  canSplit,
+  onClose,
+  onSplitH,
+  onSplitV,
+}: {
+  x: number;
+  y: number;
+  canClose: boolean;
+  canSplit: boolean;
+  onClose: () => void;
+  onSplitH: () => void;
+  onSplitV: () => void;
+}) {
+  return (
+    <div
+      className="pane-context-menu"
+      style={{ left: x, top: y }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {canSplit && (
+        <>
+          <button className="pane-context-menu-item" onClick={onSplitV}>
+            Split Horizontally
+            <span className="pane-context-menu-shortcut">⌘⇧-</span>
+          </button>
+          <button className="pane-context-menu-item" onClick={onSplitH}>
+            Split Vertically
+            <span className="pane-context-menu-shortcut">⌘\</span>
+          </button>
+        </>
+      )}
+      {canSplit && canClose && <div className="pane-context-menu-divider" />}
+      {canClose && (
+        <button
+          className="pane-context-menu-item pane-context-menu-item-danger"
+          onClick={onClose}
+        >
+          Close Pane
+          <span className="pane-context-menu-shortcut">⌘⇧W</span>
+        </button>
+      )}
+    </div>
+  );
 }
 
 // Hook for split pane keyboard shortcuts

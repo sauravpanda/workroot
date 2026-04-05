@@ -17,7 +17,7 @@ import {
   removeLeaf,
   useSplitPaneShortcuts,
 } from "./TerminalSplitPane";
-import type { PaneNode } from "./TerminalSplitPane";
+import type { PaneNode, SplitDirection } from "./TerminalSplitPane";
 
 interface TerminalTab {
   id: string;
@@ -196,6 +196,35 @@ export function TerminalPanel({
     }
   }, [focusedPaneId, activeTab, updatePaneTree, setFocusedPaneId]);
 
+  const handleClosePaneById = useCallback(
+    (paneId: string) => {
+      if (!activeTab) return;
+      const leafIds = collectLeafIds(activeTab.paneTree);
+      if (leafIds.length <= 1) return;
+      const newTree = removeLeaf(activeTab.paneTree, paneId);
+      if (newTree) {
+        updatePaneTree(newTree);
+        if (focusedPaneId === paneId) {
+          setFocusedPaneId(collectLeafIds(newTree)[0] ?? null);
+        }
+      }
+    },
+    [activeTab, focusedPaneId, updatePaneTree, setFocusedPaneId],
+  );
+
+  const handleSplitLeaf = useCallback(
+    (paneId: string, direction: SplitDirection) => {
+      if (!activeTab) return;
+      const leafIds = collectLeafIds(activeTab.paneTree);
+      if (leafIds.length >= 4) return;
+      const newId = newPaneId();
+      const newTree = splitLeaf(activeTab.paneTree, paneId, direction, newId);
+      updatePaneTree(newTree);
+      setFocusedPaneId(newId);
+    },
+    [activeTab, updatePaneTree, setFocusedPaneId],
+  );
+
   useSplitPaneShortcuts(handleSplitH, handleSplitV, handleClosePane);
 
   return (
@@ -292,6 +321,11 @@ export function TerminalPanel({
                       ? setFocusedPaneId
                       : () => {}
                   }
+                  leafCount={collectLeafIds(tab.paneTree).length}
+                  onCloseLeaf={
+                    isActivePathAndTab ? handleClosePaneById : undefined
+                  }
+                  onSplitLeaf={isActivePathAndTab ? handleSplitLeaf : undefined}
                 />
               </div>
             );
