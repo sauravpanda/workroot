@@ -37,6 +37,7 @@ fn row_to_info(row: queries::WorktreeRow) -> WorktreeInfo {
         port: row.port,
         created_at: row.created_at,
         deleted_at: row.deleted_at,
+        hidden_at: row.hidden_at,
     }
 }
 
@@ -253,6 +254,32 @@ pub fn get_worktree_delete_warnings(
     })
 }
 
+/// Hides a worktree from the sidebar without archiving or deleting it.
+#[tauri::command]
+pub fn hide_worktree(db: State<'_, AppDb>, worktree_id: i64) -> Result<bool, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    queries::hide_worktree(&conn, worktree_id).map_err(|e| format!("DB error: {}", e))
+}
+
+/// Unhides a previously hidden worktree, making it visible in the sidebar again.
+#[tauri::command]
+pub fn unhide_worktree(db: State<'_, AppDb>, worktree_id: i64) -> Result<bool, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    queries::unhide_worktree(&conn, worktree_id).map_err(|e| format!("DB error: {}", e))
+}
+
+/// Lists hidden worktrees for a project.
+#[tauri::command]
+pub fn list_hidden_worktrees(
+    db: State<'_, AppDb>,
+    project_id: i64,
+) -> Result<Vec<WorktreeInfo>, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
+    let rows = queries::list_hidden_worktrees(&conn, project_id)
+        .map_err(|e| format!("DB error: {}", e))?;
+    Ok(rows.into_iter().map(row_to_info).collect())
+}
+
 /// Gets the current status of a worktree (dirty/clean, exists on disk).
 #[tauri::command]
 pub fn get_worktree_status(db: State<'_, AppDb>, worktree_id: i64) -> Result<WorktreeInfo, String> {
@@ -280,5 +307,6 @@ pub fn get_worktree_status(db: State<'_, AppDb>, worktree_id: i64) -> Result<Wor
         port: row.port,
         created_at: row.created_at,
         deleted_at: row.deleted_at,
+        hidden_at: row.hidden_at,
     })
 }

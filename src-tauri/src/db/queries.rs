@@ -26,6 +26,7 @@ pub struct WorktreeRow {
     pub port: Option<i64>,
     pub created_at: String,
     pub deleted_at: Option<String>,
+    pub hidden_at: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -190,7 +191,7 @@ pub fn insert_worktree(
 
 pub fn get_worktree(conn: &Connection, id: i64) -> Result<Option<WorktreeRow>, rusqlite::Error> {
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at
+        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at, hidden_at
          FROM worktrees WHERE id = ?1",
     )?;
     let mut rows = stmt.query_map(params![id], |row| {
@@ -203,6 +204,7 @@ pub fn get_worktree(conn: &Connection, id: i64) -> Result<Option<WorktreeRow>, r
             port: row.get(5)?,
             created_at: row.get(6)?,
             deleted_at: row.get(7)?,
+            hidden_at: row.get(8)?,
         })
     })?;
     match rows.next() {
@@ -211,14 +213,14 @@ pub fn get_worktree(conn: &Connection, id: i64) -> Result<Option<WorktreeRow>, r
     }
 }
 
-/// Returns only active (non-archived) worktrees for a project.
+/// Returns only active (non-archived, non-hidden) worktrees for a project.
 pub fn list_worktrees(
     conn: &Connection,
     project_id: i64,
 ) -> Result<Vec<WorktreeRow>, rusqlite::Error> {
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at
-         FROM worktrees WHERE project_id = ?1 AND deleted_at IS NULL ORDER BY created_at DESC",
+        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at, hidden_at
+         FROM worktrees WHERE project_id = ?1 AND deleted_at IS NULL AND hidden_at IS NULL ORDER BY created_at DESC",
     )?;
     let rows = stmt.query_map(params![project_id], |row| {
         Ok(WorktreeRow {
@@ -230,6 +232,7 @@ pub fn list_worktrees(
             port: row.get(5)?,
             created_at: row.get(6)?,
             deleted_at: row.get(7)?,
+            hidden_at: row.get(8)?,
         })
     })?;
     rows.collect()
@@ -241,7 +244,7 @@ pub fn list_all_worktrees(
     project_id: i64,
 ) -> Result<Vec<WorktreeRow>, rusqlite::Error> {
     let mut stmt = conn.prepare(
-        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at
+        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at, hidden_at
          FROM worktrees WHERE project_id = ?1 ORDER BY created_at DESC",
     )?;
     let rows = stmt.query_map(params![project_id], |row| {
@@ -254,9 +257,53 @@ pub fn list_all_worktrees(
             port: row.get(5)?,
             created_at: row.get(6)?,
             deleted_at: row.get(7)?,
+            hidden_at: row.get(8)?,
         })
     })?;
     rows.collect()
+}
+
+/// Returns only hidden (non-archived) worktrees for a project.
+pub fn list_hidden_worktrees(
+    conn: &Connection,
+    project_id: i64,
+) -> Result<Vec<WorktreeRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, project_id, branch_name, path, status, port, created_at, deleted_at, hidden_at
+         FROM worktrees WHERE project_id = ?1 AND deleted_at IS NULL AND hidden_at IS NOT NULL ORDER BY hidden_at DESC",
+    )?;
+    let rows = stmt.query_map(params![project_id], |row| {
+        Ok(WorktreeRow {
+            id: row.get(0)?,
+            project_id: row.get(1)?,
+            branch_name: row.get(2)?,
+            path: row.get(3)?,
+            status: row.get(4)?,
+            port: row.get(5)?,
+            created_at: row.get(6)?,
+            deleted_at: row.get(7)?,
+            hidden_at: row.get(8)?,
+        })
+    })?;
+    rows.collect()
+}
+
+/// Hides a worktree from the sidebar without archiving or deleting it.
+pub fn hide_worktree(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute(
+        "UPDATE worktrees SET hidden_at = datetime('now') WHERE id = ?1 AND deleted_at IS NULL AND hidden_at IS NULL",
+        params![id],
+    )?;
+    Ok(affected > 0)
+}
+
+/// Unhides a previously hidden worktree, making it visible in the sidebar again.
+pub fn unhide_worktree(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute(
+        "UPDATE worktrees SET hidden_at = NULL WHERE id = ?1 AND hidden_at IS NOT NULL",
+        params![id],
+    )?;
+    Ok(affected > 0)
 }
 
 /// Soft-deletes a worktree by recording the deletion timestamp and marking it archived.

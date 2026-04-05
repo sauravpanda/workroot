@@ -75,6 +75,8 @@ fn run_migrations(conn: &Connection) -> Result<(), rusqlite::Error> {
     conn.execute_batch(SCHEMA)?;
     // Add deleted_at to existing databases; ignore error if column already exists.
     let _ = conn.execute_batch("ALTER TABLE worktrees ADD COLUMN deleted_at TEXT DEFAULT NULL;");
+    // Add hidden_at to existing databases; ignore error if column already exists.
+    let _ = conn.execute_batch("ALTER TABLE worktrees ADD COLUMN hidden_at TEXT DEFAULT NULL;");
     Ok(())
 }
 
