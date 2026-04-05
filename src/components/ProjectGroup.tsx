@@ -21,7 +21,14 @@ export function ProjectGroup({
   project,
   defaultExpanded = false,
 }: ProjectGroupProps) {
-  const { selectedProjectId, setSelectedProjectId } = useUiStore();
+  const {
+    selectedProjectId,
+    setSelectedProjectId,
+    setSelectedWorktreeId,
+    setSelectedWorktreePath,
+    setSelectedWorktreeName,
+    setShowSettings,
+  } = useUiStore();
   const isSelected = selectedProjectId === project.id;
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [showNewWorktree, setShowNewWorktree] = useState(false);
@@ -51,11 +58,25 @@ export function ProjectGroup({
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!newBranchName.trim()) return;
-      await createWorktree(newBranchName.trim(), createNew);
+      const newWorktree = await createWorktree(newBranchName.trim(), createNew);
       setNewBranchName("");
       setShowNewWorktree(false);
+      if (newWorktree) {
+        setSelectedWorktreeId(newWorktree.id);
+        setSelectedWorktreePath(newWorktree.path);
+        setSelectedWorktreeName(newWorktree.branch_name);
+        setShowSettings(false);
+      }
     },
-    [newBranchName, createNew, createWorktree],
+    [
+      newBranchName,
+      createNew,
+      createWorktree,
+      setSelectedWorktreeId,
+      setSelectedWorktreePath,
+      setSelectedWorktreeName,
+      setShowSettings,
+    ],
   );
 
   const handleDelete = useCallback(
