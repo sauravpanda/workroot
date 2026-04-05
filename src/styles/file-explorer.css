@@ -317,11 +317,21 @@
   flex-shrink: 0;
 }
 
-.fe-status--modified  { color: var(--warning); }
-.fe-status--added     { color: var(--success); }
-.fe-status--deleted   { color: var(--danger); }
-.fe-status--renamed   { color: var(--accent); }
-.fe-status--untracked { color: var(--text-tertiary); }
+.fe-status--modified {
+  color: var(--warning);
+}
+.fe-status--added {
+  color: var(--success);
+}
+.fe-status--deleted {
+  color: var(--danger);
+}
+.fe-status--renamed {
+  color: var(--accent);
+}
+.fe-status--untracked {
+  color: var(--text-tertiary);
+}
 
 /* ── Right: preview pane ── */
 

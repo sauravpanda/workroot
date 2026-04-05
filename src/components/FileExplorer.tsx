@@ -32,22 +32,22 @@ interface FileExplorerProps {
 /* ------------------------------------------------------------------ */
 
 const FILE_ICONS: Record<string, { icon: string; color: string }> = {
-  ts:   { icon: "TS", color: "var(--accent)" },
-  tsx:  { icon: "TX", color: "var(--accent)" },
-  js:   { icon: "JS", color: "var(--warning)" },
-  jsx:  { icon: "JX", color: "var(--warning)" },
-  rs:   { icon: "RS", color: "#dea584" },
-  py:   { icon: "PY", color: "#4b8bbe" },
-  go:   { icon: "GO", color: "#00add8" },
+  ts: { icon: "TS", color: "var(--accent)" },
+  tsx: { icon: "TX", color: "var(--accent)" },
+  js: { icon: "JS", color: "var(--warning)" },
+  jsx: { icon: "JX", color: "var(--warning)" },
+  rs: { icon: "RS", color: "#dea584" },
+  py: { icon: "PY", color: "#4b8bbe" },
+  go: { icon: "GO", color: "#00add8" },
   json: { icon: "{}", color: "var(--text-tertiary)" },
   toml: { icon: "TM", color: "var(--text-tertiary)" },
   yaml: { icon: "YM", color: "var(--text-tertiary)" },
-  yml:  { icon: "YM", color: "var(--text-tertiary)" },
-  md:   { icon: "MD", color: "var(--text-secondary)" },
-  css:  { icon: "CS", color: "#264de4" },
+  yml: { icon: "YM", color: "var(--text-tertiary)" },
+  md: { icon: "MD", color: "var(--text-secondary)" },
+  css: { icon: "CS", color: "#264de4" },
   html: { icon: "HT", color: "#e34c26" },
-  sql:  { icon: "SQ", color: "#e38d13" },
-  sh:   { icon: "SH", color: "var(--success)" },
+  sql: { icon: "SQ", color: "#e38d13" },
+  sh: { icon: "SH", color: "var(--success)" },
   lock: { icon: "LK", color: "var(--text-tertiary)" },
 };
 
@@ -69,10 +69,16 @@ function fileIconFor(name: string): { icon: string; color: string } {
 }
 
 function toRelPath(absPath: string, cwd: string): string {
-  return absPath.startsWith(cwd + "/") ? absPath.slice(cwd.length + 1) : absPath;
+  return absPath.startsWith(cwd + "/")
+    ? absPath.slice(cwd.length + 1)
+    : absPath;
 }
 
-function buildNodes(entries: DirEntry[], cwd: string, depth: number): FlatNode[] {
+function buildNodes(
+  entries: DirEntry[],
+  cwd: string,
+  depth: number,
+): FlatNode[] {
   return entries.map((e) => ({
     name: e.name,
     absPath: e.path,
@@ -87,9 +93,15 @@ function buildNodes(entries: DirEntry[], cwd: string, depth: number): FlatNode[]
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function FileExplorer({ cwd, onClose, onFileSelect }: FileExplorerProps) {
+export function FileExplorer({
+  cwd,
+  onClose,
+  onFileSelect,
+}: FileExplorerProps) {
   const [flatNodes, setFlatNodes] = useState<FlatNode[]>([]);
-  const [gitStatuses, setGitStatuses] = useState<Map<string, string>>(new Map());
+  const [gitStatuses, setGitStatuses] = useState<Map<string, string>>(
+    new Map(),
+  );
   const [loadingPaths, setLoadingPaths] = useState<Set<string>>(new Set());
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -109,10 +121,12 @@ export function FileExplorer({ cwd, onClose, onFileSelect }: FileExplorerProps) 
   useEffect(() => {
     const init = async () => {
       const [rootEntries, statusRecord] = await Promise.all([
-        invoke<DirEntry[]>("list_dir", { dirPath: cwd }).catch(() => [] as DirEntry[]),
+        invoke<DirEntry[]>("list_dir", { dirPath: cwd }).catch(
+          () => [] as DirEntry[],
+        ),
         invoke<Record<string, string>>("get_worktree_file_statuses", {
           worktreePath: cwd,
-        }).catch(() => ({} as Record<string, string>)),
+        }).catch(() => ({}) as Record<string, string>),
       ]);
       childrenCache.current.set(cwd, rootEntries);
       setFlatNodes(buildNodes(rootEntries, cwd, 0));
@@ -213,7 +227,9 @@ export function FileExplorer({ cwd, onClose, onFileSelect }: FileExplorerProps) 
     const q = filter.trim().toLowerCase();
     if (!q) return flatNodes;
     // In search mode show only files whose relative path contains the query
-    return flatNodes.filter((n) => !n.isDir && n.relPath.toLowerCase().includes(q));
+    return flatNodes.filter(
+      (n) => !n.isDir && n.relPath.toLowerCase().includes(q),
+    );
   }, [flatNodes, filter]);
 
   const isSearchMode = filter.trim().length > 0;
@@ -236,7 +252,10 @@ export function FileExplorer({ cwd, onClose, onFileSelect }: FileExplorerProps) 
 
   return (
     <div className="fe-backdrop" onClick={onClose}>
-      <div className="fe-panel fe-panel--wide" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="fe-panel fe-panel--wide"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* ── Header ── */}
         <div className="fe-header">
           <div className="fe-header-left">
@@ -301,7 +320,9 @@ export function FileExplorer({ cwd, onClose, onFileSelect }: FileExplorerProps) 
               ) : (
                 visibleNodes.map((node) => {
                   const statusLetter = gitStatuses.get(node.relPath);
-                  const statusStyle = statusLetter ? STATUS_STYLES[statusLetter] : null;
+                  const statusStyle = statusLetter
+                    ? STATUS_STYLES[statusLetter]
+                    : null;
                   const isSelected = node.absPath === selectedPath;
                   const isLoading = loadingPaths.has(node.absPath);
                   const { icon, color } = fileIconFor(node.name);
@@ -382,7 +403,9 @@ export function FileExplorer({ cwd, onClose, onFileSelect }: FileExplorerProps) 
                     {fileContent.split("\n").map((line, i) => (
                       <div key={i} className="fe-code-line">
                         <span className="fe-line-num">{i + 1}</span>
-                        <span className="fe-line-content">{line || "\u200b"}</span>
+                        <span className="fe-line-content">
+                          {line || "\u200b"}
+                        </span>
                       </div>
                     ))}
                   </pre>
