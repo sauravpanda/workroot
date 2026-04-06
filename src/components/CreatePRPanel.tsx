@@ -34,6 +34,14 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
 
   const init = useCallback(async () => {
     setLoading(true);
+    setTitle("");
+    setBody("");
+    setDraft(false);
+    setExistingPR(null);
+    setCreatedPR(null);
+    setError(null);
+    setCreating(false);
+    setGeneratingDesc(false);
     try {
       const [existing, defaultBranch, template] = await Promise.all([
         invoke<ExistingPR | null>("get_pr_for_branch", { worktreeId }),
