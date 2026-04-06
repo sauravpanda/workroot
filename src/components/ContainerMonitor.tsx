@@ -25,6 +25,8 @@ export function ContainerMonitor({ onClose }: ContainerMonitorProps) {
   const [logsLoading, setLogsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const expandedLogsRef = useRef<string | null>(null);
+  const logFetchGenRef = useRef(0);
 
   const loadStats = useCallback(async () => {
     try {
@@ -60,28 +62,30 @@ export function ContainerMonitor({ onClose }: ContainerMonitorProps) {
     [loadStats],
   );
 
-  const handleToggleLogs = useCallback(
-    async (containerId: string) => {
-      if (expandedLogs === containerId) {
-        setExpandedLogs(null);
-        setLogs("");
-        return;
-      }
-      setExpandedLogs(containerId);
-      setLogsLoading(true);
-      try {
-        const result = await invoke<string>("get_container_logs", {
-          containerId,
-          tail: 100,
-        });
-        setLogs(result);
-      } catch {
-        setLogs("Failed to fetch logs.");
-      }
-      setLogsLoading(false);
-    },
-    [expandedLogs],
-  );
+  const handleToggleLogs = useCallback(async (containerId: string) => {
+    if (expandedLogsRef.current === containerId) {
+      expandedLogsRef.current = null;
+      setExpandedLogs(null);
+      setLogs("");
+      return;
+    }
+    expandedLogsRef.current = containerId;
+    setExpandedLogs(containerId);
+    setLogsLoading(true);
+    const gen = ++logFetchGenRef.current;
+    try {
+      const result = await invoke<string>("get_container_logs", {
+        containerId,
+        tail: 100,
+      });
+      if (logFetchGenRef.current !== gen) return;
+      setLogs(result);
+    } catch {
+      if (logFetchGenRef.current !== gen) return;
+      setLogs("Failed to fetch logs.");
+    }
+    setLogsLoading(false);
+  }, []);
 
   return (
     <div className="cmon-backdrop" onClick={onClose}>
