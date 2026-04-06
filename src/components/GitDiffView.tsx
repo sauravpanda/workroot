@@ -3,7 +3,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { DiffViewer } from "./DiffViewer";
 import type { FileDiff } from "./DiffViewer";
 import { CommitPanel } from "./CommitPanel";
-import "../styles/git-diff.css";
 
 interface ChangedFile {
   path: string;
@@ -13,9 +12,23 @@ interface ChangedFile {
 
 interface GitDiffViewProps {
   worktreeId: number;
+  onCreatePR?: () => void;
 }
 
-export function GitDiffView({ worktreeId }: GitDiffViewProps) {
+const STATUS_STYLES: Record<string, string> = {
+  added: "text-[#4ade80] bg-[rgba(74,222,128,0.1)]",
+  untracked: "text-[#4ade80] bg-[rgba(74,222,128,0.1)]",
+  modified: "text-[#60a5fa] bg-[rgba(96,165,250,0.1)]",
+  deleted: "text-[#f87171] bg-[rgba(248,113,113,0.1)]",
+  renamed: "text-[#c084fc] bg-[rgba(192,132,252,0.1)]",
+};
+
+function statusLabel(status: string): string {
+  if (status === "untracked") return "U";
+  return status[0].toUpperCase();
+}
+
+export function GitDiffView({ worktreeId, onCreatePR }: GitDiffViewProps) {
   const [files, setFiles] = useState<ChangedFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<{
     path: string;
@@ -70,15 +83,9 @@ export function GitDiffView({ worktreeId }: GitDiffViewProps) {
   const handleStageFile = async (file: ChangedFile) => {
     try {
       if (file.staged) {
-        await invoke("unstage_files", {
-          worktreeId,
-          files: [file.path],
-        });
+        await invoke("unstage_files", { worktreeId, files: [file.path] });
       } else {
-        await invoke("stage_files", {
-          worktreeId,
-          files: [file.path],
-        });
+        await invoke("stage_files", { worktreeId, files: [file.path] });
       }
       await loadFiles();
     } catch (err) {
@@ -115,15 +122,19 @@ export function GitDiffView({ worktreeId }: GitDiffViewProps) {
   };
 
   if (loading) {
-    return <div className="git-diff-loading">Loading changes...</div>;
+    return (
+      <div className="flex h-[200px] items-center justify-center text-[var(--text-muted)]">
+        Loading changes...
+      </div>
+    );
   }
 
   if (files.length === 0) {
     return (
-      <div className="git-diff-empty">
-        <div className="git-diff-empty-icon">&#10003;</div>
+      <div className="flex h-[200px] flex-col items-center justify-center text-[var(--text-muted)]">
+        <div className="mb-3 text-[32px] font-bold opacity-40">&#10003;</div>
         <p>Working tree clean</p>
-        <p className="git-diff-empty-hint">No uncommitted changes</p>
+        <p className="text-xs opacity-70">No uncommitted changes</p>
       </div>
     );
   }
@@ -132,65 +143,84 @@ export function GitDiffView({ worktreeId }: GitDiffViewProps) {
   const unstagedFiles = files.filter((f) => !f.staged);
 
   return (
-    <div className="git-diff">
-      <div className="git-diff-header">
-        <span className="git-diff-title">
+    <div className="flex h-full flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-[var(--border)] px-3 py-2">
+        <span className="text-[13px] font-semibold text-[var(--text-primary)]">
           {files.length} changed file{files.length !== 1 ? "s" : ""}
         </span>
-        <div className="git-diff-actions">
+        <div className="flex gap-1.5">
           <button
-            className="git-diff-btn"
+            className="cursor-pointer rounded-[3px] border border-[var(--border)] bg-transparent px-2.5 py-1 text-xs text-[var(--text-muted)] transition-colors duration-100 hover:text-[var(--text-primary)] disabled:cursor-default disabled:opacity-40"
             onClick={handleStageAll}
             disabled={unstagedFiles.length === 0}
           >
             Stage All
           </button>
           <button
-            className="git-diff-btn"
+            className="cursor-pointer rounded-[3px] border border-[var(--border)] bg-transparent px-2.5 py-1 text-xs text-[var(--text-muted)] transition-colors duration-100 hover:text-[var(--text-primary)] disabled:cursor-default disabled:opacity-40"
             onClick={handleUnstageAll}
             disabled={stagedFiles.length === 0}
           >
             Unstage All
           </button>
-          <button className="git-diff-btn" onClick={loadFiles}>
+          <button
+            className="cursor-pointer rounded-[3px] border border-[var(--border)] bg-transparent px-2.5 py-1 text-xs text-[var(--text-muted)] transition-colors duration-100 hover:text-[var(--text-primary)]"
+            onClick={loadFiles}
+          >
             Refresh
           </button>
+          {onCreatePR && (
+            <button
+              className="cursor-pointer rounded-[3px] border border-[var(--accent-muted)] bg-transparent px-2.5 py-1 text-xs text-[var(--accent)] transition-colors duration-100 hover:bg-[var(--accent-muted)]"
+              onClick={onCreatePR}
+            >
+              Create PR ↗
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="git-diff-body">
-        <div className="git-diff-file-list">
+      {/* Body */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* File list */}
+        <div className="flex w-[260px] flex-col overflow-y-auto border-r border-[var(--border)]">
           {stagedFiles.length > 0 && (
             <>
-              <div className="git-diff-section-header">
+              <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-[11px] font-semibold uppercase text-[var(--text-muted)]">
                 Staged
-                <span className="git-diff-section-count">
+                <span className="rounded-full bg-[var(--bg-elevated)] px-1.5 py-px text-[10px]">
                   {stagedFiles.length}
                 </span>
               </div>
               {stagedFiles.map((file) => (
                 <div
                   key={`staged-${file.path}`}
-                  className={`git-diff-file-item ${
+                  className={`flex cursor-pointer items-center gap-2 border-l-2 px-3 py-[5px] text-[13px] transition-colors duration-100 hover:bg-[var(--bg-hover)] ${
                     selectedFile?.path === file.path &&
                     selectedFile?.staged === true
-                      ? "active"
-                      : ""
+                      ? "border-l-[var(--accent)] bg-[var(--bg-hover)]"
+                      : "border-l-transparent"
                   }`}
                   onClick={() => handleFileClick(file)}
                 >
                   <input
                     type="checkbox"
-                    className="git-diff-file-checkbox"
+                    className="size-3.5 cursor-pointer accent-[var(--accent)]"
                     checked={true}
                     onChange={() => handleStageFile(file)}
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <span className="git-diff-file-name" title={file.path}>
+                  <span
+                    className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[var(--text-primary)]"
+                    title={file.path}
+                  >
                     {file.path}
                   </span>
-                  <span className={`git-diff-file-status ${file.status}`}>
-                    {file.status[0].toUpperCase()}
+                  <span
+                    className={`rounded-[3px] px-[5px] py-px text-[11px] font-semibold ${STATUS_STYLES[file.status] ?? "text-[var(--text-muted)]"}`}
+                  >
+                    {statusLabel(file.status)}
                   </span>
                 </div>
               ))}
@@ -199,37 +229,40 @@ export function GitDiffView({ worktreeId }: GitDiffViewProps) {
 
           {unstagedFiles.length > 0 && (
             <>
-              <div className="git-diff-section-header">
+              <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-[11px] font-semibold uppercase text-[var(--text-muted)]">
                 Changes
-                <span className="git-diff-section-count">
+                <span className="rounded-full bg-[var(--bg-elevated)] px-1.5 py-px text-[10px]">
                   {unstagedFiles.length}
                 </span>
               </div>
               {unstagedFiles.map((file) => (
                 <div
                   key={`unstaged-${file.path}`}
-                  className={`git-diff-file-item ${
+                  className={`flex cursor-pointer items-center gap-2 border-l-2 px-3 py-[5px] text-[13px] transition-colors duration-100 hover:bg-[var(--bg-hover)] ${
                     selectedFile?.path === file.path &&
                     selectedFile?.staged === false
-                      ? "active"
-                      : ""
+                      ? "border-l-[var(--accent)] bg-[var(--bg-hover)]"
+                      : "border-l-transparent"
                   }`}
                   onClick={() => handleFileClick(file)}
                 >
                   <input
                     type="checkbox"
-                    className="git-diff-file-checkbox"
+                    className="size-3.5 cursor-pointer accent-[var(--accent)]"
                     checked={false}
                     onChange={() => handleStageFile(file)}
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <span className="git-diff-file-name" title={file.path}>
+                  <span
+                    className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[var(--text-primary)]"
+                    title={file.path}
+                  >
                     {file.path}
                   </span>
-                  <span className={`git-diff-file-status ${file.status}`}>
-                    {file.status === "untracked"
-                      ? "U"
-                      : file.status[0].toUpperCase()}
+                  <span
+                    className={`rounded-[3px] px-[5px] py-px text-[11px] font-semibold ${STATUS_STYLES[file.status] ?? "text-[var(--text-muted)]"}`}
+                  >
+                    {statusLabel(file.status)}
                   </span>
                 </div>
               ))}
@@ -237,13 +270,16 @@ export function GitDiffView({ worktreeId }: GitDiffViewProps) {
           )}
         </div>
 
-        <div className="git-diff-content">
+        {/* Diff content */}
+        <div className="flex-1 overflow-y-auto">
           {diffLoading ? (
-            <div className="git-diff-placeholder">Loading diff...</div>
+            <div className="flex h-[200px] items-center justify-center text-[13px] text-[var(--text-muted)]">
+              Loading diff...
+            </div>
           ) : diff ? (
             <DiffViewer diff={diff} />
           ) : (
-            <div className="git-diff-placeholder">
+            <div className="flex h-[200px] items-center justify-center text-[13px] text-[var(--text-muted)]">
               Select a file to view its diff
             </div>
           )}
