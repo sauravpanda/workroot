@@ -21,14 +21,11 @@
 }
 
 .onboarding-btn {
-  display: block;
+  display: flex;
   width: 100%;
-  padding: 8px 16px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  font-size: 13px;
-  cursor: pointer;
+  justify-content: center;
   margin-bottom: 8px;
+  font-size: 13px;
 }
 
 .onboarding-primary {
@@ -37,27 +34,18 @@
   border-color: var(--accent);
 }
 
-.onboarding-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.onboarding-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 .onboarding-secondary {
-  background: var(--bg-secondary);
   color: var(--text-primary);
 }
 
 .onboarding-input {
-  display: block;
-  width: 100%;
-  padding: 8px 10px;
   margin-bottom: 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
   font-size: 13px;
-  box-sizing: border-box;
 }
 
 .onboarding-status {

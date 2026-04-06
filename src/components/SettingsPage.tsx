@@ -3,6 +3,10 @@ import { invoke } from "@tauri-apps/api/core";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { Dialog, DialogContent } from "./ui/dialog";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -157,16 +161,16 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   function renderTextField(config: TextSettingConfig) {
     return (
       <div key={config.key} className="settings-page__field">
-        <label
-          className="settings-page__field-label"
+        <Label
           htmlFor={`sp-${config.key}`}
+          className="settings-page__field-label"
         >
           {config.label}
-        </label>
+        </Label>
         <div className="settings-page__field-row">
-          <input
+          <Input
             id={`sp-${config.key}`}
-            className="settings-page__field-input"
+            className="settings-page__field-input h-8 text-xs"
             type={config.type}
             value={values[config.key] || ""}
             onChange={(e) => handleChange(config.key, e.target.value)}
@@ -175,13 +179,15 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               if (e.key === "Enter") handleSave(config.key);
             }}
           />
-          <button
-            className="settings-page__save-btn"
+          <Button
+            variant="outline"
+            size="sm"
+            className="settings-page__save-btn h-8 text-xs shrink-0"
             onClick={() => handleSave(config.key)}
             disabled={!values[config.key]?.trim()}
           >
             {saved[config.key] ? "Saved" : "Save"}
-          </button>
+          </Button>
         </div>
         <p className="settings-page__field-desc">{config.description}</p>
       </div>
@@ -198,14 +204,11 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
             {config.description}
           </span>
         </div>
-        <button
-          className={`settings-page__toggle ${isOn ? "settings-page__toggle--on" : ""}`}
-          onClick={() => handleToggle(config.key)}
-          role="switch"
-          aria-checked={isOn}
-        >
-          <span className="settings-page__toggle-knob" />
-        </button>
+        <Switch
+          checked={isOn}
+          onCheckedChange={() => handleToggle(config.key)}
+          aria-label={config.label}
+        />
         {saved[config.key] && (
           <span className="settings-page__saved-indicator">Saved</span>
         )}
@@ -216,12 +219,14 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   function renderSectionActions(keys: string[]) {
     return (
       <div className="settings-page__section-actions">
-        <button
-          className="settings-page__reset-btn"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="settings-page__reset-btn text-xs text-text-muted hover:text-text-secondary"
           onClick={() => handleResetSection(keys)}
         >
           Reset to defaults
-        </button>
+        </Button>
       </div>
     );
   }
@@ -270,8 +275,10 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                 Manually check for a new version of Workroot.
               </p>
               <div className="settings-page__update-row">
-                <button
-                  className="settings-page__btn"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="settings-page__btn text-xs"
                   onClick={handleCheckUpdate}
                   disabled={
                     updateStatus === "checking" ||
@@ -283,7 +290,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                     : updateStatus === "downloading"
                       ? "Installing…"
                       : "Check for Updates"}
-                </button>
+                </Button>
                 {updateStatus === "up-to-date" && (
                   <span className="settings-page__update-ok">
                     You're up to date.
@@ -379,27 +386,33 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
             </p>
 
             <div className="settings-page__button-group">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 className="settings-page__action-btn"
                 onClick={() => dispatchCustomEvent("open-theme-picker")}
               >
                 <PaletteIcon />
                 <span>Theme Picker</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 className="settings-page__action-btn"
                 onClick={() => dispatchCustomEvent("open-density-picker")}
               >
                 <LayoutIcon />
                 <span>Density Picker</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 className="settings-page__action-btn"
                 onClick={() => dispatchCustomEvent("open-custom-css-editor")}
               >
                 <CodeIcon />
                 <span>Custom CSS Editor</span>
-              </button>
+              </Button>
             </div>
 
             {renderTextField({
@@ -605,21 +618,24 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
         {/* Header */}
         <div className="settings-page__header">
           <h2 className="settings-page__title">Settings</h2>
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             className="settings-page__close-btn"
             onClick={onClose}
             title="Close settings"
           >
             <CloseIcon />
-          </button>
+          </Button>
         </div>
 
         <div className="settings-page__body">
           {/* Navigation sidebar */}
           <nav className="settings-page__nav">
             {SECTIONS.map((section) => (
-              <button
+              <Button
                 key={section.id}
+                variant="ghost"
                 className={`settings-page__nav-item ${activeSection === section.id ? "settings-page__nav-item--active" : ""}`}
                 onClick={() => setActiveSection(section.id)}
               >
@@ -627,7 +643,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                 <span className="settings-page__nav-label">
                   {section.label}
                 </span>
-              </button>
+              </Button>
             ))}
           </nav>
 

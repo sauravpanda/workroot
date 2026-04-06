@@ -49,25 +49,12 @@
 }
 
 .settings-page__close-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  background: none;
-  border: none;
-  border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  cursor: pointer;
-  transition:
-    background-color 0.12s,
-    color 0.12s;
 }
 
 .settings-page__close-btn:hover {
-  background-color: var(--bg-hover);
   color: var(--text-primary);
+  background-color: var(--bg-hover);
 }
 
 /* ── Body layout ── */
@@ -97,21 +84,14 @@
   gap: 10px;
   width: 100%;
   padding: 8px 12px;
-  font-family: var(--font-sans);
   font-size: 0.82em;
   font-weight: 400;
   color: var(--text-secondary);
-  background: none;
-  border: none;
   border-left: 2px solid transparent;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  cursor: pointer;
   text-align: left;
-  transition:
-    background-color 0.12s,
-    color 0.12s,
-    border-color 0.12s;
-  outline: none;
+  justify-content: flex-start;
+  height: auto;
 }
 
 .settings-page__nav-item:hover {
@@ -207,8 +187,6 @@
 
 .settings-page__field-label {
   display: block;
-  font-size: 0.8em;
-  font-weight: 500;
   margin-bottom: 5px;
   color: var(--text-primary);
 }
@@ -220,26 +198,7 @@
 
 .settings-page__field-input {
   flex: 1;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  font-size: 0.8em;
   font-family: var(--font-mono);
-  outline: none;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
-}
-
-.settings-page__field-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-muted);
-}
-
-.settings-page__field-input::placeholder {
-  color: var(--text-muted);
 }
 
 .settings-page__field-desc {
@@ -250,28 +209,8 @@
 }
 
 .settings-page__save-btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: var(--bg-base);
-  font-size: 0.75em;
-  font-weight: 500;
-  cursor: pointer;
   white-space: nowrap;
   min-width: 52px;
-  transition:
-    background-color 0.15s,
-    opacity 0.15s;
-}
-
-.settings-page__save-btn:hover {
-  background-color: var(--accent-hover);
-}
-
-.settings-page__save-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
 }
 
 /* ── Toggle switches ── */
@@ -308,39 +247,6 @@
   line-height: 1.4;
 }
 
-.settings-page__toggle {
-  position: relative;
-  width: 36px;
-  height: 20px;
-  padding: 0;
-  border: none;
-  border-radius: 10px;
-  background: var(--border-strong);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background-color 0.2s;
-}
-
-.settings-page__toggle--on {
-  background: var(--accent);
-}
-
-.settings-page__toggle-knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: white;
-  transition: transform 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-}
-
-.settings-page__toggle--on .settings-page__toggle-knob {
-  transform: translateX(16px);
-}
-
 .settings-page__saved-indicator {
   font-size: 0.68em;
   color: var(--success);
@@ -357,25 +263,9 @@
 }
 
 .settings-page__action-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 10px 16px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text-primary);
-  font-size: 0.82em;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background-color 0.12s,
-    border-color 0.12s;
-}
-
-.settings-page__action-btn:hover {
-  background-color: var(--bg-hover);
-  border-color: var(--border-strong);
+  height: auto;
+  gap: 8px;
 }
 
 .settings-page__action-btn svg {
@@ -393,48 +283,7 @@
   gap: 8px;
 }
 
-.settings-page__reset-btn {
-  padding: 6px 14px;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text-secondary);
-  font-size: 0.75em;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background-color 0.12s,
-    color 0.12s;
-}
-
-.settings-page__reset-btn:hover {
-  background-color: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.settings-page__btn {
-  padding: 6px 14px;
-  background: var(--accent-muted);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  color: var(--accent);
-  font-size: 0.78em;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background-color 0.12s,
-    opacity 0.12s;
-}
-
-.settings-page__btn:hover:not(:disabled) {
-  background-color: var(--accent);
-  color: var(--bg-base);
-}
-
-.settings-page__btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* ── Update row ── */
 
 .settings-page__update-row {
   display: flex;
