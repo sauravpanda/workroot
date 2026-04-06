@@ -55,16 +55,25 @@ export function NotificationCenter({ open, onClose }: NotificationCenterProps) {
     }
   }, [open, loadNotifications]);
 
-  const handleMarkRead = useCallback(async (notifId: string) => {
-    try {
-      await invoke("mark_notification_read", { notificationId: notifId });
+  const handleMarkRead = useCallback(
+    async (notifId: string) => {
+      const previousNotifications = [...notifications];
+
+      // Optimistic update
       setNotifications((prev) =>
         prev.map((n) => (n.id === notifId ? { ...n, unread: false } : n)),
       );
-    } catch {
-      // failed to mark read
-    }
-  }, []);
+
+      try {
+        await invoke("mark_notification_read", { notificationId: notifId });
+      } catch (e) {
+        // Roll back to previous state on failure
+        setNotifications(previousNotifications);
+        setError(`Failed to mark notification as read: ${String(e)}`);
+      }
+    },
+    [notifications],
+  );
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
