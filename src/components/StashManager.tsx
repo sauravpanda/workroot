@@ -20,6 +20,7 @@ export function StashManager({ worktreeId, onClose }: StashManagerProps) {
   const [message, setMessage] = useState("");
   const [includeUntracked, setIncludeUntracked] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [confirmDropIndex, setConfirmDropIndex] = useState<number | null>(null);
 
   const loadStashes = useCallback(async () => {
     setLoading(true);
@@ -86,6 +87,8 @@ export function StashManager({ worktreeId, onClose }: StashManagerProps) {
         await loadStashes();
       } catch {
         // drop failed
+      } finally {
+        setConfirmDropIndex(null);
       }
     },
     [worktreeId, loadStashes],
@@ -161,12 +164,29 @@ export function StashManager({ worktreeId, onClose }: StashManagerProps) {
                   >
                     Pop
                   </button>
-                  <button
-                    className="stash-action-btn stash-action-danger"
-                    onClick={() => handleDrop(stash.index)}
-                  >
-                    Drop
-                  </button>
+                  {confirmDropIndex === stash.index ? (
+                    <>
+                      <button
+                        className="stash-action-btn stash-action-danger"
+                        onClick={() => handleDrop(stash.index)}
+                      >
+                        Confirm Drop
+                      </button>
+                      <button
+                        className="stash-action-btn"
+                        onClick={() => setConfirmDropIndex(null)}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="stash-action-btn stash-action-danger"
+                      onClick={() => setConfirmDropIndex(stash.index)}
+                    >
+                      Drop
+                    </button>
+                  )}
                 </div>
               </div>
             ))
