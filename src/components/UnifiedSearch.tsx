@@ -106,6 +106,7 @@ export function UnifiedSearch({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchGenRef = useRef(0);
 
   const recentSearches = useMemo(
     () => (query ? [] : getRecentSearches()),
@@ -139,17 +140,22 @@ export function UnifiedSearch({
     }
 
     setSearching(true);
+    const generation = ++searchGenRef.current;
     debounceRef.current = setTimeout(async () => {
       try {
         const searchResults = await invoke<SearchResult[]>("unified_search", {
           query: trimmed,
         });
+        if (generation !== searchGenRef.current) return;
         setResults(searchResults);
         setSelectedIndex(0);
       } catch {
+        if (generation !== searchGenRef.current) return;
         setResults([]);
       } finally {
-        setSearching(false);
+        if (generation === searchGenRef.current) {
+          setSearching(false);
+        }
       }
     }, DEBOUNCE_MS);
 
