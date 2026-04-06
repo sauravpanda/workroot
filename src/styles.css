@@ -443,6 +443,11 @@ button:disabled {
   background: transparent;
 }
 
+/* Prevent layout shift when scrollbar appears/disappears */
+* {
+  scrollbar-gutter: stable;
+}
+
 /* ==========================================================
    Selection
    ========================================================== */
