@@ -213,7 +213,11 @@ pub async fn list_repo_pulls(
 ) -> Result<Vec<RepoPull>, String> {
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
     let token = auth::get_token_from_env_or_gh()?.unwrap_or_default();
-    let token_ref = if token.is_empty() { None } else { Some(token.as_str()) };
+    let token_ref = if token.is_empty() {
+        None
+    } else {
+        Some(token.as_str())
+    };
 
     let client = super::api_client()?;
     let url = format!(
@@ -248,7 +252,11 @@ pub async fn list_repo_issues(
 ) -> Result<Vec<RepoIssue>, String> {
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
     let token = auth::get_token_from_env_or_gh()?.unwrap_or_default();
-    let token_ref = if token.is_empty() { None } else { Some(token.as_str()) };
+    let token_ref = if token.is_empty() {
+        None
+    } else {
+        Some(token.as_str())
+    };
 
     let client = super::api_client()?;
     let url = format!(
@@ -290,7 +298,11 @@ pub async fn get_repo_activity(
 ) -> Result<Vec<RepoEvent>, String> {
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
     let token = auth::get_token_from_env_or_gh()?.unwrap_or_default();
-    let token_ref = if token.is_empty() { None } else { Some(token.as_str()) };
+    let token_ref = if token.is_empty() {
+        None
+    } else {
+        Some(token.as_str())
+    };
 
     let client = super::api_client()?;
     let url = format!(
