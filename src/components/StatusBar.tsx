@@ -36,13 +36,13 @@ export function StatusBar({
     const now = new Date();
     const msToNextMinute =
       (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+    let cleanup: (() => void) | undefined;
     const timeout = setTimeout(() => {
       update();
       const interval = setInterval(update, 60_000);
       cleanup = () => clearInterval(interval);
     }, msToNextMinute);
 
-    let cleanup: (() => void) | undefined;
     return () => {
       clearTimeout(timeout);
       cleanup?.();
