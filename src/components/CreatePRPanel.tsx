@@ -18,9 +18,10 @@ interface PrCreateResult {
 interface CreatePRPanelProps {
   worktreeId: number;
   branch: string;
+  onClose?: () => void;
 }
 
-export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
+export function CreatePRPanel({ worktreeId, branch, onClose }: CreatePRPanelProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [baseBranch, setBaseBranch] = useState("main");
@@ -62,6 +63,16 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
   useEffect(() => {
     init();
   }, [init]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && onClose) {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   const handleAiDescription = async () => {
     setGeneratingDesc(true);
@@ -135,6 +146,11 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
       <div className="create-pr">
         <div className="create-pr-header">
           <span className="create-pr-title">Pull Request</span>
+          {onClose && (
+            <button className="panel-dialog-close" onClick={onClose}>
+              &times;
+            </button>
+          )}
         </div>
         <div className="create-pr-success">
           <div className="create-pr-success-icon">
@@ -169,6 +185,11 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
       <div className="create-pr">
         <div className="create-pr-header">
           <span className="create-pr-title">Pull Request</span>
+          {onClose && (
+            <button className="panel-dialog-close" onClick={onClose}>
+              &times;
+            </button>
+          )}
           <div className="create-pr-branch-flow">
             <span className="create-pr-branch-chip">
               <svg
@@ -237,6 +258,11 @@ export function CreatePRPanel({ worktreeId, branch }: CreatePRPanelProps) {
     <div className="create-pr">
       <div className="create-pr-header">
         <span className="create-pr-title">Create Pull Request</span>
+        {onClose && (
+          <button className="panel-dialog-close" onClick={onClose}>
+            &times;
+          </button>
+        )}
         <div className="create-pr-branch-flow">
           <span className="create-pr-branch-chip">
             <svg
