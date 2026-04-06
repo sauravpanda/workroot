@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Dialog, DialogContent } from "./ui/dialog";
 
@@ -47,6 +47,13 @@ export function ClipboardHistory({ onClose }: ClipboardHistoryProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
 
   const loadEntries = useCallback(async () => {
     setLoading(true);
@@ -74,7 +81,8 @@ export function ClipboardHistory({ onClose }: ClipboardHistoryProps) {
     try {
       await navigator.clipboard.writeText(entry.content);
       setCopiedId(entry.id);
-      setTimeout(() => setCopiedId(null), 1500);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setCopiedId(null), 1500);
     } catch {
       // copy failed
     }
