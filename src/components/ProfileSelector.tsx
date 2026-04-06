@@ -22,6 +22,7 @@ export function ProfileSelector({
 }: ProfileSelectorProps) {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handleCreate = useCallback(
     (e: React.FormEvent) => {
@@ -44,8 +45,13 @@ export function ProfileSelector({
 
   const handleDelete = useCallback(() => {
     if (activeProfileId === null) return;
+    if (!confirmingDelete) {
+      setConfirmingDelete(true);
+      return;
+    }
     onDelete(activeProfileId);
-  }, [activeProfileId, onDelete]);
+    setConfirmingDelete(false);
+  }, [activeProfileId, onDelete, confirmingDelete]);
 
   return (
     <div className="profile-selector">
@@ -123,8 +129,16 @@ export function ProfileSelector({
                   onClick={handleDelete}
                 >
                   <TrashIcon />
-                  Delete
+                  {confirmingDelete ? "Confirm delete?" : "Delete"}
                 </button>
+                {confirmingDelete && (
+                  <button
+                    className="profile-popover-item"
+                    onClick={() => setConfirmingDelete(false)}
+                  >
+                    Cancel
+                  </button>
+                )}
               </Popover.Content>
             </Popover.Portal>
           </Popover.Root>
