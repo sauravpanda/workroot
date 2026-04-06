@@ -1,6 +1,7 @@
 pub mod analytics;
 pub mod blame;
 pub mod branch;
+pub mod checkpoint;
 pub mod commit;
 pub mod compare;
 pub mod conflicts;
