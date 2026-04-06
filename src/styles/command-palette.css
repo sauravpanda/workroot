@@ -149,7 +149,9 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
-  transition: none;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
   outline: none;
 }
 
