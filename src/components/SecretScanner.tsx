@@ -19,18 +19,22 @@ export function SecretScanner({ cwd, onClose }: SecretScannerProps) {
   const [findings, setFindings] = useState<SecretFinding[]>([]);
   const [loading, setLoading] = useState(false);
   const [scanned, setScanned] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleScan = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const result = await invoke<SecretFinding[]>("scan_for_secrets", {
         cwd,
       });
       setFindings(result);
       setScanned(true);
-    } catch {
-      setFindings([]);
-      setScanned(true);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Scan failed unexpectedly.";
+      setError(message);
+      setScanned(false);
     }
     setLoading(false);
   }, [cwd]);
@@ -64,7 +68,18 @@ export function SecretScanner({ cwd, onClose }: SecretScannerProps) {
         </div>
 
         <div className="secretscan-body">
-          {!scanned && !loading ? (
+          {error ? (
+            <div className="secretscan-empty secretscan-error">
+              <span>Scan failed: {error}</span>
+              <button
+                className="secretscan-retry-btn"
+                onClick={handleScan}
+                disabled={loading}
+              >
+                Retry
+              </button>
+            </div>
+          ) : !scanned && !loading ? (
             <div className="secretscan-empty">
               Click &quot;Scan&quot; to check for exposed secrets.
             </div>
