@@ -71,7 +71,8 @@ export type PanelKey =
   | "dbSchema"
   | "browserEvents"
   | "dbExplorer"
-  | "checkpointManager";
+  | "checkpointManager"
+  | "multiAgentPipeline";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -147,6 +148,7 @@ const INITIAL_STATE: PanelState = {
   browserEvents: false,
   dbExplorer: false,
   checkpointManager: false,
+  multiAgentPipeline: false,
 };
 
 // ─── Reducer ─────────────────────────────────────────────────────────────────
