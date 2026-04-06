@@ -41,15 +41,20 @@ export function PluginManager({ onClose }: PluginManagerProps) {
   const handleToggle = useCallback(
     async (pluginId: string, enabled: boolean) => {
       setTogglingId(pluginId);
+
+      // Optimistic update: flip the UI immediately
+      setPlugins((prev) =>
+        prev.map((p) => (p.id === pluginId ? { ...p, enabled: !enabled } : p)),
+      );
+
       try {
         await invoke("toggle_plugin", { pluginId, enabled: !enabled });
-        setPlugins((prev) =>
-          prev.map((p) =>
-            p.id === pluginId ? { ...p, enabled: !enabled } : p,
-          ),
-        );
       } catch (e) {
-        setError(String(e));
+        // Roll back to previous state on failure
+        setPlugins((prev) =>
+          prev.map((p) => (p.id === pluginId ? { ...p, enabled } : p)),
+        );
+        setError(`Failed to toggle plugin: ${String(e)}`);
       }
       setTogglingId(null);
     },
