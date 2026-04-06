@@ -1525,6 +1525,10 @@ function AppContent({
             <CreatePRPanel
               worktreeId={selectedWorktreeId}
               branch={selectedWorktreeName}
+              onClose={() => {
+                closePanel("createPr");
+                setContentTab("terminal");
+              }}
             />
           </div>
         </div>
