@@ -145,7 +145,9 @@ export function OnboardingWizard({
             <Button
               variant="outline"
               className="onboarding-btn onboarding-secondary"
-              onClick={() => setStep("project")}
+              onClick={() =>
+                authStatus === "done" ? setStep("project") : setStep("done")
+              }
             >
               {authStatus === "done" ? "Next" : "Skip"}
             </Button>
