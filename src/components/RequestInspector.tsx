@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface TrafficEntry {
   id: number;
@@ -54,12 +54,20 @@ function buildCurl(entry: TrafficEntry): string {
 export function RequestInspector({ entry }: RequestInspectorProps) {
   const [tab, setTab] = useState<"request" | "response">("response");
   const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
 
   const copyAsCurl = async () => {
     try {
       await navigator.clipboard.writeText(buildCurl(entry));
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      copyTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard not available
     }
