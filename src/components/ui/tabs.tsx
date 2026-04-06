@@ -23,7 +23,7 @@ function TabsList({
   return (
     <Tabs.List
       data-slot="tabs-list"
-      className={cn("inline-flex h-full items-stretch", className)}
+      className={cn("inline-flex h-full items-center gap-0.5 px-1", className)}
       {...props}
     />
   );
@@ -37,9 +37,11 @@ function TabsTrigger({
     <Tabs.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex shrink-0 cursor-pointer items-center gap-[5px] border-b-2 border-transparent px-3 text-[11.5px] font-normal whitespace-nowrap transition-colors duration-[0.12s] select-none outline-none",
-        "text-[var(--text-muted)] hover:bg-[color-mix(in_srgb,var(--bg-elevated)_60%,transparent)] hover:text-[var(--text-secondary)]",
-        "data-[state=active]:border-b-[var(--accent)] data-[state=active]:bg-[color-mix(in_srgb,var(--accent-muted)_40%,transparent)] data-[state=active]:font-medium data-[state=active]:text-[var(--text-primary)]",
+        "group inline-flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-transparent px-2.5 text-xs font-[450] whitespace-nowrap transition-all duration-150 ease-out select-none",
+        "text-[var(--text-muted)] outline-none",
+        "hover:border-[var(--border-subtle)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-secondary)]",
+        "focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-0",
+        "data-[state=active]:border-[var(--border)] data-[state=active]:bg-[var(--bg-elevated)] data-[state=active]:font-medium data-[state=active]:text-[var(--text-primary)] data-[state=active]:shadow-sm",
         "disabled:pointer-events-none disabled:opacity-50",
         className,
       )}
