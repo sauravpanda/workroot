@@ -21,7 +21,11 @@ interface CreatePRPanelProps {
   onClose?: () => void;
 }
 
-export function CreatePRPanel({ worktreeId, branch, onClose }: CreatePRPanelProps) {
+export function CreatePRPanel({
+  worktreeId,
+  branch,
+  onClose,
+}: CreatePRPanelProps) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [baseBranch, setBaseBranch] = useState("main");
