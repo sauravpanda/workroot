@@ -1434,9 +1434,15 @@ function AppContent({
         </div>
       )}
       {panels.onboarding && (
-        <div className="panel-overlay">
-          <div className="panel-dialog panel-dialog--wide">
-            <OnboardingWizard onComplete={() => closePanel("onboarding")} />
+        <div className="panel-overlay" onClick={() => closePanel("onboarding")}>
+          <div
+            className="panel-dialog panel-dialog--wide"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <OnboardingWizard
+              onComplete={() => closePanel("onboarding")}
+              onClose={() => closePanel("onboarding")}
+            />
           </div>
         </div>
       )}
