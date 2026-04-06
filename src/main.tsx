@@ -49,7 +49,6 @@ import "./styles/snippet-manager.css";
 import "./styles/env-diff.css";
 import "./styles/app-performance.css";
 import "./styles/file-explorer.css";
-import "./styles/quick-actions.css";
 import "./styles/project-overview.css";
 import "./styles/inline-diff.css";
 import "./styles/web-vitals.css";
