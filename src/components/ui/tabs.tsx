@@ -23,10 +23,7 @@ function TabsList({
   return (
     <Tabs.List
       data-slot="tabs-list"
-      className={cn(
-        "inline-flex h-full items-center gap-0.5 px-1",
-        className,
-      )}
+      className={cn("inline-flex h-full items-center gap-0.5 px-1", className)}
       {...props}
     />
   );
