@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
 import "../styles/commit-panel.css";
 
 interface PushStatus {
@@ -118,9 +121,9 @@ export function CommitPanel({
       {success && <div className="commit-success">{success}</div>}
 
       <div className="commit-subject-wrapper">
-        <input
+        <Input
           type="text"
-          className="commit-subject"
+          className="commit-subject h-auto py-[5px] pr-[72px] pl-2 text-[12.5px] rounded-sm"
           placeholder="Commit message..."
           value={subject}
           onChange={(e) => setSubject(e.target.value)}
@@ -128,8 +131,10 @@ export function CommitPanel({
             if (e.key === "Enter" && canCommit) handleCommit(false);
           }}
         />
-        <button
-          className="commit-ai-btn"
+        <Button
+          variant="ghost"
+          size="xs"
+          className="commit-ai-btn absolute right-[28px] top-1/2 -translate-y-1/2 border border-accent text-accent hover:bg-accent-muted px-[7px] h-auto py-[2px] text-[10px] font-semibold tracking-[0.3px] rounded-sm"
           disabled={stagedCount === 0 || generating}
           onClick={handleAiGenerate}
           title="Generate commit message with AI"
@@ -151,7 +156,7 @@ export function CommitPanel({
             />
           </svg>
           {generating ? "…" : "AI"}
-        </button>
+        </Button>
         <span
           className={`commit-char-count ${subject.length > 50 ? "over" : ""}`}
         >
@@ -159,8 +164,8 @@ export function CommitPanel({
         </span>
       </div>
 
-      <textarea
-        className="commit-body"
+      <Textarea
+        className="commit-body font-mono text-[11.5px] leading-[1.5] rounded-sm min-h-[42px] py-[5px] px-2 resize-vertical"
         placeholder="Extended description (optional)"
         rows={2}
         value={body}
@@ -185,20 +190,23 @@ export function CommitPanel({
           )}
         </div>
         <div className="commit-buttons">
-          <button
-            className="commit-btn"
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-auto py-1 px-[11px] text-[11.5px] border-border-strong bg-bg-elevated text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-sm"
             disabled={!canCommit}
             onClick={() => handleCommit(false)}
           >
             {committing ? "Committing..." : "Commit"}
-          </button>
-          <button
-            className="commit-btn primary"
+          </Button>
+          <Button
+            size="sm"
+            className="h-auto py-1 px-[11px] text-[11.5px] bg-accent border-accent text-bg-base hover:bg-accent-hover hover:border-accent-hover font-semibold rounded-sm"
             disabled={!canCommit}
             onClick={() => handleCommit(true)}
           >
             {pushing ? "Pushing..." : "Commit & Push"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

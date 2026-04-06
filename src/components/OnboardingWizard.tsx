@@ -2,6 +2,8 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/onboarding.css";
 import { Dialog, DialogContent } from "./ui/dialog";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 interface OnboardingWizardProps {
   onComplete: () => void;
@@ -65,12 +67,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               Local Intelligence Platform for AI-Native Development. Let's get
               you set up.
             </p>
-            <button
+            <Button
               className="onboarding-btn onboarding-primary"
               onClick={() => setStep("github")}
             >
               Get Started
-            </button>
+            </Button>
           </>
         )}
 
@@ -82,12 +84,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               env sharing.
             </p>
             {authStatus === "idle" && (
-              <button
+              <Button
                 className="onboarding-btn onboarding-primary"
                 onClick={handleAuth}
               >
                 Connect GitHub
-              </button>
+              </Button>
             )}
             {authStatus === "pending" && (
               <p className="onboarding-status">Waiting for authorization...</p>
@@ -100,12 +102,13 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 Auth failed. You can try again later from settings.
               </p>
             )}
-            <button
+            <Button
+              variant="outline"
               className="onboarding-btn onboarding-secondary"
               onClick={() => setStep("project")}
             >
               {authStatus === "done" ? "Next" : "Skip"}
-            </button>
+            </Button>
           </>
         )}
 
@@ -115,27 +118,28 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             <p className="onboarding-desc">
               Point to a local repository to start tracking.
             </p>
-            <input
-              className="onboarding-input"
+            <Input
+              className="onboarding-input font-mono"
               type="text"
               value={projectPath}
               onChange={(e) => setProjectPath(e.target.value)}
               placeholder="/path/to/your/project"
             />
             {projectError && <p className="onboarding-error">{projectError}</p>}
-            <button
+            <Button
               className="onboarding-btn onboarding-primary"
               onClick={handleAddProject}
               disabled={!projectPath.trim()}
             >
               Add Project
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
               className="onboarding-btn onboarding-secondary"
               onClick={() => setStep("done")}
             >
               Skip
-            </button>
+            </Button>
           </>
         )}
 
@@ -146,12 +150,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               Workroot is ready. You can always add more projects and configure
               settings later.
             </p>
-            <button
+            <Button
               className="onboarding-btn onboarding-primary"
               onClick={onComplete}
             >
               Start Using Workroot
-            </button>
+            </Button>
           </>
         )}
 

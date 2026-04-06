@@ -45,66 +45,6 @@
   align-items: center;
 }
 
-.commit-subject {
-  width: 100%;
-  padding: 5px 72px 5px 8px; /* room for ai btn + char count */
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
-  font-size: 12.5px;
-  outline: none;
-  box-sizing: border-box;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
-}
-
-.commit-subject::placeholder {
-  color: var(--text-muted);
-}
-
-.commit-subject:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-muted);
-}
-
-/* -- AI button -- */
-
-.commit-ai-btn {
-  position: absolute;
-  right: 30px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 7px;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--accent);
-  cursor: pointer;
-  transition:
-    background-color 0.15s,
-    box-shadow 0.15s;
-}
-
-.commit-ai-btn:hover:not(:disabled) {
-  background: var(--accent-muted);
-  box-shadow: 0 0 6px var(--accent-glow);
-}
-
-.commit-ai-btn:disabled {
-  opacity: 0.38;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
 /* -- Char count -- */
 
 .commit-char-count {
@@ -119,36 +59,6 @@
 
 .commit-char-count.over {
   color: var(--warning);
-}
-
-/* -- Body textarea -- */
-
-.commit-body {
-  width: 100%;
-  padding: 5px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  line-height: 1.5;
-  outline: none;
-  resize: vertical;
-  min-height: 42px;
-  box-sizing: border-box;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
-}
-
-.commit-body::placeholder {
-  color: var(--text-muted);
-}
-
-.commit-body:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-muted);
 }
 
 /* -- Footer -- */
@@ -187,50 +97,4 @@
   display: flex;
   gap: 5px;
   flex-shrink: 0;
-}
-
-/* -- Buttons -- */
-
-.commit-btn {
-  padding: 4px 11px;
-  border: 1px solid var(--border-strong);
-  background: var(--bg-elevated);
-  color: var(--text-secondary);
-  font-family: var(--font-sans);
-  font-size: 11.5px;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition:
-    background-color 0.15s,
-    border-color 0.15s,
-    color 0.15s;
-}
-
-.commit-btn:hover:not(:disabled) {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-  border-color: var(--border-strong);
-}
-
-.commit-btn:disabled {
-  opacity: 0.38;
-  cursor: not-allowed;
-}
-
-.commit-btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--bg-base);
-  font-weight: 600;
-}
-
-.commit-btn.primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  box-shadow: 0 2px 8px var(--accent-glow);
-}
-
-.commit-btn.primary:disabled {
-  opacity: 0.38;
 }
