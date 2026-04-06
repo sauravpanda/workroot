@@ -172,14 +172,19 @@ fn get_project_remote(db: &AppDb, project_id: i64) -> Result<(String, String), S
 
 async fn fetch_json<T: serde::de::DeserializeOwned>(
     client: &reqwest::Client,
-    token: &str,
+    token: Option<&str>,
     url: &str,
 ) -> Result<T, String> {
-    let resp = client
+    let mut req = client
         .get(url)
-        .header("Authorization", format!("Bearer {}", token))
         .header("User-Agent", "Workroot")
-        .header("Accept", "application/vnd.github+json")
+        .header("Accept", "application/vnd.github+json");
+
+    if let Some(t) = token {
+        req = req.header("Authorization", format!("Bearer {}", t));
+    }
+
+    let resp = req
         .send()
         .await
         .map_err(|e| format!("Request failed: {}", e))?;
@@ -200,14 +205,19 @@ async fn fetch_json<T: serde::de::DeserializeOwned>(
 // ============================================================
 
 /// List open pull requests for a project's GitHub repo.
+/// Works without auth for public repos; uses token when available for higher rate limits.
 #[tauri::command]
 pub async fn list_repo_pulls(
     db: State<'_, AppDb>,
     project_id: i64,
 ) -> Result<Vec<RepoPull>, String> {
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
-    let token = auth::get_token_from_env_or_gh()?
-        .ok_or("Not authenticated. Please sign in with GitHub or the gh CLI.")?;
+    let token = auth::get_token_from_env_or_gh()?.unwrap_or_default();
+    let token_ref = if token.is_empty() {
+        None
+    } else {
+        Some(token.as_str())
+    };
 
     let client = super::api_client()?;
     let url = format!(
@@ -215,7 +225,7 @@ pub async fn list_repo_pulls(
         owner, repo_name
     );
 
-    let pulls: Vec<PullApi> = fetch_json(&client, &token, &url).await?;
+    let pulls: Vec<PullApi> = fetch_json(&client, token_ref, &url).await?;
 
     Ok(pulls
         .into_iter()
@@ -234,14 +244,19 @@ pub async fn list_repo_pulls(
 }
 
 /// List open issues (excluding PRs) for a project's GitHub repo.
+/// Works without auth for public repos; uses token when available for higher rate limits.
 #[tauri::command]
 pub async fn list_repo_issues(
     db: State<'_, AppDb>,
     project_id: i64,
 ) -> Result<Vec<RepoIssue>, String> {
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
-    let token = auth::get_token_from_env_or_gh()?
-        .ok_or("Not authenticated. Please sign in with GitHub or the gh CLI.")?;
+    let token = auth::get_token_from_env_or_gh()?.unwrap_or_default();
+    let token_ref = if token.is_empty() {
+        None
+    } else {
+        Some(token.as_str())
+    };
 
     let client = super::api_client()?;
     let url = format!(
@@ -249,7 +264,7 @@ pub async fn list_repo_issues(
         owner, repo_name
     );
 
-    let issues: Vec<IssueApi> = fetch_json(&client, &token, &url).await?;
+    let issues: Vec<IssueApi> = fetch_json(&client, token_ref, &url).await?;
 
     // GitHub's issues endpoint includes PRs — filter them out
     Ok(issues
@@ -275,14 +290,19 @@ pub async fn list_repo_issues(
 }
 
 /// Get recent repository events for a project's GitHub repo.
+/// Works without auth for public repos; uses token when available for higher rate limits.
 #[tauri::command]
 pub async fn get_repo_activity(
     db: State<'_, AppDb>,
     project_id: i64,
 ) -> Result<Vec<RepoEvent>, String> {
     let (owner, repo_name) = get_project_remote(&db, project_id)?;
-    let token = auth::get_token_from_env_or_gh()?
-        .ok_or("Not authenticated. Please sign in with GitHub or the gh CLI.")?;
+    let token = auth::get_token_from_env_or_gh()?.unwrap_or_default();
+    let token_ref = if token.is_empty() {
+        None
+    } else {
+        Some(token.as_str())
+    };
 
     let client = super::api_client()?;
     let url = format!(
@@ -290,7 +310,7 @@ pub async fn get_repo_activity(
         owner, repo_name
     );
 
-    let events: Vec<EventApi> = fetch_json(&client, &token, &url).await?;
+    let events: Vec<EventApi> = fetch_json(&client, token_ref, &url).await?;
 
     Ok(events
         .into_iter()

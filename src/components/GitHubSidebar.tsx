@@ -91,7 +91,9 @@ function isAuthError(err: unknown): boolean {
     msg.includes("token") ||
     msg.includes("unauthorized") ||
     msg.includes("401") ||
-    msg.includes("not authenticated")
+    msg.includes("not authenticated") ||
+    // 404 from GitHub API without a token likely means a private repo
+    msg.includes("404")
   );
 }
 
@@ -402,7 +404,7 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
               />
             </svg>
             <p className="gh-sidebar__auth-msg">
-              Sign in to GitHub to view {activeTab}.
+              Sign in to GitHub to view {activeTab} for this private repo.
             </p>
 
             {deviceCode ? (
