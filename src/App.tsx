@@ -173,6 +173,9 @@ function AppContent({
   selectedWorktreeIdRef.current = selectedWorktreeId;
   selectedWorktreeNameRef.current = selectedWorktreeName;
 
+  const openPanelRef = useRef(openPanel);
+  openPanelRef.current = openPanel;
+
   const handleAgentComplete = useCallback(() => {
     const id = selectedWorktreeIdRef.current;
     const name = selectedWorktreeNameRef.current ?? "Terminal";
@@ -185,8 +188,10 @@ function AppContent({
         });
       }
     } else {
+      // Auto-open the diff panel so the user can review changes immediately.
+      setContentTab("changes");
+      openPanelRef.current("gitDiff");
       setAgentDoneToast(name);
-      setTimeout(() => setAgentDoneToast(null), 5000);
     }
   }, [markAgentDone]);
 
@@ -1482,7 +1487,14 @@ function AppContent({
                 &times;
               </button>
             </div>
-            <GitDiffView worktreeId={selectedWorktreeId} />
+            <GitDiffView
+              worktreeId={selectedWorktreeId}
+              onCreatePR={() => {
+                closePanel("gitDiff");
+                openPanel("createPr");
+                setContentTab("pr");
+              }}
+            />
           </div>
         </div>
       )}
@@ -1642,29 +1654,30 @@ function AppContent({
         }}
       />
       {agentDoneToast && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "48px",
-            right: "16px",
-            background: "var(--bg-elevated)",
-            border: "1px solid var(--accent-muted)",
-            borderLeft: "3px solid var(--accent)",
-            borderRadius: "6px",
-            padding: "10px 14px",
-            fontSize: "12.5px",
-            color: "var(--text-primary)",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
-            zIndex: 9999,
-            maxWidth: "280px",
-            pointerEvents: "none",
-          }}
-        >
-          <span style={{ color: "var(--accent)", marginRight: "8px" }}>✓</span>
-          Agent done in{" "}
-          <strong style={{ color: "var(--text-primary)" }}>
-            {agentDoneToast}
-          </strong>
+        <div className="fixed bottom-12 right-4 z-[9999] flex max-w-[300px] items-start gap-2.5 rounded-[6px] border border-[var(--accent-muted)] bg-[var(--bg-elevated)] px-3 py-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.4)] [border-left:3px_solid_var(--accent)]">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="text-[12.5px] text-[var(--text-primary)]">
+              <span className="mr-2 text-[var(--accent)]">✓</span>
+              Agent done in <strong>{agentDoneToast}</strong>
+            </span>
+            <button
+              className="self-start cursor-pointer rounded-[3px] border border-[var(--accent-muted)] bg-transparent px-2 py-0.5 text-[11px] text-[var(--accent)] transition-colors duration-100 hover:bg-[var(--accent-muted)]"
+              onClick={() => {
+                openPanel("gitDiff");
+                setContentTab("changes");
+                setAgentDoneToast(null);
+              }}
+            >
+              Review Changes →
+            </button>
+          </div>
+          <button
+            className="flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-[10px] text-[var(--text-muted)] transition-colors duration-100 hover:text-[var(--text-primary)]"
+            onClick={() => setAgentDoneToast(null)}
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
         </div>
       )}
     </>

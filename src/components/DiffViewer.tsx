@@ -22,38 +22,53 @@ interface DiffViewerProps {
 
 export function DiffViewer({ diff }: DiffViewerProps) {
   if (diff.is_binary) {
-    return <div className="diff-viewer-binary">Binary file changed</div>;
+    return (
+      <div className="p-6 text-center text-[13px] text-[var(--text-muted)]">
+        Binary file changed
+      </div>
+    );
   }
 
   if (diff.hunks.length === 0) {
     return (
-      <div className="diff-viewer-binary">
+      <div className="p-6 text-center text-[13px] text-[var(--text-muted)]">
         No changes (file may be newly staged)
       </div>
     );
   }
 
   return (
-    <div className="diff-viewer">
-      <div className="diff-viewer-file-header">{diff.path}</div>
+    <div className="font-mono text-xs leading-[1.5]">
+      <div className="border-b border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-muted)]">
+        {diff.path}
+      </div>
       {diff.hunks.map((hunk, hi) => (
-        <div key={hi} className="diff-hunk">
-          <div className="diff-hunk-header">{hunk.header.trim()}</div>
+        <div key={hi} className="border-b border-[var(--border)]">
+          <div className="border-b border-[var(--border)] bg-[rgba(96,165,250,0.08)] px-3 py-1 text-[11px] text-[#60a5fa]">
+            {hunk.header.trim()}
+          </div>
           {hunk.lines.map((line, li) => {
-            const lineClass =
-              line.origin === "+"
-                ? "addition"
-                : line.origin === "-"
-                  ? "deletion"
-                  : "context";
+            const isAddition = line.origin === "+";
+            const isDeletion = line.origin === "-";
             return (
-              <div key={li} className={`diff-line ${lineClass}`}>
-                <div className="diff-line-number old">
+              <div
+                key={li}
+                className={`flex min-h-[20px] ${isAddition ? "bg-[rgba(74,222,128,0.08)]" : isDeletion ? "bg-[rgba(248,113,113,0.08)]" : ""}`}
+              >
+                <div className="w-11 min-w-[44px] select-none border-r border-[var(--border)] px-1.5 text-right text-[11px] leading-[20px] text-[var(--text-muted)]">
                   {line.old_lineno ?? ""}
                 </div>
-                <div className="diff-line-number">{line.new_lineno ?? ""}</div>
-                <div className="diff-line-origin">{line.origin}</div>
-                <div className="diff-line-content">{line.content}</div>
+                <div className="w-11 min-w-[44px] select-none border-r border-[var(--border)] px-1.5 text-right text-[11px] leading-[20px] text-[var(--text-muted)]">
+                  {line.new_lineno ?? ""}
+                </div>
+                <div
+                  className={`w-4 min-w-[16px] select-none text-center leading-[20px] ${isAddition ? "text-[#4ade80]" : isDeletion ? "text-[#f87171]" : ""}`}
+                >
+                  {line.origin}
+                </div>
+                <div className="flex-1 break-all px-2 leading-[20px] text-[var(--text-primary)] [white-space:pre-wrap]">
+                  {line.content}
+                </div>
               </div>
             );
           })}
