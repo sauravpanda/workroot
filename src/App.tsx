@@ -21,6 +21,7 @@ import { DensityPicker } from "./components/DensityPicker";
 import { CustomCSSEditor } from "./components/CustomCSSEditor";
 import { StashManager } from "./components/StashManager";
 import { CheckpointPanel } from "./components/CheckpointPanel";
+import { MultiAgentPipelinePanel } from "./components/MultiAgentPipelinePanel";
 import { BlameView } from "./components/BlameView";
 import { BranchCompare } from "./components/BranchCompare";
 import { GitHooksManager } from "./components/GitHooksManager";
@@ -860,6 +861,14 @@ function AppContent({
         icon: "\u2338",
         action: () => openPanel("dbExplorer"),
       },
+      {
+        id: "ai:multi-agent-pipeline",
+        label: "Multi-Agent Pipeline",
+        category: "AI",
+        icon: "\u25B6",
+        enabled: () => selectedWorktreeId !== null,
+        action: () => openPanel("multiAgentPipeline"),
+      },
     ];
 
     // Add project switch commands
@@ -1153,6 +1162,12 @@ function AppContent({
         <CheckpointPanel
           worktreeId={selectedWorktreeId}
           onClose={() => closePanel("checkpointManager")}
+        />
+      )}
+      {panels.multiAgentPipeline && selectedWorktreeId !== null && (
+        <MultiAgentPipelinePanel
+          worktreeId={selectedWorktreeId}
+          onClose={() => closePanel("multiAgentPipeline")}
         />
       )}
       {panels.blameView && selectedWorktreeId !== null && (

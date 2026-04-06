@@ -1,3 +1,4 @@
+pub mod agents;
 pub mod ai;
 pub mod backup;
 pub mod bookmarks;
@@ -321,6 +322,15 @@ pub fn run() {
             fileview::get_worktree_file_statuses,
             fileview::read_file_content,
             fileview::open_file_in_editor,
+            agents::pipeline::create_agent,
+            agents::pipeline::list_agents,
+            agents::pipeline::delete_agent,
+            agents::pipeline::create_pipeline,
+            agents::pipeline::list_pipelines,
+            agents::pipeline::delete_pipeline,
+            agents::pipeline::list_pipeline_runs,
+            agents::pipeline::get_pipeline_run,
+            agents::pipeline::run_pipeline,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

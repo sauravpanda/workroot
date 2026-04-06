@@ -418,3 +418,41 @@ CREATE TABLE IF NOT EXISTS checkpoints (
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_checkpoints_worktree_id ON checkpoints(worktree_id);
+
+-- ============================================================
+-- Multi-Agent Pipeline (Issue #66)
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS agent_definitions (
+    id          INTEGER PRIMARY KEY,
+    name        TEXT NOT NULL,
+    role        TEXT NOT NULL CHECK(role IN ('generator', 'reviewer')),
+    command     TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS pipeline_definitions (
+    id              INTEGER PRIMARY KEY,
+    name            TEXT NOT NULL,
+    generator_id    INTEGER NOT NULL REFERENCES agent_definitions(id) ON DELETE RESTRICT,
+    reviewer_id     INTEGER NOT NULL REFERENCES agent_definitions(id) ON DELETE RESTRICT,
+    max_iterations  INTEGER NOT NULL DEFAULT 3,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS pipeline_runs (
+    id              INTEGER PRIMARY KEY,
+    pipeline_id     INTEGER NOT NULL REFERENCES pipeline_definitions(id) ON DELETE CASCADE,
+    worktree_id     INTEGER NOT NULL REFERENCES worktrees(id) ON DELETE CASCADE,
+    task_desc       TEXT NOT NULL,
+    status          TEXT NOT NULL DEFAULT 'running'
+                        CHECK(status IN ('running', 'approved', 'failed', 'max_iterations')),
+    iterations      INTEGER NOT NULL DEFAULT 0,
+    output          TEXT NOT NULL DEFAULT '[]',
+    started_at      TEXT NOT NULL DEFAULT (datetime('now')),
+    finished_at     TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_pipeline_runs_pipeline ON pipeline_runs(pipeline_id);
+CREATE INDEX IF NOT EXISTS idx_pipeline_runs_worktree ON pipeline_runs(worktree_id);
+CREATE INDEX IF NOT EXISTS idx_pipeline_runs_started  ON pipeline_runs(started_at);
