@@ -523,7 +523,7 @@ function TerminalInstance({
 
       const settings = await loadTerminalSettings();
 
-      if (cancelled) return;
+      if (cancelled || !termRef.current) return;
 
       // Apply the saved theme (may differ from initial)
       term.options.theme = settings.theme.theme;
@@ -540,9 +540,21 @@ function TerminalInstance({
             COLORTERM: "truecolor",
           },
         });
+
+        // Check cancelled after spawn — cwd/theme may have changed during spawn
+        if (cancelled) {
+          try {
+            pty.kill();
+          } catch {
+            // ignore
+          }
+          return;
+        }
+
         ptyRef.current = pty;
 
         pty.onData((data: Uint8Array) => {
+          if (!termRef.current) return;
           term.write(data);
           // Activity tracking for agent-complete detection.
           activityBytesRef.current += data.length;
@@ -559,7 +571,9 @@ function TerminalInstance({
         });
 
         pty.onExit(() => {
-          term.write("\r\n\x1b[90m[Process exited]\x1b[0m\r\n");
+          if (termRef.current) {
+            term.write("\r\n\x1b[90m[Process exited]\x1b[0m\r\n");
+          }
           if (idleTimerRef.current) {
             clearTimeout(idleTimerRef.current);
             idleTimerRef.current = null;
@@ -568,10 +582,12 @@ function TerminalInstance({
         });
 
         term.onData((data: string) => {
+          if (!ptyRef.current) return;
           pty.write(data);
         });
 
         term.onResize((e) => {
+          if (!ptyRef.current) return;
           try {
             pty.resize(e.cols, e.rows);
           } catch {
@@ -583,11 +599,14 @@ function TerminalInstance({
         if (settings.initCommand) {
           const cmd = settings.initCommand;
           setTimeout(() => {
+            if (cancelled || !ptyRef.current) return;
             pty.write(cmd + "\n");
           }, 400);
         }
       } catch (err) {
-        term.write(`\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`);
+        if (!cancelled && termRef.current) {
+          term.write(`\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`);
+        }
       }
     }, 100);
 
