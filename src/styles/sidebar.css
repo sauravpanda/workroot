@@ -21,7 +21,7 @@
   cursor: col-resize;
   flex-shrink: 0;
   background: transparent;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-normal);
   position: relative;
   z-index: 10;
 }
@@ -36,7 +36,7 @@
   height: 32px;
   border-radius: 1px;
   background: transparent;
-  transition: background-color 0.2s;
+  transition: background-color var(--transition-normal);
 }
 
 .resize-handle:hover {
@@ -136,7 +136,7 @@
   user-select: none;
   padding: 2px 0;
   border-radius: var(--radius-sm);
-  transition: opacity 0.15s;
+  transition: opacity var(--transition-fast);
 }
 
 .sidebar-brand:hover {
@@ -159,9 +159,9 @@
   background-color: var(--accent-muted);
   color: var(--accent);
   transition:
-    background-color 0.2s,
-    color 0.2s,
-    box-shadow 0.2s;
+    background-color var(--transition-normal),
+    color var(--transition-normal),
+    box-shadow var(--transition-normal);
   flex-shrink: 0;
   border: 1px solid rgba(16, 185, 129, 0.2);
 }
@@ -172,7 +172,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
-  transition: color 0.15s;
+  transition: color var(--transition-fast);
   line-height: 1;
 }
 
@@ -224,7 +224,7 @@
   color: var(--text-muted);
   cursor: pointer;
   flex-shrink: 0;
-  transition: color 0.1s;
+  transition: color var(--transition-fast);
 }
 
 .sidebar-search-clear:hover {
@@ -294,10 +294,10 @@
   color: var(--text-muted);
   cursor: pointer;
   transition:
-    background-color 0.15s,
-    color 0.15s,
-    border-color 0.15s,
-    box-shadow 0.15s;
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .sidebar-toolbar-btn:hover {
@@ -335,7 +335,7 @@
   user-select: none;
   line-height: 1;
   opacity: 0.6;
-  transition: opacity 0.2s;
+  transition: opacity var(--transition-normal);
   white-space: nowrap;
 }
 
@@ -362,7 +362,7 @@
   padding: 0.45em 0.6em 0.35em;
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.12s;
+  transition: background-color var(--transition-fast);
   position: relative;
 }
 
@@ -415,7 +415,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 0.6;
-  transition: opacity 0.15s;
+  transition: opacity var(--transition-fast);
   line-height: 1.3;
 }
 
@@ -534,8 +534,8 @@
   user-select: none;
   border-radius: var(--radius-sm);
   transition:
-    background-color 0.1s,
-    box-shadow 0.15s;
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast);
   position: relative;
   min-width: 0;
 }
@@ -705,8 +705,8 @@
   text-align: left;
   opacity: 0.6;
   transition:
-    opacity 0.15s,
-    color 0.15s;
+    opacity var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .show-hidden-btn:hover {
@@ -744,8 +744,8 @@
   cursor: pointer;
   flex-shrink: 0;
   transition:
-    border-color 0.15s,
-    color 0.15s;
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .unhide-btn:hover {
@@ -766,9 +766,9 @@
   cursor: pointer;
   text-align: center;
   transition:
-    border-color 0.15s,
-    color 0.15s,
-    background-color 0.15s;
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    background-color var(--transition-fast);
   letter-spacing: 0.02em;
 }
 
@@ -850,7 +850,7 @@
   border-radius: 0;
   color: var(--text-primary);
   cursor: pointer;
-  transition: background-color 0.1s;
+  transition: background-color var(--transition-fast);
   letter-spacing: -0.005em;
 }
 

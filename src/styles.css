@@ -83,6 +83,10 @@
   --shadow-accent:
     0 4px 16px rgba(16, 185, 129, 0.2), 0 0 0 1px rgba(16, 185, 129, 0.15) inset;
 
+  /* Transitions */
+  --transition-fast: 0.12s;
+  --transition-normal: 0.2s;
+
   /* Easing */
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
