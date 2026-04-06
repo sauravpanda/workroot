@@ -40,6 +40,7 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const healthCheckGenRef = useRef(0);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -67,12 +68,15 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
   }, [selectedModel]);
 
   const checkHealth = useCallback(async () => {
+    const gen = ++healthCheckGenRef.current;
     setConnectionStatus("checking");
     try {
       await invoke("ai_check_health");
+      if (gen !== healthCheckGenRef.current) return;
       setConnectionStatus("connected");
       loadModels();
     } catch {
+      if (gen !== healthCheckGenRef.current) return;
       setConnectionStatus("disconnected");
       setModels([]);
     }
