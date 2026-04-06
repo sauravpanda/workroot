@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/onboarding.css";
 import { Dialog, DialogContent } from "./ui/dialog";
@@ -7,17 +7,35 @@ import { Input } from "./ui/input";
 
 interface OnboardingWizardProps {
   onComplete: () => void;
+  onClose?: () => void;
 }
 
 type Step = "welcome" | "github" | "project" | "done";
 
-export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
+export function OnboardingWizard({
+  onComplete,
+  onClose,
+}: OnboardingWizardProps) {
   const [step, setStep] = useState<Step>("welcome");
   const [authStatus, setAuthStatus] = useState<
     "idle" | "pending" | "done" | "error"
   >("idle");
   const [projectPath, setProjectPath] = useState("");
   const [projectError, setProjectError] = useState("");
+
+  const handleClose = useCallback(() => {
+    if (onClose) onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleClose]);
 
   const handleAuth = async () => {
     setAuthStatus("pending");
@@ -60,6 +78,28 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   return (
     <Dialog open>
       <DialogContent className="onboarding-card">
+        {onClose && (
+          <button
+            onClick={handleClose}
+            aria-label="Close"
+            className="onboarding-close-btn"
+            style={{
+              position: "absolute",
+              top: "12px",
+              right: "12px",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "1.25rem",
+              lineHeight: 1,
+              padding: "4px 8px",
+              borderRadius: "4px",
+              color: "var(--foreground, #888)",
+            }}
+          >
+            &times;
+          </button>
+        )}
         {step === "welcome" && (
           <>
             <h2 className="onboarding-title">Welcome to Workroot</h2>
