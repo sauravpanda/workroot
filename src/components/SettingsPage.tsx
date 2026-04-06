@@ -68,6 +68,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   >("idle");
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [confirmingReset, setConfirmingReset] = useState<string | null>(null);
 
   // Load all settings on mount
   useEffect(() => {
@@ -217,16 +218,44 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   }
 
   function renderSectionActions(keys: string[]) {
+    const sectionId = keys.join(",");
+    const isConfirming = confirmingReset === sectionId;
+
     return (
       <div className="settings-page__section-actions">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="settings-page__reset-btn text-xs text-text-muted hover:text-text-secondary"
-          onClick={() => handleResetSection(keys)}
-        >
-          Reset to defaults
-        </Button>
+        {isConfirming ? (
+          <>
+            <span className="text-xs text-text-muted">Are you sure?</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="settings-page__reset-btn text-xs text-red-500 hover:text-red-400"
+              onClick={() => {
+                handleResetSection(keys);
+                setConfirmingReset(null);
+              }}
+            >
+              Confirm
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-text-muted hover:text-text-secondary"
+              onClick={() => setConfirmingReset(null)}
+            >
+              Cancel
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="settings-page__reset-btn text-xs text-text-muted hover:text-text-secondary"
+            onClick={() => setConfirmingReset(sectionId)}
+          >
+            Reset to defaults
+          </Button>
+        )}
       </div>
     );
   }
