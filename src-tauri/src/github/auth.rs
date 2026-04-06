@@ -21,6 +21,25 @@ pub fn store_pat(token: &str) -> Result<(), String> {
     store_token(token)
 }
 
+/// Runs a command through the user's login shell so that shell profile
+/// (PATH, env vars) is properly sourced. GUI apps on macOS don't inherit
+/// the user's shell environment, so this is needed to find tools like `gh`
+/// and read env vars set in .zshrc / config.fish / .bashrc.
+fn run_in_login_shell(command: &str) -> Option<String> {
+    let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
+    let output = std::process::Command::new(&shell)
+        .args(["-l", "-c", command])
+        .output()
+        .ok()?;
+    if output.status.success() {
+        let result = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if !result.is_empty() {
+            return Some(result);
+        }
+    }
+    None
+}
+
 /// Attempts to read a GitHub token from the `gh` CLI config or environment.
 /// Falls back to the OS keychain.
 pub fn get_token_from_env_or_gh() -> Result<Option<String>, String> {
@@ -29,30 +48,25 @@ pub fn get_token_from_env_or_gh() -> Result<Option<String>, String> {
         return Ok(Some(t));
     }
 
-    // 2. Check GH_TOKEN / GITHUB_TOKEN env vars
-    if let Ok(token) = std::env::var("GH_TOKEN") {
-        if !token.is_empty() {
-            return Ok(Some(token));
-        }
-    }
-    if let Ok(token) = std::env::var("GITHUB_TOKEN") {
-        if !token.is_empty() {
-            return Ok(Some(token));
-        }
-    }
-
-    // 3. Try reading from `gh auth token` (GitHub CLI)
-    match std::process::Command::new("gh")
-        .args(["auth", "token"])
-        .output()
-    {
-        Ok(output) if output.status.success() => {
-            let token = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    // 2. Check GH_TOKEN / GITHUB_TOKEN env vars (fast path: process env)
+    for var in &["GH_TOKEN", "GITHUB_TOKEN"] {
+        if let Ok(token) = std::env::var(var) {
             if !token.is_empty() {
                 return Ok(Some(token));
             }
         }
-        _ => {}
+    }
+
+    // 3. Check env vars via login shell (GUI apps may not inherit shell env)
+    for var in &["GH_TOKEN", "GITHUB_TOKEN"] {
+        if let Some(token) = run_in_login_shell(&format!("echo ${}", var)) {
+            return Ok(Some(token));
+        }
+    }
+
+    // 4. Try `gh auth token` via login shell (handles both PATH and env)
+    if let Some(token) = run_in_login_shell("gh auth token") {
+        return Ok(Some(token));
     }
 
     Ok(None)
