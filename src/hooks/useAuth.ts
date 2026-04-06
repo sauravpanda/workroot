@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
 interface GitHubUser {
@@ -34,9 +34,12 @@ export function useAuth() {
     isPolling: false,
   });
 
+  const mountedRef = useRef(true);
+
   const checkAuth = useCallback(async () => {
     try {
       const user = await invoke<GitHubUser | null>("github_get_user");
+      if (!mountedRef.current) return;
       setState((prev) => ({
         ...prev,
         isAuthenticated: user !== null,
@@ -45,6 +48,7 @@ export function useAuth() {
         error: null,
       }));
     } catch {
+      if (!mountedRef.current) return;
       setState((prev) => ({
         ...prev,
         isAuthenticated: false,
@@ -58,11 +62,19 @@ export function useAuth() {
     checkAuth();
   }, [checkAuth]);
 
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const loginWithPat = useCallback(async (token: string) => {
     setState((prev) => ({ ...prev, error: null, isLoading: true }));
     try {
       await invoke("github_store_pat", { token });
+      if (!mountedRef.current) return;
       const user = await invoke<GitHubUser | null>("github_get_user");
+      if (!mountedRef.current) return;
       if (user) {
         setState((prev) => ({
           ...prev,
@@ -79,6 +91,7 @@ export function useAuth() {
         }));
       }
     } catch (err: unknown) {
+      if (!mountedRef.current) return;
       setState((prev) => ({
         ...prev,
         error: String(err),
@@ -106,7 +119,9 @@ export function useAuth() {
         interval: deviceCode.interval,
       })
         .then(async () => {
+          if (!mountedRef.current) return;
           const user = await invoke<GitHubUser | null>("github_get_user");
+          if (!mountedRef.current) return;
           setState((prev) => ({
             ...prev,
             isAuthenticated: true,
@@ -117,6 +132,7 @@ export function useAuth() {
           }));
         })
         .catch((err: unknown) => {
+          if (!mountedRef.current) return;
           setState((prev) => ({
             ...prev,
             error: String(err),
