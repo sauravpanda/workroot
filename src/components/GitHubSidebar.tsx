@@ -188,6 +188,20 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
   const [refreshing, setRefreshing] = useState(false);
 
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const mountedRef = useRef(true);
+  const activeTabRef = useRef<Tab>(activeTab);
+
+  // Keep activeTabRef in sync
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   /* ---- Fetch data for the active tab ---- */
   const fetchData = useCallback(
@@ -247,6 +261,7 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
     setSignInError(null);
     try {
       const dc = await invoke<DeviceCodeInfo>("github_start_device_flow");
+      if (!mountedRef.current) return;
       setDeviceCode(dc);
       setSigningIn(false);
       invoke("github_poll_for_token", {
@@ -254,19 +269,22 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
         interval: dc.interval,
       })
         .then(() => {
+          if (!mountedRef.current) return;
           setDeviceCode(null);
           setAuthError(false);
-          fetchData(activeTab);
+          fetchData(activeTabRef.current);
         })
         .catch((err: unknown) => {
+          if (!mountedRef.current) return;
           setDeviceCode(null);
           setSignInError(String(err));
         });
     } catch (err: unknown) {
+      if (!mountedRef.current) return;
       setSigningIn(false);
       setSignInError(String(err));
     }
-  }, [activeTab, fetchData]);
+  }, [fetchData]);
 
   const handlePatSubmit = useCallback(async () => {
     if (!patInput.trim()) return;
