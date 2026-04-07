@@ -79,6 +79,10 @@ pub fn monitor_process(
     let stdout = child.stdout.take();
     let stderr = child.stderr.take();
 
+    // Maximum log lines stored per stream per process launch to prevent
+    // unbounded memory growth from noisy subprocesses.
+    const MAX_LOG_LINES: u64 = 50_000;
+
     // Start log capture tasks
     if let Some(out) = stdout {
         let app = app_handle.clone();
@@ -86,8 +90,21 @@ pub fn monitor_process(
             use tokio::io::{AsyncBufReadExt, BufReader};
             let reader = BufReader::new(out);
             let mut lines = reader.lines();
+            let mut count: u64 = 0;
             while let Ok(Some(line)) = lines.next_line().await {
-                super::logs::store_and_emit(&app, process_id, "stdout", &line);
+                count += 1;
+                if count == MAX_LOG_LINES {
+                    super::logs::store_and_emit(
+                        &app,
+                        process_id,
+                        "stdout",
+                        "[log capture limit reached — further output truncated]",
+                    );
+                }
+                if count <= MAX_LOG_LINES {
+                    super::logs::store_and_emit(&app, process_id, "stdout", &line);
+                }
+                // Continue reading (to drain the pipe) but don't store
             }
         });
     }
@@ -98,8 +115,20 @@ pub fn monitor_process(
             use tokio::io::{AsyncBufReadExt, BufReader};
             let reader = BufReader::new(err);
             let mut lines = reader.lines();
+            let mut count: u64 = 0;
             while let Ok(Some(line)) = lines.next_line().await {
-                super::logs::store_and_emit(&app, process_id, "stderr", &line);
+                count += 1;
+                if count == MAX_LOG_LINES {
+                    super::logs::store_and_emit(
+                        &app,
+                        process_id,
+                        "stderr",
+                        "[log capture limit reached — further output truncated]",
+                    );
+                }
+                if count <= MAX_LOG_LINES {
+                    super::logs::store_and_emit(&app, process_id, "stderr", &line);
+                }
             }
         });
     }
@@ -244,15 +273,27 @@ pub fn monitor_process(
                         registry.register(process_id, pid);
                     }
 
-                    // Capture new stdout/stderr
+                    // Capture new stdout/stderr (with same bounds as initial capture)
                     if let Some(out) = new_child.stdout.take() {
                         let app2 = app.clone();
                         tokio::spawn(async move {
                             use tokio::io::{AsyncBufReadExt, BufReader};
                             let reader = BufReader::new(out);
                             let mut lines = reader.lines();
+                            let mut count: u64 = 0;
                             while let Ok(Some(line)) = lines.next_line().await {
-                                super::logs::store_and_emit(&app2, process_id, "stdout", &line);
+                                count += 1;
+                                if count == MAX_LOG_LINES {
+                                    super::logs::store_and_emit(
+                                        &app2,
+                                        process_id,
+                                        "stdout",
+                                        "[log capture limit reached — further output truncated]",
+                                    );
+                                }
+                                if count <= MAX_LOG_LINES {
+                                    super::logs::store_and_emit(&app2, process_id, "stdout", &line);
+                                }
                             }
                         });
                     }
@@ -262,8 +303,20 @@ pub fn monitor_process(
                             use tokio::io::{AsyncBufReadExt, BufReader};
                             let reader = BufReader::new(err);
                             let mut lines = reader.lines();
+                            let mut count: u64 = 0;
                             while let Ok(Some(line)) = lines.next_line().await {
-                                super::logs::store_and_emit(&app2, process_id, "stderr", &line);
+                                count += 1;
+                                if count == MAX_LOG_LINES {
+                                    super::logs::store_and_emit(
+                                        &app2,
+                                        process_id,
+                                        "stderr",
+                                        "[log capture limit reached — further output truncated]",
+                                    );
+                                }
+                                if count <= MAX_LOG_LINES {
+                                    super::logs::store_and_emit(&app2, process_id, "stderr", &line);
+                                }
                             }
                         });
                     }
