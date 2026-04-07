@@ -194,6 +194,8 @@ function SplitContainer({
         document.body.style.userSelect = "";
         document.removeEventListener("mousemove", handleMouseMove);
         document.removeEventListener("mouseup", handleMouseUp);
+        // Trigger xterm refit on all visible terminal instances
+        window.dispatchEvent(new Event("resize"));
       };
 
       document.addEventListener("mousemove", handleMouseMove);
