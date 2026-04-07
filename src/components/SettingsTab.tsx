@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { getVersion } from "@tauri-apps/api/app";
+import { check } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
 import "../styles/settings.css";
 
 interface SettingField {
@@ -69,10 +72,26 @@ const PORT_FIELDS: SettingField[] = [
   },
 ];
 
+type UpdateStatus =
+  | { state: "idle" }
+  | { state: "checking" }
+  | {
+      state: "available";
+      version: string;
+      update: Awaited<ReturnType<typeof check>>;
+    }
+  | { state: "up-to-date" }
+  | { state: "downloading" }
+  | { state: "error"; message: string };
+
 export function SettingsTab() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+  const [appVersion, setAppVersion] = useState<string>("");
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({
+    state: "idle",
+  });
 
   useEffect(() => {
     async function load() {
@@ -92,6 +111,48 @@ export function SettingsTab() {
     }
     load();
   }, []);
+
+  useEffect(() => {
+    getVersion()
+      .then(setAppVersion)
+      .catch(() => setAppVersion("unknown"));
+  }, []);
+
+  const handleCheckForUpdate = useCallback(async () => {
+    setUpdateStatus({ state: "checking" });
+    try {
+      const update = await check();
+      if (update) {
+        setUpdateStatus({
+          state: "available",
+          version: update.version,
+          update,
+        });
+      } else {
+        setUpdateStatus({ state: "up-to-date" });
+      }
+    } catch (err) {
+      setUpdateStatus({
+        state: "error",
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }, []);
+
+  const handleInstallUpdate = useCallback(async () => {
+    if (updateStatus.state !== "available") return;
+    const { update } = updateStatus;
+    setUpdateStatus({ state: "downloading" });
+    try {
+      await update!.downloadAndInstall();
+      await relaunch();
+    } catch (err) {
+      setUpdateStatus({
+        state: "error",
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }, [updateStatus]);
 
   const handleSave = useCallback(
     async (key: string) => {
@@ -217,6 +278,78 @@ export function SettingsTab() {
           tab opens.
         </p>
         {TERMINAL_FIELDS.map(renderField)}
+      </section>
+
+      <hr className="settings-divider" />
+
+      <section className="settings-section">
+        <h3 className="settings-section-title">Updates</h3>
+        <p className="settings-section-desc">
+          Current version: <strong>{appVersion || "..."}</strong>
+        </p>
+
+        <div className="settings-update-status">
+          {updateStatus.state === "idle" && (
+            <button
+              className="settings-save-btn"
+              onClick={handleCheckForUpdate}
+            >
+              Check for Updates
+            </button>
+          )}
+
+          {updateStatus.state === "checking" && (
+            <span className="settings-update-msg">Checking for updates...</span>
+          )}
+
+          {updateStatus.state === "up-to-date" && (
+            <div className="settings-update-row">
+              <span className="settings-update-msg settings-update-success">
+                You&apos;re up to date!
+              </span>
+              <button
+                className="settings-save-btn settings-btn-secondary"
+                onClick={handleCheckForUpdate}
+              >
+                Check Again
+              </button>
+            </div>
+          )}
+
+          {updateStatus.state === "available" && (
+            <div className="settings-update-row">
+              <span className="settings-update-msg">
+                Version <strong>{updateStatus.version}</strong> is available.
+              </span>
+              <button
+                className="settings-save-btn"
+                onClick={handleInstallUpdate}
+              >
+                Update Now
+              </button>
+            </div>
+          )}
+
+          {updateStatus.state === "downloading" && (
+            <span className="settings-update-msg">
+              Downloading and installing update...
+            </span>
+          )}
+
+          {updateStatus.state === "error" && (
+            <div className="settings-update-row">
+              <span className="settings-update-msg settings-update-error">
+                Update check failed: {updateStatus.message}
+              </span>
+              <button
+                className="settings-save-btn settings-btn-secondary"
+                onClick={handleCheckForUpdate}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+        </div>
       </section>
 
       <hr className="settings-divider" />
