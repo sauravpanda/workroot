@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/activity-timeline.css";
 
@@ -63,14 +63,17 @@ export function ActivityTimeline({ onClose }: ActivityTimelineProps) {
     loadEvents();
   }, [loadEvents]);
 
-  const eventTypes = [
-    "all",
-    ...Array.from(new Set(events.map((e) => e.event_type))),
-  ];
-  const filteredEvents =
-    filterType === "all"
-      ? events
-      : events.filter((e) => e.event_type === filterType);
+  const eventTypes = useMemo(
+    () => ["all", ...Array.from(new Set(events.map((e) => e.event_type)))],
+    [events],
+  );
+  const filteredEvents = useMemo(
+    () =>
+      filterType === "all"
+        ? events
+        : events.filter((e) => e.event_type === filterType),
+    [events, filterType],
+  );
 
   return (
     <div className="timeline-backdrop" onClick={onClose}>
