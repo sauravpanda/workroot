@@ -109,7 +109,7 @@ export function ClipboardHistory({ onClose }: ClipboardHistoryProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="cliph-panel">
+      <DialogContent className="cliph-panel" aria-label="Clipboard History">
         <div className="cliph-header">
           <h3 className="cliph-title">Clipboard History</h3>
           <div className="cliph-header-actions">
@@ -167,7 +167,15 @@ export function ClipboardHistory({ onClose }: ClipboardHistoryProps) {
                 <div
                   key={entry.id}
                   className={`cliph-item ${isCopied ? "cliph-item-copied" : ""}`}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => handleCopy(entry)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleCopy(entry);
+                    }
+                  }}
                 >
                   <div className="cliph-item-top">
                     <pre className="cliph-preview">
