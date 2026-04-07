@@ -91,6 +91,23 @@ pub fn delete_ssh_connection(db: State<'_, AppDb>, id: i64) -> Result<(), String
     Ok(())
 }
 
+/// Shell-quote a string by wrapping it in single quotes and escaping
+/// any embedded single quotes. This prevents shell injection when the
+/// resulting command is pasted into a terminal.
+fn shell_quote(s: &str) -> String {
+    format!("'{}'", s.replace('\'', "'\\''"))
+}
+
+/// Validate that an SSH field does not contain shell metacharacters that
+/// could indicate an injection attempt.
+fn validate_ssh_field(field: &str, name: &str) -> Result<(), String> {
+    const FORBIDDEN: &[char] = &[';', '&', '|', '`', '$', '(', ')', '{', '}', '\n', '\r'];
+    if field.chars().any(|c| FORBIDDEN.contains(&c)) {
+        return Err(format!("{} contains invalid characters", name));
+    }
+    Ok(())
+}
+
 /// Build the ssh command string from a saved connection profile.
 #[tauri::command]
 pub fn build_ssh_command(db: State<'_, AppDb>, id: i64) -> Result<SshQuickConnect, String> {
@@ -122,6 +139,16 @@ pub fn build_ssh_command(db: State<'_, AppDb>, id: i64) -> Result<SshQuickConnec
         })
         .map_err(|e| format!("DB: {}", e))?;
 
+    // Validate all user-supplied fields before building the command
+    validate_ssh_field(&host, "host")?;
+    validate_ssh_field(&username, "username")?;
+    if let Some(ref kp) = key_path {
+        validate_ssh_field(kp, "key_path")?;
+    }
+    if let Some(ref jh) = jump_host {
+        validate_ssh_field(jh, "jump_host")?;
+    }
+
     let mut parts = vec!["ssh".to_string()];
 
     if port != 22 {
@@ -130,15 +157,15 @@ pub fn build_ssh_command(db: State<'_, AppDb>, id: i64) -> Result<SshQuickConnec
 
     if auth_type == "key" {
         if let Some(ref kp) = key_path {
-            parts.push(format!("-i {}", kp));
+            parts.push(format!("-i {}", shell_quote(kp)));
         }
     }
 
     if let Some(ref jh) = jump_host {
-        parts.push(format!("-J {}", jh));
+        parts.push(format!("-J {}", shell_quote(jh)));
     }
 
-    parts.push(format!("{}@{}", username, host));
+    parts.push(shell_quote(&format!("{}@{}", username, host)));
 
     Ok(SshQuickConnect {
         command: parts.join(" "),

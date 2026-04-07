@@ -414,24 +414,22 @@ async function loadTerminalSettings(): Promise<{
     ? "powershell.exe"
     : "/bin/zsh";
 
-  try {
-    const [shellSetting, initSetting, themeSetting] = await Promise.all([
-      invoke<string | null>("get_setting", { key: "terminal_shell" }),
-      invoke<string | null>("get_setting", { key: "terminal_init_command" }),
-      invoke<string | null>("get_setting", { key: "terminal_theme" }),
-    ]);
-    return {
-      shell: shellSetting?.trim() || defaultShell,
-      initCommand: initSetting?.trim() || null,
-      theme: getThemeById(themeSetting?.trim() || DEFAULT_THEME_ID),
-    };
-  } catch {
-    return {
-      shell: defaultShell,
-      initCommand: null,
-      theme: getThemeById(DEFAULT_THEME_ID),
-    };
-  }
+  const [shellResult, initResult, themeResult] = await Promise.allSettled([
+    invoke<string | null>("get_setting", { key: "terminal_shell" }),
+    invoke<string | null>("get_setting", { key: "terminal_init_command" }),
+    invoke<string | null>("get_setting", { key: "terminal_theme" }),
+  ]);
+  return {
+    shell:
+      (shellResult.status === "fulfilled" && shellResult.value?.trim()) ||
+      defaultShell,
+    initCommand:
+      (initResult.status === "fulfilled" && initResult.value?.trim()) || null,
+    theme: getThemeById(
+      (themeResult.status === "fulfilled" && themeResult.value?.trim()) ||
+        DEFAULT_THEME_ID,
+    ),
+  };
 }
 
 // Patterns that suggest the agent is waiting for user input.
