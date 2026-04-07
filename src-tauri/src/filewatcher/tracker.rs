@@ -19,6 +19,20 @@ impl FileWatcherRegistry {
     }
 }
 
+impl FileWatcherRegistry {
+    /// Remove all watchers, releasing OS file descriptors.
+    pub fn stop_all(&self) {
+        if let Ok(mut watchers) = self.watchers.lock() {
+            watchers.clear();
+        }
+    }
+
+    /// Number of active watchers (for diagnostics).
+    pub fn count(&self) -> usize {
+        self.watchers.lock().map(|w| w.len()).unwrap_or(0)
+    }
+}
+
 impl Default for FileWatcherRegistry {
     fn default() -> Self {
         Self::new()
