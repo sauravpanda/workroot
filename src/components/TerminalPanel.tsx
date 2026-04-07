@@ -696,12 +696,18 @@ function TerminalInstance({
     // without destroying/recreating the PTY session.
   }, [cwd]);
 
-  // Update theme when themeId prop changes (without recreating the PTY)
+  // Update theme when themeId prop changes (without recreating the PTY).
+  // Also reapply when the terminal becomes visible, because hidden terminals
+  // (visibility: hidden) may not repaint after a theme options change.
   useEffect(() => {
     if (!termRef.current || !themeId) return;
     const t = getThemeById(themeId);
     termRef.current.options.theme = t.theme;
-  }, [themeId]);
+    // Force a full redraw so the new colours appear immediately — this is
+    // especially important for inactive tabs whose WebGL canvas was not
+    // repainted while hidden.
+    termRef.current.refresh(0, termRef.current.rows - 1);
+  }, [themeId, visible]);
 
   // Refit when becoming active or visible
   useEffect(() => {
