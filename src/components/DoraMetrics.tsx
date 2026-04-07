@@ -193,7 +193,7 @@ export function DoraMetrics({ projectId, onClose }: DoraMetricsProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="dora-panel">
+      <DialogContent className="dora-panel" aria-label="DORA Metrics">
         {/* Header */}
         <div className="dora-header">
           <h3 className="dora-title">DORA Metrics</h3>

@@ -166,7 +166,7 @@ export function SshManager({ onClose, onConnect }: SshManagerProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="ssh-panel">
+      <DialogContent className="ssh-panel" aria-label="SSH Connections">
         <div className="ssh-header">
           <h3 className="ssh-title">SSH Connection Manager</h3>
           <div className="ssh-header-actions">

@@ -88,7 +88,7 @@ export function AppPerformance({ onClose }: AppPerformanceProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="appperf-panel">
+      <DialogContent className="appperf-panel" aria-label="App Performance">
         <div className="appperf-header">
           <h3 className="appperf-title">App Performance</h3>
           <div className="appperf-header-actions">

@@ -77,7 +77,7 @@ export function OnboardingWizard({
 
   return (
     <Dialog open>
-      <DialogContent className="onboarding-card">
+      <DialogContent className="onboarding-card" aria-label="Onboarding">
         {onClose && (
           <button
             onClick={handleClose}

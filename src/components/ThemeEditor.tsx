@@ -216,7 +216,7 @@ export function ThemeEditor({
         if (!open) handleCancel();
       }}
     >
-      <DialogContent className="theme-editor-panel">
+      <DialogContent className="theme-editor-panel" aria-label="Theme Editor">
         {/* Header */}
         <div className="theme-editor-header">
           <h3 className="theme-editor-title">Theme Editor</h3>

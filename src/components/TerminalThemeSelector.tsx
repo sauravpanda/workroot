@@ -44,7 +44,10 @@ export function TerminalThemeSelector({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="theme-selector-panel">
+      <DialogContent
+        className="theme-selector-panel"
+        aria-label="Terminal Theme"
+      >
         <div className="theme-selector-header">
           <h3 className="theme-selector-title">Terminal Theme</h3>
           <button className="theme-selector-close" onClick={onClose}>
