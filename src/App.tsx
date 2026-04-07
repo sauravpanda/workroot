@@ -186,6 +186,9 @@ function AppContent({
   const openPanelRef = useRef(openPanel);
   openPanelRef.current = openPanel;
 
+  const contentTabRef = useRef(contentTab);
+  contentTabRef.current = contentTab;
+
   const handleAgentComplete = useCallback(() => {
     const id = selectedWorktreeIdRef.current;
     const name = selectedWorktreeNameRef.current ?? "Terminal";
@@ -197,8 +200,9 @@ function AppContent({
           silent: false,
         });
       }
-    } else {
-      // Show toast with a "Review Changes" button instead of auto-opening.
+    } else if (contentTabRef.current !== "terminal") {
+      // Only show toast if the user isn't already viewing the terminal —
+      // if they're watching the agent's output, the notification is redundant.
       setAgentDoneToast(name);
     }
   }, [markAgentDone]);
