@@ -98,8 +98,8 @@ export function GitLogViewer({ worktreeId, onClose }: GitLogViewerProps) {
   }, [page, loadLog]);
 
   const handleSearch = useCallback(async () => {
+    setPage(0);
     if (!search.trim()) {
-      setPage(0);
       loadLog(0, false);
       return;
     }
@@ -203,6 +203,12 @@ export function GitLogViewer({ worktreeId, onClose }: GitLogViewerProps) {
                             <span className="gitlog-detail-label">Author:</span>
                             <span className="gitlog-detail-value">
                               {commit.author} &lt;{commit.email}&gt;
+                            </span>
+                          </div>
+                          <div className="gitlog-detail-row">
+                            <span className="gitlog-detail-label">Date:</span>
+                            <span className="gitlog-detail-value">
+                              {new Date(commit.date).toLocaleString()}
                             </span>
                           </div>
                           {commit.parent_ids.length > 0 && (
