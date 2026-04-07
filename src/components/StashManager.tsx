@@ -170,11 +170,15 @@ export function StashManager({ worktreeId, onClose }: StashManagerProps) {
                     Pop
                   </button>
                   {confirmDropIndex === stash.index ? (
-                    <>
+                    <span className="stash-drop-confirm-group">
+                      <span className="stash-drop-warning">
+                        This will permanently delete this stash.
+                      </span>
                       <button
                         className="stash-action-btn stash-action-danger"
                         aria-label={`Confirm drop stash ${stash.index}`}
                         onClick={() => handleDrop(stash.index)}
+                        autoFocus
                       >
                         Confirm Drop
                       </button>
@@ -185,7 +189,7 @@ export function StashManager({ worktreeId, onClose }: StashManagerProps) {
                       >
                         Cancel
                       </button>
-                    </>
+                    </span>
                   ) : (
                     <button
                       className="stash-action-btn stash-action-danger"

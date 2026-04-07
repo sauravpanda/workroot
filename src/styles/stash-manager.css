@@ -231,3 +231,18 @@
   background: var(--danger-muted);
   color: var(--danger);
 }
+
+/* -- Drop confirmation -- */
+
+.stash-drop-confirm-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stash-drop-warning {
+  font-size: 0.68em;
+  color: var(--danger);
+  white-space: nowrap;
+  margin-right: 4px;
+}
