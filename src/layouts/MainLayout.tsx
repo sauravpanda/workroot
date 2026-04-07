@@ -90,9 +90,9 @@ export function MainLayout({
   const [agentDoneWorktreeIds, setAgentDoneWorktreeIds] = useState<Set<number>>(
     () => new Set(),
   );
-  const [agentNeedsAttentionIds, setAgentNeedsAttentionIds] = useState<Set<number>>(
-    () => new Set(),
-  );
+  const [agentNeedsAttentionIds, setAgentNeedsAttentionIds] = useState<
+    Set<number>
+  >(() => new Set());
 
   // Project tabs state
   const [allProjects, setAllProjects] = useState<ProjectTab[]>([]);

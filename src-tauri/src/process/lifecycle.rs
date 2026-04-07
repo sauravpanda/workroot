@@ -296,8 +296,9 @@ fn kill_process_by_pid(pid: u32) {
         let nix_pid = Pid::from_raw(pid as i32);
         let _ = kill(nix_pid, Signal::SIGTERM);
 
-        // Brief wait then force kill
-        std::thread::sleep(std::time::Duration::from_millis(500));
+        // Brief wait then force kill — kept short to avoid blocking the
+        // tokio runtime when called from async contexts.
+        std::thread::sleep(std::time::Duration::from_millis(100));
         if kill(nix_pid, None).is_ok() {
             let _ = kill(nix_pid, Signal::SIGKILL);
         }
