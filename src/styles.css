@@ -478,7 +478,7 @@ button:disabled {
 .panel-overlay {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 9500;
   background: rgba(6, 6, 8, 0.65);
   backdrop-filter: blur(12px) saturate(0.8);
   -webkit-backdrop-filter: blur(12px) saturate(0.8);

@@ -8,7 +8,7 @@
   left: 0;
   right: 0;
   height: 32px;
-  z-index: 9998;
+  z-index: 9000;
   display: flex;
   align-items: stretch;
   background: var(--bg-base);

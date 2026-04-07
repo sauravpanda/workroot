@@ -4,7 +4,8 @@
 
 .main-layout {
   display: flex;
-  height: calc(100vh - 24px);
+  height: 100vh;
+  padding-bottom: 24px;
   overflow: hidden;
 }
 
@@ -913,7 +914,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 10001;
+  z-index: 9501;
   background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: 8px;
