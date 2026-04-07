@@ -132,7 +132,10 @@ pub async fn execute_plugin(
         .canonicalize()
         .map_err(|e| format!("Failed to resolve entry point: {e}"))?;
     if !canonical_entry.starts_with(&plugin_dir) {
-        return Err(format!("Entry point escapes plugin directory: '{}'", manifest.entry_point));
+        return Err(format!(
+            "Entry point escapes plugin directory: '{}'",
+            manifest.entry_point
+        ));
     }
 
     let (program, mut cmd_args) = match manifest.language.as_str() {
