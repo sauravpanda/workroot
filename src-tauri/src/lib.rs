@@ -49,6 +49,27 @@ use github::auth;
 use github::{DeviceCodeResponse, GitHubUser};
 use process::lifecycle::ProcessRegistry;
 use proxy::ProxyState;
+
+/// Shared reqwest HTTP client — reuse across all requests to benefit from
+/// connection pooling, DNS caching, and reduced allocations.
+pub struct HttpClient(pub reqwest::Client);
+
+impl HttpClient {
+    pub fn new() -> Self {
+        Self(
+            reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(30))
+                .build()
+                .unwrap_or_else(|_| reqwest::Client::new()),
+        )
+    }
+}
+
+impl Default for HttpClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 use tasks::watch::WatchState;
 use tauri::{Manager, State};
 
@@ -337,6 +358,7 @@ pub fn run() {
             let db = init_db(&app_handle)?;
             app.manage(db);
             app.manage(ProcessRegistry::new());
+            app.manage(HttpClient::new());
             app.manage(ProxyState::new());
             app.manage(ClaudeMdWatcher::new());
             app.manage(SchemaCache::new());

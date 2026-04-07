@@ -69,6 +69,7 @@ struct OllamaModel {
 /// Send messages to a local LLM (Ollama by default) and return the response.
 #[tauri::command]
 pub async fn ai_chat_send(
+    http: tauri::State<'_, crate::HttpClient>,
     messages: Vec<AiChatMessage>,
     model: Option<String>,
     endpoint: Option<String>,
@@ -90,8 +91,8 @@ pub async fn ai_chat_send(
         stream: false,
     };
 
-    let client = reqwest::Client::new();
-    let response = client
+    let response = http
+        .0
         .post(&url)
         .json(&body)
         .send()
@@ -122,11 +123,14 @@ pub async fn ai_chat_send(
 
 /// List available models from a local LLM server (Ollama by default).
 #[tauri::command]
-pub async fn ai_chat_list_models(endpoint: Option<String>) -> Result<Vec<String>, String> {
+pub async fn ai_chat_list_models(
+    http: tauri::State<'_, crate::HttpClient>,
+    endpoint: Option<String>,
+) -> Result<Vec<String>, String> {
     let url = endpoint.unwrap_or_else(|| DEFAULT_TAGS_ENDPOINT.to_string());
 
-    let client = reqwest::Client::new();
-    let response = client
+    let response = http
+        .0
         .get(&url)
         .send()
         .await
@@ -153,16 +157,14 @@ pub async fn ai_chat_list_models(endpoint: Option<String>) -> Result<Vec<String>
 
 /// Check if a local LLM server (Ollama by default) is reachable.
 #[tauri::command]
-pub async fn ai_check_health(endpoint: Option<String>) -> Result<bool, String> {
+pub async fn ai_check_health(
+    http: tauri::State<'_, crate::HttpClient>,
+    endpoint: Option<String>,
+) -> Result<bool, String> {
     // Use the base Ollama URL for a simple health check
     let url = endpoint.unwrap_or_else(|| "http://localhost:11434".to_string());
 
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(5))
-        .build()
-        .map_err(|e| format!("Client error: {}", e))?;
-
-    match client.get(&url).send().await {
+    match http.0.get(&url).send().await {
         Ok(resp) => Ok(resp.status().is_success()),
         Err(_) => Ok(false),
     }
