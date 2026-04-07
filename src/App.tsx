@@ -378,23 +378,35 @@ function AppContent({
     markAgentNeedsAttention,
   } = useUiStore();
 
-  const [isGitHubConnected, setIsGitHubConnected] = useState(false);
+  const [gitHubAuthStatus, setGitHubAuthStatus] = useState<
+    "connected" | "disconnected" | "network-error"
+  >("disconnected");
   useEffect(() => {
+    const isNetworkError = (err: unknown): boolean => {
+      const msg = String(err).toLowerCase();
+      return (
+        msg.includes("network") ||
+        msg.includes("fetch") ||
+        msg.includes("timeout") ||
+        msg.includes("econnrefused") ||
+        msg.includes("enotfound") ||
+        msg.includes("err_network") ||
+        msg.includes("socket") ||
+        msg.includes("dns") ||
+        msg.includes("abort")
+      );
+    };
     const check = () =>
       invoke<boolean>("github_check_auth")
-        .then(setIsGitHubConnected)
+        .then((authed) =>
+          setGitHubAuthStatus(authed ? "connected" : "disconnected"),
+        )
         .catch((err: unknown) => {
-          // Only mark as disconnected for auth failures, not network errors
-          const msg = String(err).toLowerCase();
-          if (
-            msg.includes("network") ||
-            msg.includes("fetch") ||
-            msg.includes("timeout")
-          ) {
-            // Network error — keep the previous auth state
-            return;
+          if (isNetworkError(err)) {
+            setGitHubAuthStatus("network-error");
+          } else {
+            setGitHubAuthStatus("disconnected");
           }
-          setIsGitHubConnected(false);
         });
     check();
     const id = setInterval(check, 30_000);
@@ -1385,7 +1397,7 @@ function AppContent({
       <StatusBar
         projectName={selectedProjectName}
         branchName={selectedWorktreeName}
-        isGitHubConnected={isGitHubConnected}
+        gitHubAuthStatus={gitHubAuthStatus}
       />
       <CommandPalette
         open={panels.palette}

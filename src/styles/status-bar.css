@@ -111,6 +111,22 @@
   box-shadow: none;
 }
 
+.status-bar-dot--network-error {
+  background-color: var(--warning, #eab308);
+  box-shadow: 0 0 5px rgba(234, 179, 8, 0.5);
+  animation: sb-network-error-pulse 2s ease-in-out infinite;
+}
+
+@keyframes sb-network-error-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
 .status-bar-connection {
   font-size: 12px;
   letter-spacing: 0.01em;

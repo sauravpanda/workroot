@@ -8,7 +8,7 @@ import "../styles/status-bar.css";
 interface StatusBarProps {
   projectName: string | null;
   branchName: string | null;
-  isGitHubConnected: boolean;
+  gitHubAuthStatus: "connected" | "disconnected" | "network-error";
 }
 
 /* ------------------------------------------------------------------ */
@@ -23,10 +23,22 @@ function formatTime(date: Date): string {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
+const authDotClass: Record<StatusBarProps["gitHubAuthStatus"], string> = {
+  connected: "status-bar-dot--connected",
+  disconnected: "status-bar-dot--disconnected",
+  "network-error": "status-bar-dot--network-error",
+};
+
+const authLabel: Record<StatusBarProps["gitHubAuthStatus"], string> = {
+  connected: "Connected",
+  disconnected: "Disconnected",
+  "network-error": "Network Error",
+};
+
 export function StatusBar({
   projectName,
   branchName,
-  isGitHubConnected,
+  gitHubAuthStatus,
 }: StatusBarProps) {
   const [time, setTime] = useState(() => formatTime(new Date()));
 
@@ -85,14 +97,10 @@ export function StatusBar({
       <div className="status-bar-right">
         <span className="status-bar-item">
           <span
-            className={`status-bar-dot ${
-              isGitHubConnected
-                ? "status-bar-dot--connected"
-                : "status-bar-dot--disconnected"
-            }`}
+            className={`status-bar-dot ${authDotClass[gitHubAuthStatus]}`}
           />
           <span className="status-bar-connection">
-            {isGitHubConnected ? "Connected" : "Disconnected"}
+            {authLabel[gitHubAuthStatus]}
           </span>
         </span>
         <span className="status-bar-item">
