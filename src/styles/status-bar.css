@@ -18,7 +18,7 @@
     var(--bg-base) 100%
   );
   border-top: 1px solid var(--border-subtle);
-  z-index: 9999;
+  z-index: 100;
   user-select: none;
   -webkit-user-select: none;
 }
