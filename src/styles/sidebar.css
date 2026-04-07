@@ -679,7 +679,8 @@
 }
 
 @keyframes wt-agent-attention {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     box-shadow: 0 0 5px rgba(245, 158, 11, 0.6);
   }
