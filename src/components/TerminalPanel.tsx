@@ -675,7 +675,10 @@ function TerminalInstance({
   useEffect(() => {
     const el = containerRef.current;
     if (!el || !visible) return;
-    const ro = new ResizeObserver(() => {
+    const ro = new ResizeObserver((entries) => {
+      // Skip refit when container is hidden (display:none gives zero size)
+      const { width, height } = entries[0].contentRect;
+      if (width === 0 || height === 0) return;
       try {
         fitAddonRef.current?.fit();
       } catch {
