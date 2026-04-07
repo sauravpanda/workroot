@@ -61,7 +61,7 @@ export function WorktreeItem({
     y: number;
   } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{
-    warnings: DeleteWarnings;
+    warnings: DeleteWarnings | null;
   } | null>(null);
 
   const handleClick = useCallback(() => {
@@ -111,12 +111,8 @@ export function WorktreeItem({
   const handleDeleteClick = useCallback(async () => {
     setContextMenu(null);
     const warnings = await onCheckWarnings(worktree.id);
-    if (warnings && (warnings.is_dirty || warnings.unpushed_commits > 0)) {
-      setDeleteConfirm({ warnings });
-    } else {
-      onDelete(worktree.id);
-    }
-  }, [worktree.id, onDelete, onCheckWarnings]);
+    setDeleteConfirm({ warnings: warnings ?? null });
+  }, [worktree.id, onCheckWarnings]);
 
   const handleConfirmDelete = useCallback(() => {
     setDeleteConfirm(null);
@@ -225,23 +221,25 @@ export function WorktreeItem({
       >
         <AlertDialogContent className="delete-confirm-dialog">
           <div className="delete-confirm-title">Delete worktree?</div>
-          {deleteConfirm && (
-            <div className="delete-confirm-warnings">
-              {deleteConfirm.warnings.is_dirty && (
-                <div className="delete-confirm-warning">
-                  Has uncommitted changes
-                </div>
-              )}
-              {deleteConfirm.warnings.unpushed_commits > 0 && (
-                <div className="delete-confirm-warning">
-                  {deleteConfirm.warnings.unpushed_commits} unpushed{" "}
-                  {deleteConfirm.warnings.unpushed_commits === 1
-                    ? "commit"
-                    : "commits"}
-                </div>
-              )}
-            </div>
-          )}
+          {deleteConfirm?.warnings &&
+            (deleteConfirm.warnings.is_dirty ||
+              deleteConfirm.warnings.unpushed_commits > 0) && (
+              <div className="delete-confirm-warnings">
+                {deleteConfirm.warnings.is_dirty && (
+                  <div className="delete-confirm-warning">
+                    Has uncommitted changes
+                  </div>
+                )}
+                {deleteConfirm.warnings.unpushed_commits > 0 && (
+                  <div className="delete-confirm-warning">
+                    {deleteConfirm.warnings.unpushed_commits} unpushed{" "}
+                    {deleteConfirm.warnings.unpushed_commits === 1
+                      ? "commit"
+                      : "commits"}
+                  </div>
+                )}
+              </div>
+            )}
           <div className="delete-confirm-actions">
             <AlertDialogCancel
               className="delete-confirm-btn cancel"
@@ -253,7 +251,11 @@ export function WorktreeItem({
               className="delete-confirm-btn confirm"
               onClick={handleConfirmDelete}
             >
-              Delete Anyway
+              {deleteConfirm?.warnings &&
+              (deleteConfirm.warnings.is_dirty ||
+                deleteConfirm.warnings.unpushed_commits > 0)
+                ? "Delete Anyway"
+                : "Delete"}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
