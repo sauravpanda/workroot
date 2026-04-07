@@ -168,7 +168,7 @@
 
 .sidebar-title {
   font-weight: 700;
-  font-size: 0.78em;
+  font-size: 0.88em;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
@@ -199,7 +199,7 @@
 .sidebar-search-input {
   flex: 1;
   font-family: var(--font-sans);
-  font-size: 0.75em;
+  font-size: 0.84em;
   color: var(--text-primary);
   background: transparent;
   border: none;
@@ -245,7 +245,7 @@
 
 .sidebar-error {
   padding: 0.5em 0.85em;
-  font-size: 0.75em;
+  font-size: 0.84em;
   color: var(--danger);
 }
 
@@ -253,7 +253,7 @@
   padding: 2em 0.85em;
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.8em;
+  font-size: 0.88em;
 }
 
 .sidebar-empty p {
@@ -327,7 +327,7 @@
 
 .sidebar-toolbar-hint {
   font-family: var(--font-mono);
-  font-size: 0.62em;
+  font-size: 0.71em;
   color: var(--text-muted);
   padding: 0.18em 0.4em;
   border: 1px solid var(--border-subtle);
@@ -397,7 +397,7 @@
 
 .project-name {
   font-weight: 600;
-  font-size: 0.81em;
+  font-size: 0.88em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -409,7 +409,7 @@
 
 .project-path {
   font-family: var(--font-mono);
-  font-size: 0.65em;
+  font-size: 0.74em;
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -428,7 +428,7 @@
 
 .project-framework {
   font-family: var(--font-mono);
-  font-size: 0.6em;
+  font-size: 0.7em;
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
   padding: 1px 5px;
@@ -438,7 +438,7 @@
 }
 
 .project-wt-count {
-  font-size: 0.6em;
+  font-size: 0.7em;
   font-weight: 700;
   background: var(--accent-muted);
   border: 1px solid rgba(16, 185, 129, 0.2);
@@ -451,7 +451,7 @@
 }
 
 .project-missing {
-  font-size: 0.6em;
+  font-size: 0.7em;
   color: var(--danger);
   flex-shrink: 0;
 }
@@ -481,13 +481,13 @@
 
 .project-error {
   padding: 0.3em 0.65em;
-  font-size: 0.7em;
+  font-size: 0.79em;
   color: var(--danger);
 }
 
 .project-empty {
   padding: 0.25em 1em 0.4em 2.2em;
-  font-size: 0.71em;
+  font-size: 0.8em;
   color: var(--text-muted);
   font-style: italic;
 }
@@ -588,7 +588,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--font-mono);
-  font-size: 0.74em;
+  font-size: 0.82em;
   color: var(--text-secondary);
   letter-spacing: -0.01em;
 }
@@ -670,7 +670,7 @@
 
 .worktree-dirty {
   font-family: var(--font-mono);
-  font-size: 0.64em;
+  font-size: 0.73em;
   font-weight: 700;
   color: var(--warning);
   line-height: 1;
@@ -679,7 +679,7 @@
 
 .worktree-port {
   font-family: var(--font-mono);
-  font-size: 0.62em;
+  font-size: 0.71em;
   color: var(--text-muted);
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
@@ -758,7 +758,7 @@
   width: calc(100% - 1.2em);
   margin: 0.15em 0.6em 0.45em;
   padding: 0.2em;
-  font-size: 0.68em;
+  font-size: 0.77em;
   background: none;
   border: 1px dashed var(--border-subtle);
   color: var(--text-muted);
@@ -790,7 +790,7 @@
 /* ---- New worktree input (now uses shadcn Input with Tailwind classes) ---- */
 
 .new-worktree-checkbox {
-  font-size: 0.72em;
+  font-size: 0.8em;
   color: var(--text-secondary);
   display: flex;
   align-items: center;
@@ -843,7 +843,7 @@
   display: block;
   width: 100%;
   padding: 0.4em 0.9em;
-  font-size: 0.79em;
+  font-size: 0.87em;
   text-align: left;
   background: none;
   border: none;
