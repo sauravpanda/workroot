@@ -8,7 +8,7 @@ import {
   useRef,
 } from "react";
 import { ErrorProvider } from "./contexts/ErrorContext";
-import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ErrorBoundary, PanelBoundary } from "./components/ErrorBoundary";
 import { GlobalErrorToast } from "./components/GlobalErrorToast";
 import { invoke } from "@tauri-apps/api/core";
 import { MainLayout } from "./layouts/MainLayout";
@@ -1332,19 +1332,27 @@ function AppContent({
   return (
     <Suspense fallback={null}>
       {showSettings ? (
-        <SettingsTab />
+        <PanelBoundary name="Settings">
+          <SettingsTab />
+        </PanelBoundary>
       ) : !selectedWorktreePath ? (
         <div className="content-scroll">
           <div className="content-inner">
-            <Dashboard
-              projectId={selectedProjectId}
-              onAction={handleDashboardAction}
-            />
+            <PanelBoundary name="Dashboard">
+              <Dashboard
+                projectId={selectedProjectId}
+                onAction={handleDashboardAction}
+              />
+            </PanelBoundary>
             <ActiveProjectBadge />
             <AuthButton />
-            <RepoList />
+            <PanelBoundary name="RepoList">
+              <RepoList />
+            </PanelBoundary>
             {selectedProjectId !== null && (
-              <EnvPanel projectId={selectedProjectId} />
+              <PanelBoundary name="EnvPanel">
+                <EnvPanel projectId={selectedProjectId} />
+              </PanelBoundary>
             )}
           </div>
         </div>
@@ -1371,598 +1379,756 @@ function AppContent({
             }
             projectName={selectedProjectName ?? undefined}
           />
-          <TerminalPanel
-            cwd={lastWorktreePathRef.current}
-            worktreeName={
-              selectedWorktreeName ?? lastWorktreeNameRef.current ?? "Shell"
-            }
-            themeId={terminalThemeId}
-            onAgentComplete={handleAgentComplete}
-            onAgentNeedsAttention={handleAgentNeedsAttention}
-          />
+          <PanelBoundary name="Terminal">
+            <TerminalPanel
+              cwd={lastWorktreePathRef.current}
+              worktreeName={
+                selectedWorktreeName ?? lastWorktreeNameRef.current ?? "Shell"
+              }
+              themeId={terminalThemeId}
+              onAgentComplete={handleAgentComplete}
+              onAgentNeedsAttention={handleAgentNeedsAttention}
+            />
+          </PanelBoundary>
         </div>
       )}
-      <StatusBar
-        projectName={selectedProjectName}
-        branchName={selectedWorktreeName}
-        isGitHubConnected={isGitHubConnected}
-      />
-      <CommandPalette
-        open={panels.palette}
-        onClose={handleClosePalette}
-        onExecute={execute}
-        search={search}
-      />
-      {panels.bookmarks && (
-        <CommandBookmarks
-          projectId={selectedProjectId}
-          onClose={handleCloseBookmarks}
+      <PanelBoundary name="StatusBar">
+        <StatusBar
+          projectName={selectedProjectName}
+          branchName={selectedWorktreeName}
+          isGitHubConnected={isGitHubConnected}
         />
+      </PanelBoundary>
+      <PanelBoundary name="CommandPalette">
+        <CommandPalette
+          open={panels.palette}
+          onClose={handleClosePalette}
+          onExecute={execute}
+          search={search}
+        />
+      </PanelBoundary>
+      {panels.bookmarks && (
+        <PanelBoundary name="CommandBookmarks">
+          <CommandBookmarks
+            projectId={selectedProjectId}
+            onClose={handleCloseBookmarks}
+          />
+        </PanelBoundary>
       )}
       {panels.themeSelector && (
-        <TerminalThemeSelector
-          currentThemeId={terminalThemeId}
-          onThemeChange={setTerminalThemeId}
-          onClose={() => closePanel("themeSelector")}
-        />
+        <PanelBoundary name="TerminalThemeSelector">
+          <TerminalThemeSelector
+            currentThemeId={terminalThemeId}
+            onThemeChange={setTerminalThemeId}
+            onClose={() => closePanel("themeSelector")}
+          />
+        </PanelBoundary>
       )}
       {panels.taskRunner && selectedWorktreePath && (
-        <TaskRunner
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("taskRunner")}
-        />
+        <PanelBoundary name="TaskRunner">
+          <TaskRunner
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("taskRunner")}
+          />
+        </PanelBoundary>
       )}
       {panels.appThemePicker && (
-        <AppThemePicker
-          currentThemeId={appThemeId}
-          onThemeChange={setAppThemeId}
-          onClose={() => closePanel("appThemePicker")}
-        />
+        <PanelBoundary name="AppThemePicker">
+          <AppThemePicker
+            currentThemeId={appThemeId}
+            onThemeChange={setAppThemeId}
+            onClose={() => closePanel("appThemePicker")}
+          />
+        </PanelBoundary>
       )}
       {panels.themeEditor && (
-        <ThemeEditor
-          currentThemeId={appThemeId}
-          onClose={() => closePanel("themeEditor")}
-          onThemeSave={(theme: AppTheme) => {
-            applyTheme(theme);
-            setAppThemeId(theme.id);
-          }}
-        />
+        <PanelBoundary name="ThemeEditor">
+          <ThemeEditor
+            currentThemeId={appThemeId}
+            onClose={() => closePanel("themeEditor")}
+            onThemeSave={(theme: AppTheme) => {
+              applyTheme(theme);
+              setAppThemeId(theme.id);
+            }}
+          />
+        </PanelBoundary>
       )}
       {panels.densityPicker && (
-        <DensityPicker
-          currentMode={densityMode}
-          onModeChange={setDensityMode}
-          onClose={() => closePanel("densityPicker")}
-        />
+        <PanelBoundary name="DensityPicker">
+          <DensityPicker
+            currentMode={densityMode}
+            onModeChange={setDensityMode}
+            onClose={() => closePanel("densityPicker")}
+          />
+        </PanelBoundary>
       )}
       {panels.shortcuts && (
-        <KeyboardShortcuts onClose={() => closePanel("shortcuts")} />
+        <PanelBoundary name="KeyboardShortcuts">
+          <KeyboardShortcuts onClose={() => closePanel("shortcuts")} />
+        </PanelBoundary>
       )}
       {panels.cssEditor && (
-        <CustomCSSEditor onClose={() => closePanel("cssEditor")} />
+        <PanelBoundary name="CustomCSSEditor">
+          <CustomCSSEditor onClose={() => closePanel("cssEditor")} />
+        </PanelBoundary>
       )}
       {panels.stashManager && selectedWorktreeId !== null && (
-        <StashManager
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("stashManager")}
-        />
+        <PanelBoundary name="StashManager">
+          <StashManager
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("stashManager")}
+          />
+        </PanelBoundary>
       )}
       {panels.checkpointManager && selectedWorktreeId !== null && (
-        <CheckpointPanel
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("checkpointManager")}
-        />
+        <PanelBoundary name="CheckpointPanel">
+          <CheckpointPanel
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("checkpointManager")}
+          />
+        </PanelBoundary>
       )}
       {panels.multiAgentPipeline && selectedWorktreeId !== null && (
-        <MultiAgentPipelinePanel
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("multiAgentPipeline")}
-        />
+        <PanelBoundary name="MultiAgentPipeline">
+          <MultiAgentPipelinePanel
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("multiAgentPipeline")}
+          />
+        </PanelBoundary>
       )}
       {panels.blameView && selectedWorktreeId !== null && (
-        <BlameView
-          worktreeId={selectedWorktreeId}
-          filePath={blameFilePath}
-          onClose={() => closePanel("blameView")}
-        />
+        <PanelBoundary name="BlameView">
+          <BlameView
+            worktreeId={selectedWorktreeId}
+            filePath={blameFilePath}
+            onClose={() => closePanel("blameView")}
+          />
+        </PanelBoundary>
       )}
       {panels.branchCompare && selectedWorktreeId !== null && (
-        <BranchCompare
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("branchCompare")}
-        />
+        <PanelBoundary name="BranchCompare">
+          <BranchCompare
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("branchCompare")}
+          />
+        </PanelBoundary>
       )}
       {panels.gitHooks && selectedWorktreeId !== null && (
-        <GitHooksManager
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("gitHooks")}
-        />
+        <PanelBoundary name="GitHooksManager">
+          <GitHooksManager
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("gitHooks")}
+          />
+        </PanelBoundary>
       )}
       {panels.conflictResolver && selectedWorktreeId !== null && (
-        <ConflictResolver
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("conflictResolver")}
-        />
+        <PanelBoundary name="ConflictResolver">
+          <ConflictResolver
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("conflictResolver")}
+          />
+        </PanelBoundary>
       )}
       {panels.securityAudit && selectedWorktreePath && (
-        <SecurityAudit
-          cwd={selectedWorktreePath}
-          onClose={() => {
-            closePanel("securityAudit");
-            setContentTab("terminal");
-          }}
-        />
+        <PanelBoundary name="SecurityAudit">
+          <SecurityAudit
+            cwd={selectedWorktreePath}
+            onClose={() => {
+              closePanel("securityAudit");
+              setContentTab("terminal");
+            }}
+          />
+        </PanelBoundary>
       )}
       {panels.secretScanner && selectedWorktreePath && (
-        <SecretScanner
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("secretScanner")}
-        />
+        <PanelBoundary name="SecretScanner">
+          <SecretScanner
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("secretScanner")}
+          />
+        </PanelBoundary>
       )}
       {panels.licenseReport && selectedWorktreePath && (
-        <LicenseReport
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("licenseReport")}
-        />
+        <PanelBoundary name="LicenseReport">
+          <LicenseReport
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("licenseReport")}
+          />
+        </PanelBoundary>
       )}
       {panels.securityHeaders && (
-        <SecurityHeaders onClose={() => closePanel("securityHeaders")} />
+        <PanelBoundary name="SecurityHeaders">
+          <SecurityHeaders onClose={() => closePanel("securityHeaders")} />
+        </PanelBoundary>
       )}
       {panels.testRunnerPanel && selectedWorktreePath && (
-        <TestRunnerPanel
-          cwd={selectedWorktreePath}
-          onClose={() => {
-            closePanel("testRunnerPanel");
-            setContentTab("terminal");
-          }}
-        />
+        <PanelBoundary name="TestRunner">
+          <TestRunnerPanel
+            cwd={selectedWorktreePath}
+            onClose={() => {
+              closePanel("testRunnerPanel");
+              setContentTab("terminal");
+            }}
+          />
+        </PanelBoundary>
       )}
       {panels.coverageReport && selectedWorktreePath && (
-        <CoverageReport
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("coverageReport")}
-        />
+        <PanelBoundary name="CoverageReport">
+          <CoverageReport
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("coverageReport")}
+          />
+        </PanelBoundary>
       )}
       {panels.benchmark && selectedWorktreePath && (
-        <BenchmarkDashboard
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("benchmark")}
-        />
+        <PanelBoundary name="Benchmark">
+          <BenchmarkDashboard
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("benchmark")}
+          />
+        </PanelBoundary>
       )}
       {panels.docker && selectedWorktreePath && (
-        <DockerPanel
-          cwd={selectedWorktreePath}
-          onClose={() => {
-            closePanel("docker");
-            setContentTab("terminal");
-          }}
-        />
+        <PanelBoundary name="Docker">
+          <DockerPanel
+            cwd={selectedWorktreePath}
+            onClose={() => {
+              closePanel("docker");
+              setContentTab("terminal");
+            }}
+          />
+        </PanelBoundary>
       )}
       {panels.dockerImages && (
-        <DockerImages onClose={() => closePanel("dockerImages")} />
+        <PanelBoundary name="DockerImages">
+          <DockerImages onClose={() => closePanel("dockerImages")} />
+        </PanelBoundary>
       )}
       {panels.containerMonitor && (
-        <ContainerMonitor onClose={() => closePanel("containerMonitor")} />
+        <PanelBoundary name="ContainerMonitor">
+          <ContainerMonitor onClose={() => closePanel("containerMonitor")} />
+        </PanelBoundary>
       )}
       {panels.flakyTests && selectedWorktreePath && (
-        <FlakyTests
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("flakyTests")}
-        />
+        <PanelBoundary name="FlakyTests">
+          <FlakyTests
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("flakyTests")}
+          />
+        </PanelBoundary>
       )}
-      <NotificationCenter
-        open={panels.notifications}
-        onClose={() => closePanel("notifications")}
-      />
+      <PanelBoundary name="NotificationCenter">
+        <NotificationCenter
+          open={panels.notifications}
+          onClose={() => closePanel("notifications")}
+        />
+      </PanelBoundary>
       {panels.activityTimeline && (
-        <ActivityTimeline onClose={() => closePanel("activityTimeline")} />
+        <PanelBoundary name="ActivityTimeline">
+          <ActivityTimeline onClose={() => closePanel("activityTimeline")} />
+        </PanelBoundary>
       )}
       {panels.pluginManager && (
-        <PluginManager onClose={() => closePanel("pluginManager")} />
+        <PanelBoundary name="PluginManager">
+          <PluginManager onClose={() => closePanel("pluginManager")} />
+        </PanelBoundary>
       )}
       {panels.backupRestore && (
-        <BackupRestore onClose={() => closePanel("backupRestore")} />
+        <PanelBoundary name="BackupRestore">
+          <BackupRestore onClose={() => closePanel("backupRestore")} />
+        </PanelBoundary>
       )}
       {panels.analyticsDashboard && selectedWorktreePath && (
-        <AnalyticsDashboard
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("analyticsDashboard")}
-        />
+        <PanelBoundary name="AnalyticsDashboard">
+          <AnalyticsDashboard
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("analyticsDashboard")}
+          />
+        </PanelBoundary>
       )}
-      <AiChatSidebar
-        open={panels.aiChat}
-        onClose={() => closePanel("aiChat")}
-      />
-      <UnifiedSearch
-        open={panels.unifiedSearch}
-        onClose={() => closePanel("unifiedSearch")}
-        onNavigate={(type: string, _data: string) => {
-          closePanel("unifiedSearch");
-          if (type === "bookmark") openPanel("bookmarks");
-          else if (type === "setting") openPanel("settingsPage");
-        }}
-      />
+      <PanelBoundary name="AiChat">
+        <AiChatSidebar
+          open={panels.aiChat}
+          onClose={() => closePanel("aiChat")}
+        />
+      </PanelBoundary>
+      <PanelBoundary name="UnifiedSearch">
+        <UnifiedSearch
+          open={panels.unifiedSearch}
+          onClose={() => closePanel("unifiedSearch")}
+          onNavigate={(type: string, _data: string) => {
+            closePanel("unifiedSearch");
+            if (type === "bookmark") openPanel("bookmarks");
+            else if (type === "setting") openPanel("settingsPage");
+          }}
+        />
+      </PanelBoundary>
       {panels.settingsPage && (
-        <SettingsPage onClose={() => closePanel("settingsPage")} />
+        <PanelBoundary name="SettingsPage">
+          <SettingsPage onClose={() => closePanel("settingsPage")} />
+        </PanelBoundary>
       )}
       {panels.terminalRecording && selectedWorktreeId !== null && (
-        <TerminalRecording
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("terminalRecording")}
-        />
+        <PanelBoundary name="TerminalRecording">
+          <TerminalRecording
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("terminalRecording")}
+          />
+        </PanelBoundary>
       )}
       {panels.doraMetrics && selectedProjectId !== null && (
-        <DoraMetrics
-          projectId={selectedProjectId}
-          onClose={() => closePanel("doraMetrics")}
-        />
+        <PanelBoundary name="DoraMetrics">
+          <DoraMetrics
+            projectId={selectedProjectId}
+            onClose={() => closePanel("doraMetrics")}
+          />
+        </PanelBoundary>
       )}
       {panels.webhookEvents && (
-        <WebhookEvents onClose={() => closePanel("webhookEvents")} />
+        <PanelBoundary name="WebhookEvents">
+          <WebhookEvents onClose={() => closePanel("webhookEvents")} />
+        </PanelBoundary>
       )}
       {panels.sshManager && (
-        <SshManager
-          onClose={() => closePanel("sshManager")}
-          onConnect={() => closePanel("sshManager")}
-        />
+        <PanelBoundary name="SshManager">
+          <SshManager
+            onClose={() => closePanel("sshManager")}
+            onConnect={() => closePanel("sshManager")}
+          />
+        </PanelBoundary>
       )}
       {panels.gitAnalytics && selectedWorktreeId !== null && (
-        <GitAnalytics
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("gitAnalytics")}
-        />
+        <PanelBoundary name="GitAnalytics">
+          <GitAnalytics
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("gitAnalytics")}
+          />
+        </PanelBoundary>
       )}
       {panels.snippetManager && (
-        <SnippetManager
-          projectId={selectedProjectId}
-          onClose={() => closePanel("snippetManager")}
-        />
+        <PanelBoundary name="SnippetManager">
+          <SnippetManager
+            projectId={selectedProjectId}
+            onClose={() => closePanel("snippetManager")}
+          />
+        </PanelBoundary>
       )}
       {panels.envDiff && selectedProjectId !== null && (
-        <EnvProfileDiff
-          projectId={selectedProjectId}
-          onClose={() => closePanel("envDiff")}
-        />
+        <PanelBoundary name="EnvProfileDiff">
+          <EnvProfileDiff
+            projectId={selectedProjectId}
+            onClose={() => closePanel("envDiff")}
+          />
+        </PanelBoundary>
       )}
       {panels.appPerformance && (
-        <AppPerformance onClose={() => closePanel("appPerformance")} />
+        <PanelBoundary name="AppPerformance">
+          <AppPerformance onClose={() => closePanel("appPerformance")} />
+        </PanelBoundary>
       )}
       {panels.fileExplorer && selectedWorktreePath && (
-        <FileExplorer
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("fileExplorer")}
-          onFileSelect={(path: string) => {
-            closePanel("fileExplorer");
-            setBlameFilePath(path);
-            openPanel("blameView");
-          }}
-        />
+        <PanelBoundary name="FileExplorer">
+          <FileExplorer
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("fileExplorer")}
+            onFileSelect={(path: string) => {
+              closePanel("fileExplorer");
+              setBlameFilePath(path);
+              openPanel("blameView");
+            }}
+          />
+        </PanelBoundary>
       )}
       {panels.projectOverview && selectedProjectId !== null && (
-        <ProjectOverview
-          projectId={selectedProjectId}
-          onClose={() => closePanel("projectOverview")}
-        />
+        <PanelBoundary name="ProjectOverview">
+          <ProjectOverview
+            projectId={selectedProjectId}
+            onClose={() => closePanel("projectOverview")}
+          />
+        </PanelBoundary>
       )}
       {panels.webVitals && (
-        <WebVitals onClose={() => closePanel("webVitals")} />
+        <PanelBoundary name="WebVitals">
+          <WebVitals onClose={() => closePanel("webVitals")} />
+        </PanelBoundary>
       )}
       {panels.pluginRuntime && selectedWorktreePath && (
-        <PluginRuntime
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("pluginRuntime")}
-        />
+        <PanelBoundary name="PluginRuntime">
+          <PluginRuntime
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("pluginRuntime")}
+          />
+        </PanelBoundary>
       )}
       {panels.depAnalyzer && selectedWorktreePath && (
-        <DependencyAnalyzer
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("depAnalyzer")}
-        />
+        <PanelBoundary name="DependencyAnalyzer">
+          <DependencyAnalyzer
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("depAnalyzer")}
+          />
+        </PanelBoundary>
       )}
       {panels.portScanner && (
-        <PortScanner onClose={() => closePanel("portScanner")} />
+        <PanelBoundary name="PortScanner">
+          <PortScanner onClose={() => closePanel("portScanner")} />
+        </PanelBoundary>
       )}
       {panels.dirStats && selectedWorktreePath && (
-        <DirectoryStats
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("dirStats")}
-        />
+        <PanelBoundary name="DirectoryStats">
+          <DirectoryStats
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("dirStats")}
+          />
+        </PanelBoundary>
       )}
       {panels.tagManager && selectedWorktreeId !== null && (
-        <TagManager
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("tagManager")}
-        />
+        <PanelBoundary name="TagManager">
+          <TagManager
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("tagManager")}
+          />
+        </PanelBoundary>
       )}
       {panels.gitLog && selectedWorktreeId !== null && (
-        <GitLogViewer
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("gitLog")}
-        />
+        <PanelBoundary name="GitLogViewer">
+          <GitLogViewer
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("gitLog")}
+          />
+        </PanelBoundary>
       )}
       {panels.workspaceManager && (
-        <WorkspaceManager
-          onClose={() => closePanel("workspaceManager")}
-          onLoad={() => closePanel("workspaceManager")}
-        />
+        <PanelBoundary name="WorkspaceManager">
+          <WorkspaceManager
+            onClose={() => closePanel("workspaceManager")}
+            onLoad={() => closePanel("workspaceManager")}
+          />
+        </PanelBoundary>
       )}
       {panels.taskScheduler && (
-        <TaskScheduler onClose={() => closePanel("taskScheduler")} />
+        <PanelBoundary name="TaskScheduler">
+          <TaskScheduler onClose={() => closePanel("taskScheduler")} />
+        </PanelBoundary>
       )}
       {panels.clipboardHistory && (
-        <ClipboardHistory onClose={() => closePanel("clipboardHistory")} />
+        <PanelBoundary name="ClipboardHistory">
+          <ClipboardHistory onClose={() => closePanel("clipboardHistory")} />
+        </PanelBoundary>
       )}
       {panels.todoPanel && (
-        <TodoPanel
-          projectId={selectedProjectId}
-          onClose={() => closePanel("todoPanel")}
-        />
+        <PanelBoundary name="TodoPanel">
+          <TodoPanel
+            projectId={selectedProjectId}
+            onClose={() => closePanel("todoPanel")}
+          />
+        </PanelBoundary>
       )}
       {panels.morningBriefing && selectedProjectId && (
-        <div
-          className="panel-overlay"
-          onClick={() => closePanel("morningBriefing")}
-        >
-          <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="panel-dialog-header">
-              <span>Morning Briefing</span>
-              <button
-                className="panel-dialog-close"
-                onClick={() => closePanel("morningBriefing")}
-              >
-                &times;
-              </button>
+        <PanelBoundary name="MorningBriefing">
+          <div
+            className="panel-overlay"
+            onClick={() => closePanel("morningBriefing")}
+          >
+            <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
+              <div className="panel-dialog-header">
+                <span>Morning Briefing</span>
+                <button
+                  className="panel-dialog-close"
+                  onClick={() => closePanel("morningBriefing")}
+                >
+                  &times;
+                </button>
+              </div>
+              <MorningBriefing projectId={selectedProjectId} />
             </div>
-            <MorningBriefing projectId={selectedProjectId} />
           </div>
-        </div>
+        </PanelBoundary>
       )}
       {panels.onboarding && (
-        <div className="panel-overlay" onClick={() => closePanel("onboarding")}>
+        <PanelBoundary name="Onboarding">
           <div
-            className="panel-dialog panel-dialog--wide"
-            onClick={(e) => e.stopPropagation()}
+            className="panel-overlay"
+            onClick={() => closePanel("onboarding")}
           >
-            <OnboardingWizard
-              onComplete={() => closePanel("onboarding")}
-              onClose={() => closePanel("onboarding")}
-            />
+            <div
+              className="panel-dialog panel-dialog--wide"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <OnboardingWizard
+                onComplete={() => closePanel("onboarding")}
+                onClose={() => closePanel("onboarding")}
+              />
+            </div>
           </div>
-        </div>
+        </PanelBoundary>
       )}
       {panels.networkTab && (
-        <div className="panel-overlay" onClick={() => closePanel("networkTab")}>
+        <PanelBoundary name="NetworkTab">
           <div
-            className="panel-dialog panel-dialog--wide"
-            onClick={(e) => e.stopPropagation()}
+            className="panel-overlay"
+            onClick={() => closePanel("networkTab")}
           >
-            <div className="panel-dialog-header">
-              <span>Network Traffic</span>
-              <button
-                className="panel-dialog-close"
-                onClick={() => closePanel("networkTab")}
-              >
-                &times;
-              </button>
+            <div
+              className="panel-dialog panel-dialog--wide"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="panel-dialog-header">
+                <span>Network Traffic</span>
+                <button
+                  className="panel-dialog-close"
+                  onClick={() => closePanel("networkTab")}
+                >
+                  &times;
+                </button>
+              </div>
+              <NetworkTab />
             </div>
-            <NetworkTab />
           </div>
-        </div>
+        </PanelBoundary>
       )}
       {panels.prStatus && selectedWorktreeId && (
-        <div className="panel-overlay" onClick={() => closePanel("prStatus")}>
-          <div
-            className="panel-dialog panel-dialog--wide"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="panel-dialog-header">
-              <span>PR Status</span>
-              <button
-                className="panel-dialog-close"
-                onClick={() => closePanel("prStatus")}
-              >
-                &times;
-              </button>
+        <PanelBoundary name="PRStatus">
+          <div className="panel-overlay" onClick={() => closePanel("prStatus")}>
+            <div
+              className="panel-dialog panel-dialog--wide"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="panel-dialog-header">
+                <span>PR Status</span>
+                <button
+                  className="panel-dialog-close"
+                  onClick={() => closePanel("prStatus")}
+                >
+                  &times;
+                </button>
+              </div>
+              <PRStatusPanel worktreeId={selectedWorktreeId} />
             </div>
-            <PRStatusPanel worktreeId={selectedWorktreeId} />
           </div>
-        </div>
+        </PanelBoundary>
       )}
       {panels.gitDiff && selectedWorktreeId && (
-        <div
-          className="panel-overlay"
-          onClick={() => {
-            closePanel("gitDiff");
-            setContentTab("terminal");
-          }}
-        >
+        <PanelBoundary name="GitDiff">
           <div
-            className="panel-dialog panel-dialog--wide"
-            onClick={(e) => e.stopPropagation()}
+            className="panel-overlay"
+            onClick={() => {
+              closePanel("gitDiff");
+              setContentTab("terminal");
+            }}
           >
-            <div className="panel-dialog-header">
-              <span>Git Changes</span>
-              <button
-                className="panel-dialog-close"
-                onClick={() => {
+            <div
+              className="panel-dialog panel-dialog--wide"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="panel-dialog-header">
+                <span>Git Changes</span>
+                <button
+                  className="panel-dialog-close"
+                  onClick={() => {
+                    closePanel("gitDiff");
+                    setContentTab("terminal");
+                  }}
+                >
+                  &times;
+                </button>
+              </div>
+              <GitDiffView
+                worktreeId={selectedWorktreeId}
+                onCreatePR={() => {
                   closePanel("gitDiff");
-                  setContentTab("terminal");
+                  openPanel("createPr");
+                  setContentTab("pr");
                 }}
-              >
-                &times;
-              </button>
+              />
             </div>
-            <GitDiffView
-              worktreeId={selectedWorktreeId}
-              onCreatePR={() => {
-                closePanel("gitDiff");
-                openPanel("createPr");
-                setContentTab("pr");
-              }}
-            />
           </div>
-        </div>
+        </PanelBoundary>
       )}
       {panels.createPr && selectedWorktreeId && selectedWorktreeName && (
-        <div
-          className="panel-overlay"
-          onClick={() => {
-            closePanel("createPr");
-            setContentTab("terminal");
-          }}
-        >
-          <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
-            <CreatePRPanel
-              worktreeId={selectedWorktreeId}
-              branch={selectedWorktreeName}
-              onClose={() => {
-                closePanel("createPr");
-                setContentTab("terminal");
-              }}
-            />
+        <PanelBoundary name="CreatePR">
+          <div
+            className="panel-overlay"
+            onClick={() => {
+              closePanel("createPr");
+              setContentTab("terminal");
+            }}
+          >
+            <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
+              <CreatePRPanel
+                worktreeId={selectedWorktreeId}
+                branch={selectedWorktreeName}
+                onClose={() => {
+                  closePanel("createPr");
+                  setContentTab("terminal");
+                }}
+              />
+            </div>
           </div>
-        </div>
+        </PanelBoundary>
       )}
       {panels.memoryTab && selectedWorktreeId && (
-        <div className="panel-overlay" onClick={() => closePanel("memoryTab")}>
+        <PanelBoundary name="MemoryTab">
           <div
-            className="panel-dialog panel-dialog--wide"
-            onClick={(e) => e.stopPropagation()}
+            className="panel-overlay"
+            onClick={() => closePanel("memoryTab")}
           >
-            <div className="panel-dialog-header">
-              <span>Memory Notes</span>
-              <button
-                className="panel-dialog-close"
-                onClick={() => closePanel("memoryTab")}
-              >
-                &times;
-              </button>
+            <div
+              className="panel-dialog panel-dialog--wide"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="panel-dialog-header">
+                <span>Memory Notes</span>
+                <button
+                  className="panel-dialog-close"
+                  onClick={() => closePanel("memoryTab")}
+                >
+                  &times;
+                </button>
+              </div>
+              <MemoryTab worktreeId={selectedWorktreeId} />
             </div>
-            <MemoryTab worktreeId={selectedWorktreeId} />
           </div>
-        </div>
+        </PanelBoundary>
       )}
       {panels.shellHistory && selectedProjectId && (
-        <div
-          className="panel-overlay"
-          onClick={() => closePanel("shellHistory")}
-        >
+        <PanelBoundary name="ShellHistory">
           <div
-            className="panel-dialog panel-dialog--wide"
-            onClick={(e) => e.stopPropagation()}
+            className="panel-overlay"
+            onClick={() => closePanel("shellHistory")}
           >
-            <div className="panel-dialog-header">
-              <span>Shell History</span>
-              <button
-                className="panel-dialog-close"
-                onClick={() => closePanel("shellHistory")}
-              >
-                &times;
-              </button>
+            <div
+              className="panel-dialog panel-dialog--wide"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="panel-dialog-header">
+                <span>Shell History</span>
+                <button
+                  className="panel-dialog-close"
+                  onClick={() => closePanel("shellHistory")}
+                >
+                  &times;
+                </button>
+              </div>
+              <ShellHistoryTab
+                projectId={selectedProjectId}
+                branch={selectedWorktreeName ?? ""}
+              />
             </div>
-            <ShellHistoryTab
-              projectId={selectedProjectId}
-              branch={selectedWorktreeName ?? ""}
-            />
           </div>
-        </div>
+        </PanelBoundary>
       )}
       {panels.deadEnds && selectedWorktreeId && (
-        <div className="panel-overlay" onClick={() => closePanel("deadEnds")}>
-          <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
-            <div className="panel-dialog-header">
-              <span>Dead Ends Log</span>
-              <button
-                className="panel-dialog-close"
-                onClick={() => closePanel("deadEnds")}
-              >
-                &times;
-              </button>
+        <PanelBoundary name="DeadEnds">
+          <div className="panel-overlay" onClick={() => closePanel("deadEnds")}>
+            <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
+              <div className="panel-dialog-header">
+                <span>Dead Ends Log</span>
+                <button
+                  className="panel-dialog-close"
+                  onClick={() => closePanel("deadEnds")}
+                >
+                  &times;
+                </button>
+              </div>
+              <DeadEndsLog worktreeId={selectedWorktreeId} />
             </div>
-            <DeadEndsLog worktreeId={selectedWorktreeId} />
           </div>
-        </div>
+        </PanelBoundary>
       )}
       {panels.dbSchema && selectedWorktreeId && (
-        <div className="panel-overlay" onClick={() => closePanel("dbSchema")}>
-          <div
-            className="panel-dialog panel-dialog--wide"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="panel-dialog-header">
-              <span>Database Schema</span>
-              <button
-                className="panel-dialog-close"
-                onClick={() => closePanel("dbSchema")}
-              >
-                &times;
-              </button>
+        <PanelBoundary name="DbSchema">
+          <div className="panel-overlay" onClick={() => closePanel("dbSchema")}>
+            <div
+              className="panel-dialog panel-dialog--wide"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="panel-dialog-header">
+                <span>Database Schema</span>
+                <button
+                  className="panel-dialog-close"
+                  onClick={() => closePanel("dbSchema")}
+                >
+                  &times;
+                </button>
+              </div>
+              <DbSchemaTab worktreeId={selectedWorktreeId} />
             </div>
-            <DbSchemaTab worktreeId={selectedWorktreeId} />
           </div>
-        </div>
+        </PanelBoundary>
       )}
       {panels.browserEvents && selectedWorktreeId && (
-        <div
-          className="panel-overlay"
-          onClick={() => closePanel("browserEvents")}
-        >
+        <PanelBoundary name="BrowserEvents">
           <div
-            className="panel-dialog panel-dialog--wide"
-            onClick={(e) => e.stopPropagation()}
+            className="panel-overlay"
+            onClick={() => closePanel("browserEvents")}
           >
-            <BrowserEvents
-              worktreeId={selectedWorktreeId}
-              onClose={() => closePanel("browserEvents")}
-            />
+            <div
+              className="panel-dialog panel-dialog--wide"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <BrowserEvents
+                worktreeId={selectedWorktreeId}
+                onClose={() => closePanel("browserEvents")}
+              />
+            </div>
           </div>
-        </div>
+        </PanelBoundary>
       )}
       {panels.dbExplorer && selectedWorktreeId && (
-        <div className="panel-overlay" onClick={() => closePanel("dbExplorer")}>
+        <PanelBoundary name="DatabaseExplorer">
           <div
-            className="panel-dialog panel-dialog--wide"
-            onClick={(e) => e.stopPropagation()}
+            className="panel-overlay"
+            onClick={() => closePanel("dbExplorer")}
           >
-            <DatabaseExplorer
-              worktreeId={selectedWorktreeId}
-              onClose={() => closePanel("dbExplorer")}
-            />
+            <div
+              className="panel-dialog panel-dialog--wide"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DatabaseExplorer
+                worktreeId={selectedWorktreeId}
+                onClose={() => closePanel("dbExplorer")}
+              />
+            </div>
           </div>
-        </div>
+        </PanelBoundary>
       )}
-      <QuickSwitcher
-        open={panels.quickSwitcher}
-        onClose={() => closePanel("quickSwitcher")}
-        selectedProjectId={selectedProjectId}
-        onSwitchProject={(id: number) => {
-          setSelectedProjectId(id);
-          closePanel("quickSwitcher");
-        }}
-        onSwitchBranch={() => {
-          closePanel("quickSwitcher");
-        }}
-      />
-      <ErrorDiagnosis
-        open={panels.errorDiagnosis}
-        onClose={() => closePanel("errorDiagnosis")}
-      />
-      <QuickActions
-        worktreeId={selectedWorktreeId}
-        worktreePath={selectedWorktreePath}
-        projectId={selectedProjectId}
-        onAction={(action) => {
-          if (action === "commit") execute("git:commit");
-          else if (action === "stash") openPanel("stashManager");
-          else if (action === "diff") openPanel("blameView");
-          else if (action === "blame") {
-            setBlameFilePath("");
-            openPanel("blameView");
-          } else if (action === "record") openPanel("terminalRecording");
-          else if (action === "tests") openPanel("testRunnerPanel");
-        }}
-      />
+      <PanelBoundary name="QuickSwitcher">
+        <QuickSwitcher
+          open={panels.quickSwitcher}
+          onClose={() => closePanel("quickSwitcher")}
+          selectedProjectId={selectedProjectId}
+          onSwitchProject={(id: number) => {
+            setSelectedProjectId(id);
+            closePanel("quickSwitcher");
+          }}
+          onSwitchBranch={() => {
+            closePanel("quickSwitcher");
+          }}
+        />
+      </PanelBoundary>
+      <PanelBoundary name="ErrorDiagnosis">
+        <ErrorDiagnosis
+          open={panels.errorDiagnosis}
+          onClose={() => closePanel("errorDiagnosis")}
+        />
+      </PanelBoundary>
+      <PanelBoundary name="QuickActions">
+        <QuickActions
+          worktreeId={selectedWorktreeId}
+          worktreePath={selectedWorktreePath}
+          projectId={selectedProjectId}
+          onAction={(action) => {
+            if (action === "commit") execute("git:commit");
+            else if (action === "stash") openPanel("stashManager");
+            else if (action === "diff") openPanel("blameView");
+            else if (action === "blame") {
+              setBlameFilePath("");
+              openPanel("blameView");
+            } else if (action === "record") openPanel("terminalRecording");
+            else if (action === "tests") openPanel("testRunnerPanel");
+          }}
+        />
+      </PanelBoundary>
       {agentDoneToast && (
         <div className="fixed bottom-12 right-4 z-[9999] flex max-w-[300px] items-start gap-2.5 rounded-[6px] border border-[var(--accent-muted)] bg-[var(--bg-elevated)] px-3 py-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.4)] [border-left:3px_solid_var(--accent)]">
           <div className="flex min-w-0 flex-1 flex-col gap-1">
