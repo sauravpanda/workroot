@@ -59,17 +59,17 @@ pub fn get_active_project(
     db: State<'_, AppDb>,
     proxy: State<'_, ProxyState>,
 ) -> Result<Option<ActiveProjectInfo>, String> {
-    let worktree_id = proxy.active_worktree_id.lock().map(|w| *w).unwrap_or(None);
+    let active = proxy.get_active();
 
-    let worktree_id = match worktree_id {
+    let worktree_id = match active.worktree_id {
         Some(id) => id,
         None => return Ok(None),
     };
 
-    let port = proxy.get_active_port();
-    if port == 0 {
+    if active.port == 0 {
         return Ok(None);
     }
+    let port = active.port;
 
     let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;
 

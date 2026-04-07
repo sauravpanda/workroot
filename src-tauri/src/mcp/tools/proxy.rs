@@ -19,7 +19,7 @@ pub fn get_active_proxy(app: &AppHandle) -> Result<Value, String> {
         }));
     }
 
-    let worktree_id = proxy.active_worktree_id.lock().map(|w| *w).unwrap_or(None);
+    let worktree_id = proxy.get_active().worktree_id;
 
     let db = app.state::<AppDb>();
     let conn = db.0.lock().map_err(|e| format!("DB lock error: {}", e))?;

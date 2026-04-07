@@ -77,7 +77,13 @@ pub async fn run_lighthouse_audit(url: String) -> Result<WebVitalsReport, String
         _ => {
             // Fallback: measure TTFB with a simple GET request
             let start = std::time::Instant::now();
-            let resp = reqwest::get(&url)
+            let client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(10))
+                .build()
+                .map_err(|e| format!("HTTP client build failed: {e}"))?;
+            let resp = client
+                .get(&url)
+                .send()
                 .await
                 .map_err(|e| format!("HTTP request failed: {e}"))?;
             let ttfb = start.elapsed().as_secs_f64() * 1000.0;
