@@ -59,7 +59,7 @@ export function CoverageReport({ cwd, onClose }: CoverageReportProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="coverage-panel">
+      <DialogContent className="coverage-panel" aria-label="Coverage Report">
         <div className="coverage-header">
           <h3 className="coverage-title">Coverage Report</h3>
           <div className="coverage-header-actions">

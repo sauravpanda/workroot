@@ -51,7 +51,7 @@ export function AppThemePicker({
         }
       }}
     >
-      <DialogContent className="app-theme-panel">
+      <DialogContent className="app-theme-panel" aria-label="App Theme">
         <div className="app-theme-header">
           <h3 className="app-theme-title">App Theme</h3>
           <button

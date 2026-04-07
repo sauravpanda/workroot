@@ -129,7 +129,7 @@ export function GitLogViewer({ worktreeId, onClose }: GitLogViewerProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="gitlog-panel">
+      <DialogContent className="gitlog-panel" aria-label="Git Log">
         <div className="gitlog-header">
           <h3 className="gitlog-title">Git Log</h3>
           <button className="gitlog-close" onClick={onClose}>

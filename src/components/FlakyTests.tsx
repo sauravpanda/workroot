@@ -58,7 +58,7 @@ export function FlakyTests({ cwd, onClose }: FlakyTestsProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="flaky-panel">
+      <DialogContent className="flaky-panel" aria-label="Flaky Tests">
         <div className="flaky-header">
           <h3 className="flaky-title">Flaky Tests</h3>
           <div className="flaky-header-actions">

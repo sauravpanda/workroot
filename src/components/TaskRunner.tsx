@@ -82,7 +82,7 @@ export function TaskRunner({ cwd, onRunCommand, onClose }: TaskRunnerProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="taskrunner-panel">
+      <DialogContent className="taskrunner-panel" aria-label="Task Runner">
         <div className="taskrunner-header">
           <h3 className="taskrunner-title">Task Runner</h3>
           <div className="taskrunner-header-actions">

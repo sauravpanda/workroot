@@ -83,7 +83,7 @@ export function DockerPanel({ cwd, onClose }: DockerPanelProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="docker-panel">
+      <DialogContent className="docker-panel" aria-label="Docker">
         <div className="docker-header">
           <h3 className="docker-title">Docker</h3>
           <div className="docker-header-actions">

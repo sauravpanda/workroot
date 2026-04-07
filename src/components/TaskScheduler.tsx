@@ -124,7 +124,7 @@ export function TaskScheduler({ onClose }: TaskSchedulerProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="tasksched-panel">
+      <DialogContent className="tasksched-panel" aria-label="Task Scheduler">
         <div className="tasksched-header">
           <h3 className="tasksched-title">Task Scheduler</h3>
           <button className="tasksched-close" onClick={onClose}>

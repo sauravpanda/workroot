@@ -109,7 +109,7 @@ export function ClipboardHistory({ onClose }: ClipboardHistoryProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="cliph-panel">
+      <DialogContent className="cliph-panel" aria-label="Clipboard History">
         <div className="cliph-header">
           <h3 className="cliph-title">Clipboard History</h3>
           <div className="cliph-header-actions">

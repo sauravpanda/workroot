@@ -128,7 +128,7 @@ export function DependencyAnalyzer({ cwd, onClose }: DependencyAnalyzerProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="depan-panel">
+      <DialogContent className="depan-panel" aria-label="Dependency Analyzer">
         <div className="depan-header">
           <h3 className="depan-title">Dependencies</h3>
           <div className="depan-header-actions">

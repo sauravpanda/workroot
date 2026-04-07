@@ -178,7 +178,7 @@ export function CommandBookmarks({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="bookmarks-panel">
+      <DialogContent className="bookmarks-panel" aria-label="Command Bookmarks">
         <div className="bookmarks-header">
           <h3 className="bookmarks-title">Command Bookmarks</h3>
           <div className="bookmarks-header-actions">

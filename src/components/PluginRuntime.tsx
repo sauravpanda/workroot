@@ -112,7 +112,7 @@ export function PluginRuntime({ cwd, onClose }: PluginRuntimeProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="plrt-panel">
+      <DialogContent className="plrt-panel" aria-label="Plugin Runtime">
         <div className="plrt-header">
           <h3 className="plrt-title">Plugin Runtime</h3>
           <div className="plrt-header-actions">

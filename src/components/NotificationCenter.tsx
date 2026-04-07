@@ -86,7 +86,7 @@ export function NotificationCenter({ open, onClose }: NotificationCenterProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="notif-panel">
+      <DialogContent className="notif-panel" aria-label="Notifications">
         <div className="notif-header">
           <h3 className="notif-title">
             Notifications
