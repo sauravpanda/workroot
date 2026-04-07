@@ -1,5 +1,6 @@
 use serde::Serialize;
-use std::process::Command;
+use std::time::Duration;
+use tokio::process::Command;
 
 #[derive(Debug, Serialize)]
 pub struct ContainerStats {
@@ -14,15 +15,20 @@ pub struct ContainerStats {
 /// Get resource usage stats for all running containers.
 #[tauri::command]
 pub async fn get_container_stats() -> Result<Vec<ContainerStats>, String> {
-    let output = Command::new("docker")
-        .args([
-            "stats",
-            "--no-stream",
-            "--format",
-            "{{.ID}}\t{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}",
-        ])
-        .output()
-        .map_err(|e| format!("Run docker stats: {}", e))?;
+    let output = tokio::time::timeout(
+        Duration::from_secs(10),
+        Command::new("docker")
+            .args([
+                "stats",
+                "--no-stream",
+                "--format",
+                "{{.ID}}\t{{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}",
+            ])
+            .output(),
+    )
+    .await
+    .map_err(|_| "docker stats timed out after 10 seconds".to_string())?
+    .map_err(|e| format!("Run docker stats: {}", e))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -59,10 +65,15 @@ pub async fn get_container_stats() -> Result<Vec<ContainerStats>, String> {
 #[tauri::command]
 pub async fn get_container_logs(container_id: String, tail: Option<u32>) -> Result<String, String> {
     let tail_str = tail.unwrap_or(100).to_string();
-    let output = Command::new("docker")
-        .args(["logs", "--tail", &tail_str, &container_id])
-        .output()
-        .map_err(|e| format!("Run docker logs: {}", e))?;
+    let output = tokio::time::timeout(
+        Duration::from_secs(10),
+        Command::new("docker")
+            .args(["logs", "--tail", &tail_str, &container_id])
+            .output(),
+    )
+    .await
+    .map_err(|_| "docker logs timed out after 10 seconds".to_string())?
+    .map_err(|e| format!("Run docker logs: {}", e))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -107,10 +118,13 @@ pub async fn container_action(container_id: String, action: String) -> Result<()
 
     args.push(&container_id);
 
-    let output = Command::new("docker")
-        .args(&args)
-        .output()
-        .map_err(|e| format!("Run docker {}: {}", cmd, e))?;
+    let output = tokio::time::timeout(
+        Duration::from_secs(30),
+        Command::new("docker").args(&args).output(),
+    )
+    .await
+    .map_err(|_| format!("docker {} timed out after 30 seconds", cmd))?
+    .map_err(|e| format!("Run docker {}: {}", cmd, e))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
