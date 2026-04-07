@@ -17,9 +17,15 @@ impl FileWatcherRegistry {
             watchers: Mutex::new(HashMap::new()),
         }
     }
-}
 
-impl FileWatcherRegistry {
+    /// Remove watchers for project IDs that are no longer valid.
+    /// Call this periodically or when projects are deleted.
+    pub fn remove_stale(&self, valid_ids: &[i64]) {
+        if let Ok(mut watchers) = self.watchers.lock() {
+            watchers.retain(|id, _| valid_ids.contains(id));
+        }
+    }
+
     /// Remove all watchers, releasing OS file descriptors.
     pub fn stop_all(&self) {
         if let Ok(mut watchers) = self.watchers.lock() {
@@ -27,7 +33,7 @@ impl FileWatcherRegistry {
         }
     }
 
-    /// Number of active watchers (for diagnostics).
+    /// Returns the number of active watchers.
     pub fn count(&self) -> usize {
         self.watchers.lock().map(|w| w.len()).unwrap_or(0)
     }

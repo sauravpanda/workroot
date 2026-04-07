@@ -1,6 +1,7 @@
 use crate::db::queries;
 use crate::db::AppDb;
 use serde::Serialize;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tauri::{AppHandle, Emitter, Manager, State};
 
 /// Payload emitted to the frontend for each log line.
@@ -12,7 +13,17 @@ pub struct LogLineEvent {
     pub timestamp: String,
 }
 
+/// Maximum log lines to store per process before pruning old entries.
+const MAX_LINES_PER_PROCESS: i64 = 50_000;
+
+/// Prune every N inserts to avoid checking on every line.
+const PRUNE_CHECK_INTERVAL: u64 = 1_000;
+
+/// Global insert counter for periodic pruning.
+static INSERT_COUNTER: AtomicU64 = AtomicU64::new(0);
+
 /// Store a log line in the database and emit a Tauri event.
+/// Periodically prunes old log lines to prevent unbounded DB growth.
 pub fn store_and_emit(app: &AppHandle, process_id: i64, stream: &str, content: &str) {
     let timestamp = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
@@ -20,6 +31,18 @@ pub fn store_and_emit(app: &AppHandle, process_id: i64, stream: &str, content: &
     let db = app.state::<AppDb>();
     if let Ok(conn) = db.0.lock() {
         let _ = queries::insert_log(&conn, process_id, stream, content);
+
+        // Periodically prune old logs to cap memory/disk usage
+        let count = INSERT_COUNTER.fetch_add(1, Ordering::Relaxed);
+        if count.is_multiple_of(PRUNE_CHECK_INTERVAL) {
+            let _ = conn.execute(
+                "DELETE FROM process_logs WHERE process_id = ?1 AND id NOT IN (
+                    SELECT id FROM process_logs WHERE process_id = ?1
+                    ORDER BY id DESC LIMIT ?2
+                )",
+                rusqlite::params![process_id, MAX_LINES_PER_PROCESS],
+            );
+        }
     }
 
     // Emit event to frontend
