@@ -287,6 +287,7 @@ pub fn run() {
             terminal::recording::list_recordings,
             terminal::recording::get_recording_events,
             terminal::recording::delete_recording,
+            terminal::drop_image::save_dropped_image,
             metrics::dora::record_deployment,
             metrics::dora::get_dora_metrics,
             metrics::dora::list_deployments,
