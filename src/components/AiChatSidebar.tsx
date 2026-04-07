@@ -347,6 +347,7 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
               !input.trim() || loading || connectionStatus !== "connected"
             }
             title="Send message"
+            aria-label="Send message"
           >
             <SendIcon />
           </button>
