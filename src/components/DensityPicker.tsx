@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { applyDensity, saveDensity, type DensityMode } from "../themes/density";
+import { Dialog, DialogContent } from "./ui/dialog";
 
 interface DensityPickerProps {
   currentMode: DensityMode;
@@ -59,14 +60,16 @@ export function DensityPicker({
   );
 
   return (
-    <div
-      className="density-backdrop"
-      onClick={() => {
-        applyDensity(currentMode);
-        onClose();
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) {
+          applyDensity(currentMode);
+          onClose();
+        }
       }}
     >
-      <div className="density-panel" onClick={(e) => e.stopPropagation()}>
+      <DialogContent className="density-panel" aria-label="Layout Density">
         <div className="density-header">
           <h3 className="density-title">Layout Density</h3>
           <button
@@ -94,8 +97,8 @@ export function DensityPicker({
             />
           ))}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

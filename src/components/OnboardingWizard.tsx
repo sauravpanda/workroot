@@ -160,7 +160,11 @@ export function OnboardingWizard({
             <p className="onboarding-desc">
               Point to a local repository to start tracking.
             </p>
+            <label htmlFor="onboarding-project-path" className="sr-only">
+              Project path
+            </label>
             <Input
+              id="onboarding-project-path"
               className="onboarding-input font-mono"
               type="text"
               value={projectPath}

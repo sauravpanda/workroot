@@ -449,6 +449,7 @@ function ColorRow({
           type="color"
           value={hex6}
           onChange={(e) => onChange(colorKey, e.target.value)}
+          aria-label={`${COLOR_LABELS[colorKey]} color picker`}
         />
       </div>
       <input
@@ -456,6 +457,7 @@ function ColorRow({
         type="text"
         value={value}
         onChange={(e) => onChange(colorKey, e.target.value)}
+        aria-label={`${COLOR_LABELS[colorKey]} hex value`}
       />
     </div>
   );
