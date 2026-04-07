@@ -18,6 +18,9 @@ export function RepoList() {
   const [cloneDir, setCloneDir] = useState("");
   const [cloningRepo, setCloningRepo] = useState<string | null>(null);
   const [view, setView] = useState<"projects" | "github">("projects");
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(
+    null,
+  );
 
   const registeredPaths = useMemo(
     () => new Set(projects.map((p) => p.local_path)),
@@ -107,13 +110,35 @@ export function RepoList() {
                       <span className="repo-path">{p.local_path}</span>
                     </span>
                   </div>
-                  <button
-                    onClick={() => removeProject(p.id)}
-                    className="repo-remove-btn"
-                    title="Remove project"
-                  >
-                    Remove
-                  </button>
+                  {confirmingDeleteId === p.id ? (
+                    <>
+                      <button
+                        onClick={async () => {
+                          await removeProject(p.id);
+                          setConfirmingDeleteId(null);
+                        }}
+                        className="repo-remove-btn repo-remove-confirm"
+                        title="Confirm removal"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        onClick={() => setConfirmingDeleteId(null)}
+                        className="repo-remove-btn repo-remove-cancel"
+                        title="Cancel removal"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmingDeleteId(p.id)}
+                      className="repo-remove-btn"
+                      title="Remove project"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
