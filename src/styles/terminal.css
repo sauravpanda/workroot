@@ -5,7 +5,8 @@
 .terminal-fullscreen {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   width: 100%;
   background-color: var(--bg-base);
 }
@@ -194,6 +195,7 @@
 .terminal-container {
   flex: 1;
   min-height: 0;
+  overflow: hidden;
   padding: 4px 6px 4px 4px;
 }
 
