@@ -32,6 +32,7 @@ interface TerminalPanelProps {
   worktreeName: string;
   themeId?: string;
   onAgentComplete?: () => void;
+  onAgentNeedsAttention?: () => void;
 }
 
 let paneCounter = 0;
@@ -74,6 +75,7 @@ export function TerminalPanel({
   worktreeName,
   themeId,
   onAgentComplete,
+  onAgentNeedsAttention,
 }: TerminalPanelProps) {
   // All per-worktree tab states, keyed by cwd path.
   const [pathStates, setPathStates] = useState<Record<string, PathTabState>>(
@@ -376,6 +378,9 @@ export function TerminalPanel({
                       onAgentComplete={
                         isActivePathAndTab ? onAgentComplete : undefined
                       }
+                      onAgentNeedsAttention={
+                        isActivePathAndTab ? onAgentNeedsAttention : undefined
+                      }
                     />,
                     container,
                     paneId,
@@ -396,6 +401,7 @@ interface TerminalInstanceProps {
   visible?: boolean;
   themeId?: string;
   onAgentComplete?: () => void;
+  onAgentNeedsAttention?: () => void;
 }
 
 async function loadTerminalSettings(): Promise<{
@@ -427,6 +433,21 @@ async function loadTerminalSettings(): Promise<{
   }
 }
 
+// Patterns that suggest the agent is waiting for user input.
+const ATTENTION_PATTERNS = [
+  /Do you want to proceed/i,
+  /\(y\/n\)/i,
+  /\[Y\/n\]/i,
+  /\[yes\/no\]/i,
+  /Press Enter/i,
+  /waiting for.*input/i,
+  /permission/i,
+  /approve|deny/i,
+];
+
+// Cooldown (ms) between attention notifications to avoid spam.
+const ATTENTION_COOLDOWN_MS = 10_000;
+
 // Minimum bytes of PTY output to count as "agent activity" before we watch for idle.
 const ACTIVITY_THRESHOLD_BYTES = 500;
 // How long the terminal must be idle (ms) after activity before we fire onAgentComplete.
@@ -438,6 +459,7 @@ function TerminalInstance({
   visible = true,
   themeId,
   onAgentComplete,
+  onAgentNeedsAttention,
 }: TerminalInstanceProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -447,6 +469,9 @@ function TerminalInstance({
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onAgentCompleteRef = useRef(onAgentComplete);
   onAgentCompleteRef.current = onAgentComplete;
+  const onAgentNeedsAttentionRef = useRef(onAgentNeedsAttention);
+  onAgentNeedsAttentionRef.current = onAgentNeedsAttention;
+  const lastAttentionTimeRef = useRef(0);
 
   // Create xterm + PTY on mount, destroy on unmount
   useEffect(() => {
@@ -556,6 +581,20 @@ function TerminalInstance({
         pty.onData((data: Uint8Array) => {
           if (!termRef.current) return;
           term.write(data);
+
+          // Check for patterns that suggest the agent needs user input.
+          const text = new TextDecoder().decode(data);
+          const now = Date.now();
+          if (now - lastAttentionTimeRef.current >= ATTENTION_COOLDOWN_MS) {
+            for (const pattern of ATTENTION_PATTERNS) {
+              if (pattern.test(text)) {
+                lastAttentionTimeRef.current = now;
+                onAgentNeedsAttentionRef.current?.();
+                break;
+              }
+            }
+          }
+
           // Activity tracking for agent-complete detection.
           activityBytesRef.current += data.length;
           if (idleTimerRef.current) clearTimeout(idleTimerRef.current);

@@ -142,6 +142,7 @@ function AppContent({
     showRightSidebar,
     setShowRightSidebar,
     markAgentDone,
+    markAgentNeedsAttention,
   } = useUiStore();
 
   const [isGitHubConnected, setIsGitHubConnected] = useState(false);
@@ -206,6 +207,19 @@ function AppContent({
       setAgentDoneToast(name);
     }
   }, [markAgentDone]);
+
+  const handleAgentNeedsAttention = useCallback(() => {
+    const id = selectedWorktreeIdRef.current;
+    if (id !== null) markAgentNeedsAttention(id);
+    if (!document.hasFocus()) {
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Agent needs attention", {
+          body: `${selectedWorktreeNameRef.current ?? "Terminal"} is waiting for input`,
+          silent: false,
+        });
+      }
+    }
+  }, [markAgentNeedsAttention]);
 
   // Reset content tab and close tab-launched panels when switching worktrees
   useEffect(() => {
@@ -1119,6 +1133,7 @@ function AppContent({
             }
             themeId={terminalThemeId}
             onAgentComplete={handleAgentComplete}
+            onAgentNeedsAttention={handleAgentNeedsAttention}
           />
         </div>
       )}

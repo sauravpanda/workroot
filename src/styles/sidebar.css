@@ -666,6 +666,29 @@
   }
 }
 
+/* ---- Agent needs-attention pulse ---- */
+
+.worktree-agent-attention {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background-color: var(--warning);
+  box-shadow: 0 0 5px rgba(245, 158, 11, 0.6);
+  animation: wt-agent-attention 1s ease-in-out infinite;
+}
+
+@keyframes wt-agent-attention {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 5px rgba(245, 158, 11, 0.6);
+  }
+  50% {
+    opacity: 0.5;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+  }
+}
+
 /* ---- Dirty + Port badges ---- */
 
 .worktree-dirty {
