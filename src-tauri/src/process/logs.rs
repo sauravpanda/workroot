@@ -34,7 +34,7 @@ pub fn store_and_emit(app: &AppHandle, process_id: i64, stream: &str, content: &
 
         // Periodically prune old logs to cap memory/disk usage
         let count = INSERT_COUNTER.fetch_add(1, Ordering::Relaxed);
-        if count % PRUNE_CHECK_INTERVAL == 0 {
+        if count.is_multiple_of(PRUNE_CHECK_INTERVAL) {
             let _ = conn.execute(
                 "DELETE FROM process_logs WHERE process_id = ?1 AND id NOT IN (
                     SELECT id FROM process_logs WHERE process_id = ?1
