@@ -163,7 +163,14 @@ export function BranchCompare({ worktreeId, onClose }: BranchCompareProps) {
                 {tab === "commits"
                   ? result.commits.map((c) => (
                       <div key={c.hash} className="brcompare-commit">
-                        <code className="brcompare-hash">
+                        <code
+                          className="brcompare-hash brcompare-hash-copyable"
+                          title="Click to copy hash"
+                          role="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(c.hash);
+                          }}
+                        >
                           {c.hash.slice(0, 7)}
                         </code>
                         <span className="brcompare-summary">{c.summary}</span>
