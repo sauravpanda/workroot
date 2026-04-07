@@ -1019,10 +1019,7 @@ function AppContent({
     openAiChat: () => openPanel("aiChat"),
     openNotifications: () => openPanel("notifications"),
     openSettings: () => {
-      setShowSettings(true);
-      setSelectedWorktreeId(null);
-      setSelectedWorktreePath(null);
-      setSelectedWorktreeName(null);
+      openPanel("settingsPage");
     },
   };
 
