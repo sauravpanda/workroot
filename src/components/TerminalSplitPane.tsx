@@ -194,6 +194,9 @@ function SplitContainer({
         document.body.style.userSelect = "";
         document.removeEventListener("mousemove", handleMouseMove);
         document.removeEventListener("mouseup", handleMouseUp);
+        // Trigger a window resize event so terminal instances refit to the
+        // new pane dimensions (xterm's FitAddon listens for this).
+        window.dispatchEvent(new Event("resize"));
       };
 
       document.addEventListener("mousemove", handleMouseMove);
