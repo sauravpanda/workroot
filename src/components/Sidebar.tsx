@@ -226,6 +226,7 @@ export function Sidebar({
           className="sidebar-toolbar-btn"
           onClick={onOpenSearch}
           title="Search"
+          aria-label="Search files"
         >
           <Search className="size-4" />
         </Button>
@@ -236,6 +237,7 @@ export function Sidebar({
           className="sidebar-toolbar-btn"
           onClick={onOpenAiChat}
           title="AI Chat"
+          aria-label="Open AI chat"
         >
           <MessageCircle className="size-4" />
         </Button>
@@ -248,6 +250,7 @@ export function Sidebar({
           className="sidebar-toolbar-btn"
           onClick={onOpenNotifications}
           title="Notifications"
+          aria-label="View notifications"
         >
           <Bell className="size-4" />
         </Button>
@@ -258,6 +261,7 @@ export function Sidebar({
           className="sidebar-toolbar-btn"
           onClick={onOpenSettings}
           title="Settings"
+          aria-label="Open settings"
         >
           <Sun className="size-4" />
         </Button>
