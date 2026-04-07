@@ -235,9 +235,15 @@ export function FileExplorer({
   }, [flatNodes, filter]);
 
   const isSearchMode = filter.trim().length > 0;
-  const selectedRelPath = selectedPath ? toRelPath(selectedPath, cwd) : null;
-  const lineCount = fileContent ? fileContent.split("\n").length : 0;
-  const worktreeName = cwd.split("/").pop() ?? cwd;
+  const selectedRelPath = useMemo(
+    () => (selectedPath ? toRelPath(selectedPath, cwd) : null),
+    [selectedPath, cwd],
+  );
+  const lineCount = useMemo(
+    () => (fileContent ? fileContent.split("\n").length : 0),
+    [fileContent],
+  );
+  const worktreeName = useMemo(() => cwd.split("/").pop() ?? cwd, [cwd]);
 
   /* ---- Keyboard: Escape closes ---- */
   useEffect(() => {
