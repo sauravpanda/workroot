@@ -190,11 +190,22 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const mountedRef = useRef(true);
   const activeTabRef = useRef<Tab>(activeTab);
+  const projectIdRef = useRef(projectId);
 
   // Keep activeTabRef in sync
   useEffect(() => {
     activeTabRef.current = activeTab;
   }, [activeTab]);
+
+  // Clear stale data and update ref when project changes
+  useEffect(() => {
+    projectIdRef.current = projectId;
+    setPulls([]);
+    setIssues([]);
+    setEvents([]);
+    setError(null);
+    setAuthError(false);
+  }, [projectId]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -208,6 +219,8 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
     async (tab: Tab, showSpinner = true) => {
       if (projectId === null) return;
 
+      const requestProjectId = projectId;
+
       if (showSpinner) setLoading(true);
       setError(null);
       setAuthError(false);
@@ -218,6 +231,7 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
             const data = await invoke<RepoPull[]>("list_repo_pulls", {
               projectId,
             });
+            if (projectIdRef.current !== requestProjectId) return;
             setPulls(data);
             break;
           }
@@ -225,6 +239,7 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
             const data = await invoke<RepoIssue[]>("list_repo_issues", {
               projectId,
             });
+            if (projectIdRef.current !== requestProjectId) return;
             setIssues(data);
             break;
           }
@@ -232,19 +247,23 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
             const data = await invoke<RepoEvent[]>("get_repo_activity", {
               projectId,
             });
+            if (projectIdRef.current !== requestProjectId) return;
             setEvents(data);
             break;
           }
         }
       } catch (err) {
+        if (projectIdRef.current !== requestProjectId) return;
         if (isAuthError(err)) {
           setAuthError(true);
         } else {
           setError(String(err));
         }
       } finally {
-        setLoading(false);
-        setRefreshing(false);
+        if (projectIdRef.current === requestProjectId) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
     },
     [projectId],
