@@ -189,9 +189,7 @@ function AppContent({
         });
       }
     } else {
-      // Auto-open the diff panel so the user can review changes immediately.
-      setContentTab("changes");
-      openPanelRef.current("gitDiff");
+      // Show toast with a "Review Changes" button instead of auto-opening.
       setAgentDoneToast(name);
     }
   }, [markAgentDone]);

@@ -32,7 +32,7 @@ const AlertDialogContent = React.forwardRef<
     <AlertDialogOverlay />
     <AlertDialogPrimitive.Content
       ref={ref}
-      className={cn(className)}
+      className={cn("fixed z-[9999]", className)}
       {...props}
     >
       {children}

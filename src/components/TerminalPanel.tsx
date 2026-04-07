@@ -668,5 +668,20 @@ function TerminalInstance({
     return () => window.removeEventListener("resize", handleResize);
   }, [visible]);
 
+  // Refit when container size changes (e.g. sidebar toggled)
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !visible) return;
+    const ro = new ResizeObserver(() => {
+      try {
+        fitAddonRef.current?.fit();
+      } catch {
+        // ignore
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [visible]);
+
   return <div className="terminal-container" ref={containerRef} />;
 }
