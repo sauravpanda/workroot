@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/branch-compare.css";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface BranchInfo {
   name: string;
@@ -41,6 +42,7 @@ interface BranchCompareProps {
 }
 
 export function BranchCompare({ worktreeId, onClose }: BranchCompareProps) {
+  const focusTrapRef = useFocusTrap();
   const [branches, setBranches] = useState<BranchInfo[]>([]);
   const [base, setBase] = useState("");
   const [head, setHead] = useState("");
@@ -77,7 +79,7 @@ export function BranchCompare({ worktreeId, onClose }: BranchCompareProps) {
   }, [worktreeId, base, head]);
 
   return (
-    <div className="brcompare-backdrop" onClick={onClose}>
+    <div className="brcompare-backdrop" ref={focusTrapRef} onClick={onClose}>
       <div className="brcompare-panel" onClick={(e) => e.stopPropagation()}>
         <div className="brcompare-header">
           <h3 className="brcompare-title">Branch Compare</h3>

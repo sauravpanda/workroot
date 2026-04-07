@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface WorkspaceEntry {
   id: number;
@@ -38,6 +39,7 @@ function parseConfigPreview(config: string): string {
 }
 
 export function WorkspaceManager({ onClose, onLoad }: WorkspaceManagerProps) {
+  const focusTrapRef = useFocusTrap();
   const [workspaces, setWorkspaces] = useState<WorkspaceEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saveName, setSaveName] = useState("");
@@ -110,7 +112,7 @@ export function WorkspaceManager({ onClose, onLoad }: WorkspaceManagerProps) {
   );
 
   return (
-    <div className="wspmgr-backdrop" onClick={onClose}>
+    <div className="wspmgr-backdrop" ref={focusTrapRef} onClick={onClose}>
       <div className="wspmgr-panel" onClick={(e) => e.stopPropagation()}>
         <div className="wspmgr-header">
           <h3 className="wspmgr-title">Workspaces</h3>

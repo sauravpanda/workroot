@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/stash-manager.css";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface StashEntry {
   index: number;
@@ -15,6 +16,7 @@ interface StashManagerProps {
 }
 
 export function StashManager({ worktreeId, onClose }: StashManagerProps) {
+  const focusTrapRef = useFocusTrap();
   const [stashes, setStashes] = useState<StashEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -95,7 +97,7 @@ export function StashManager({ worktreeId, onClose }: StashManagerProps) {
   );
 
   return (
-    <div className="stash-backdrop" onClick={onClose}>
+    <div className="stash-backdrop" ref={focusTrapRef} onClick={onClose}>
       <div className="stash-panel" onClick={(e) => e.stopPropagation()}>
         <div className="stash-header">
           <h3 className="stash-title">Stash Manager</h3>

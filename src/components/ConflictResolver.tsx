@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/conflict-resolver.css";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface ConflictedFile {
   path: string;
@@ -18,6 +19,7 @@ export function ConflictResolver({
   worktreeId,
   onClose,
 }: ConflictResolverProps) {
+  const focusTrapRef = useFocusTrap();
   const [files, setFiles] = useState<ConflictedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export function ConflictResolver({
   const selected = files.find((f) => f.path === selectedFile);
 
   return (
-    <div className="conflict-backdrop" onClick={onClose}>
+    <div className="conflict-backdrop" ref={focusTrapRef} onClick={onClose}>
       <div className="conflict-panel" onClick={(e) => e.stopPropagation()}>
         <div className="conflict-header">
           <h3 className="conflict-title">Conflict Resolver</h3>

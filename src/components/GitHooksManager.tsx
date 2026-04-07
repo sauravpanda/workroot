@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/git-hooks.css";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface HookInfo {
   name: string;
@@ -23,6 +24,7 @@ const HOOK_TEMPLATES: Record<string, string> = {
 };
 
 export function GitHooksManager({ worktreeId, onClose }: GitHooksManagerProps) {
+  const focusTrapRef = useFocusTrap();
   const [hooks, setHooks] = useState<HookInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedHook, setSelectedHook] = useState<string | null>(null);
@@ -89,7 +91,7 @@ export function GitHooksManager({ worktreeId, onClose }: GitHooksManagerProps) {
   }, []);
 
   return (
-    <div className="githooks-backdrop" onClick={onClose}>
+    <div className="githooks-backdrop" ref={focusTrapRef} onClick={onClose}>
       <div className="githooks-panel" onClick={(e) => e.stopPropagation()}>
         <div className="githooks-header">
           <h3 className="githooks-title">Git Hooks</h3>
