@@ -629,9 +629,12 @@ function TerminalInstance({
       ptyRef.current = null;
       fitAddonRef.current = null;
     };
-  }, [cwd, themeId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- themeId is
+    // intentionally excluded: theme changes are handled by the effect below
+    // without destroying/recreating the PTY session.
+  }, [cwd]);
 
-  // Update theme when themeId prop changes
+  // Update theme when themeId prop changes (without recreating the PTY)
   useEffect(() => {
     if (!termRef.current || !themeId) return;
     const t = getThemeById(themeId);

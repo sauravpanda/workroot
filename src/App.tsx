@@ -174,6 +174,15 @@ function AppContent({
   selectedWorktreeIdRef.current = selectedWorktreeId;
   selectedWorktreeNameRef.current = selectedWorktreeName;
 
+  // Remember the last valid worktree path/name so TerminalPanel stays
+  // mounted (and PTY sessions survive) when navigating to Home or Settings.
+  const lastWorktreePathRef = useRef(selectedWorktreePath);
+  const lastWorktreeNameRef = useRef(selectedWorktreeName);
+  if (selectedWorktreePath) {
+    lastWorktreePathRef.current = selectedWorktreePath;
+    lastWorktreeNameRef.current = selectedWorktreeName;
+  }
+
   const openPanelRef = useRef(openPanel);
   openPanelRef.current = openPanel;
 
@@ -1064,22 +1073,7 @@ function AppContent({
     <>
       {showSettings ? (
         <SettingsTab />
-      ) : selectedWorktreePath ? (
-        <>
-          <ContentToolbar
-            activeTab={contentTab}
-            onTabChange={handleContentTabChange}
-            worktreeName={selectedWorktreeName ?? "Shell"}
-            projectName={selectedProjectName ?? undefined}
-          />
-          <TerminalPanel
-            cwd={selectedWorktreePath}
-            worktreeName={selectedWorktreeName ?? "Shell"}
-            themeId={terminalThemeId}
-            onAgentComplete={handleAgentComplete}
-          />
-        </>
-      ) : (
+      ) : !selectedWorktreePath ? (
         <div className="content-scroll">
           <div className="content-inner">
             <Dashboard
@@ -1093,6 +1087,38 @@ function AppContent({
               <EnvPanel projectId={selectedProjectId} />
             )}
           </div>
+        </div>
+      ) : null}
+      {/* TerminalPanel is rendered outside the ternary so it stays mounted
+          (and PTY sessions stay alive) when the user navigates to Home or
+          Settings. We hide it via display:none when it isn't the active view. */}
+      {lastWorktreePathRef.current && (
+        <div
+          style={{
+            display: !showSettings && selectedWorktreePath ? "flex" : "none",
+            width: "100%",
+            height: "100%",
+            flexDirection: "column",
+            flex: 1,
+            minHeight: 0,
+          }}
+        >
+          <ContentToolbar
+            activeTab={contentTab}
+            onTabChange={handleContentTabChange}
+            worktreeName={
+              selectedWorktreeName ?? lastWorktreeNameRef.current ?? "Shell"
+            }
+            projectName={selectedProjectName ?? undefined}
+          />
+          <TerminalPanel
+            cwd={lastWorktreePathRef.current}
+            worktreeName={
+              selectedWorktreeName ?? lastWorktreeNameRef.current ?? "Shell"
+            }
+            themeId={terminalThemeId}
+            onAgentComplete={handleAgentComplete}
+          />
         </div>
       )}
       <StatusBar
