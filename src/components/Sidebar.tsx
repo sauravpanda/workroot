@@ -151,6 +151,7 @@ export function Sidebar({
             size="icon-xs"
             onClick={handleAddProject}
             title="Add local project"
+            aria-label="Add local project"
             className="text-text-muted hover:bg-accent-muted hover:text-accent hover:border-accent/20 border border-transparent"
           >
             <Plus className="size-3.5" />
@@ -160,6 +161,7 @@ export function Sidebar({
             size="icon-xs"
             onClick={handleToggleSettings}
             title="Settings"
+            aria-label="Settings"
             className={
               showSettings
                 ? "bg-accent text-bg-base border-accent shadow-[0_0_8px_var(--color-accent-muted)]"
@@ -226,6 +228,7 @@ export function Sidebar({
           className="sidebar-toolbar-btn"
           onClick={onOpenSearch}
           title="Search"
+          aria-label="Search"
         >
           <Search className="size-4" />
         </Button>
@@ -236,6 +239,7 @@ export function Sidebar({
           className="sidebar-toolbar-btn"
           onClick={onOpenAiChat}
           title="AI Chat"
+          aria-label="AI Chat"
         >
           <MessageCircle className="size-4" />
         </Button>
@@ -248,6 +252,7 @@ export function Sidebar({
           className="sidebar-toolbar-btn"
           onClick={onOpenNotifications}
           title="Notifications"
+          aria-label="Notifications"
         >
           <Bell className="size-4" />
         </Button>
@@ -258,6 +263,7 @@ export function Sidebar({
           className="sidebar-toolbar-btn"
           onClick={onOpenSettings}
           title="Settings"
+          aria-label="Settings"
         >
           <Sun className="size-4" />
         </Button>

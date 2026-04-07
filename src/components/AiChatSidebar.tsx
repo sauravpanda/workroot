@@ -191,6 +191,7 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
             className="ai-chat__icon-btn"
             onClick={handleClearChat}
             title="Clear chat"
+            aria-label="Clear chat"
           >
             <TrashIcon />
           </button>
@@ -198,10 +199,11 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
             className="ai-chat__icon-btn"
             onClick={() => setShowSettings(!showSettings)}
             title="Settings"
+            aria-label="Settings"
           >
             <GearIcon />
           </button>
-          <button className="ai-chat__icon-btn" onClick={onClose} title="Close">
+          <button className="ai-chat__icon-btn" onClick={onClose} title="Close" aria-label="Close">
             <CloseIcon />
           </button>
         </div>
@@ -340,6 +342,7 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
               !input.trim() || loading || connectionStatus !== "connected"
             }
             title="Send message"
+            aria-label="Send message"
           >
             <SendIcon />
           </button>

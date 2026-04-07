@@ -102,6 +102,7 @@ export function QuickActions({
                 className="group/btn relative flex cursor-pointer flex-col items-center gap-0.5 rounded-sm border-none bg-transparent px-2 py-1.5 transition-[transform,background-color] duration-150 hover:scale-[1.2] hover:-translate-y-0.5 hover:bg-white/[0.06] active:scale-[1.05] active:translate-y-0"
                 onClick={() => onAction(action.id)}
                 title={action.label}
+                aria-label={action.label}
               >
                 <span className="text-[1.1em] leading-none text-[var(--text-primary)] transition-colors duration-100 group-hover/btn:text-[var(--accent)]">
                   {action.icon}
