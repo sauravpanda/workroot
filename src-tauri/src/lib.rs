@@ -64,6 +64,12 @@ impl HttpClient {
         )
     }
 }
+
+impl Default for HttpClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 use tasks::watch::WatchState;
 use tauri::{Manager, State};
 
