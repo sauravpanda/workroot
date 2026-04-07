@@ -37,7 +37,7 @@
   gap: 5px;
   padding: 0 9px;
   height: 100%;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
   white-space: nowrap;
   line-height: 24px;
@@ -66,7 +66,7 @@
 
 .status-bar-branch {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--text-secondary);
   letter-spacing: -0.01em;
 }
@@ -112,7 +112,7 @@
 }
 
 .status-bar-connection {
-  font-size: 10.5px;
+  font-size: 12px;
   letter-spacing: 0.01em;
 }
 
@@ -120,7 +120,7 @@
 
 .status-bar-time {
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--text-muted);
   letter-spacing: 0.02em;
 }
@@ -129,7 +129,7 @@
 
 .status-bar-kbd {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 11px;
   padding: 1px 4px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
