@@ -1,7 +1,7 @@
 pub mod server;
 pub mod switch;
 
-use std::sync::atomic::{AtomicU16, Ordering};
+use std::sync::atomic::AtomicU16;
 use std::sync::Mutex;
 
 /// Active routing target — port and worktree ID are updated atomically.
