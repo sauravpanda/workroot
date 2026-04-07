@@ -174,7 +174,10 @@ export function WorktreeItem({
         </span>
         <span className="worktree-indicators">
           {isAgentNeedsAttention && !isAgentDone && (
-            <span className="worktree-agent-attention" title="Needs attention" />
+            <span
+              className="worktree-agent-attention"
+              title="Needs attention"
+            />
           )}
           {isAgentDone && (
             <span className="worktree-agent-done" title="Agent completed" />
