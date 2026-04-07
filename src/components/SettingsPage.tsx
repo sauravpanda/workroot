@@ -660,6 +660,37 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
             </div>
 
             <div className="settings-page__field">
+              <div className="settings-page__field-label">Author</div>
+              <p className="settings-page__field-desc">Saurav Panda</p>
+            </div>
+
+            <div className="settings-page__field">
+              <div className="settings-page__field-label">Contact</div>
+              <p className="settings-page__field-desc">
+                <a
+                  href="mailto:saurav@workroot.dev"
+                  style={{ color: "var(--color-accent, #58a6ff)" }}
+                >
+                  saurav@workroot.dev
+                </a>
+              </p>
+            </div>
+
+            <div className="settings-page__field">
+              <div className="settings-page__field-label">Support</div>
+              <p className="settings-page__field-desc">
+                <a
+                  href="https://github.com/sauravpanda/workroot/issues/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--color-accent, #58a6ff)" }}
+                >
+                  Create a support ticket on GitHub
+                </a>
+              </p>
+            </div>
+
+            <div className="settings-page__field">
               <div className="settings-page__field-label">Source Code</div>
               <p className="settings-page__field-desc">
                 <a
