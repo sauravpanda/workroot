@@ -1,4 +1,12 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import {
+  lazy,
+  Suspense,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import { ErrorProvider } from "./contexts/ErrorContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GlobalErrorToast } from "./components/GlobalErrorToast";
@@ -6,87 +14,312 @@ import { invoke } from "@tauri-apps/api/core";
 import { MainLayout } from "./layouts/MainLayout";
 import { AuthButton } from "./components/AuthButton";
 import { RepoList } from "./components/RepoList";
-import { EnvPanel } from "./components/EnvPanel";
 import { ActiveProjectBadge } from "./components/ActiveProjectBadge";
-import { SettingsTab } from "./components/SettingsTab";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { CommandPalette } from "./components/CommandPalette";
-import { CommandBookmarks } from "./components/CommandBookmarks";
-import { TerminalThemeSelector } from "./components/TerminalThemeSelector";
-import { TaskRunner } from "./components/TaskRunner";
-import { AppThemePicker } from "./components/AppThemePicker";
-import { KeyboardShortcuts } from "./components/KeyboardShortcuts";
-import { ThemeEditor } from "./components/ThemeEditor";
-import { DensityPicker } from "./components/DensityPicker";
-import { CustomCSSEditor } from "./components/CustomCSSEditor";
-import { StashManager } from "./components/StashManager";
-import { CheckpointPanel } from "./components/CheckpointPanel";
-import { MultiAgentPipelinePanel } from "./components/MultiAgentPipelinePanel";
-import { BlameView } from "./components/BlameView";
-import { BranchCompare } from "./components/BranchCompare";
-import { GitHooksManager } from "./components/GitHooksManager";
-import { ConflictResolver } from "./components/ConflictResolver";
-import { SecurityAudit } from "./components/SecurityAudit";
-import { SecretScanner } from "./components/SecretScanner";
-import { LicenseReport } from "./components/LicenseReport";
-import { SecurityHeaders } from "./components/SecurityHeaders";
-import { TestRunnerPanel } from "./components/TestRunnerPanel";
-import { CoverageReport } from "./components/CoverageReport";
-import { BenchmarkDashboard } from "./components/BenchmarkDashboard";
-import { DockerPanel } from "./components/DockerPanel";
-import { DockerImages } from "./components/DockerImages";
-import { ContainerMonitor } from "./components/ContainerMonitor";
-import { FlakyTests } from "./components/FlakyTests";
-import { NotificationCenter } from "./components/NotificationCenter";
-import { ActivityTimeline } from "./components/ActivityTimeline";
-import { PluginManager } from "./components/PluginManager";
-import { BackupRestore } from "./components/BackupRestore";
-import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
-import { AiChatSidebar } from "./components/AiChatSidebar";
-import { UnifiedSearch } from "./components/UnifiedSearch";
-import { SettingsPage } from "./components/SettingsPage";
-import { TerminalRecording } from "./components/TerminalRecording";
-import { DoraMetrics } from "./components/DoraMetrics";
-import { WebhookEvents } from "./components/WebhookEvents";
-import { SshManager } from "./components/SshManager";
-import { GitAnalytics } from "./components/GitAnalytics";
-import { SnippetManager } from "./components/SnippetManager";
-import { EnvProfileDiff } from "./components/EnvProfileDiff";
-import { AppPerformance } from "./components/AppPerformance";
-import { FileExplorer } from "./components/FileExplorer";
 import { QuickActions } from "./components/QuickActions";
-import { ProjectOverview } from "./components/ProjectOverview";
-import { WebVitals } from "./components/WebVitals";
-import { PluginRuntime } from "./components/PluginRuntime";
-import { DependencyAnalyzer } from "./components/DependencyAnalyzer";
-import { PortScanner } from "./components/PortScanner";
-import { DirectoryStats } from "./components/DirectoryStats";
-import { TagManager } from "./components/TagManager";
-import { GitLogViewer } from "./components/GitLogViewer";
-import { WorkspaceManager } from "./components/WorkspaceManager";
-import { TaskScheduler } from "./components/TaskScheduler";
-import { ClipboardHistory } from "./components/ClipboardHistory";
-import { TodoPanel } from "./components/TodoPanel";
-import { QuickSwitcher } from "./components/QuickSwitcher";
-import { ErrorDiagnosis } from "./components/ErrorDiagnosis";
-import { MorningBriefing } from "./components/MorningBriefing";
-import { OnboardingWizard } from "./components/OnboardingWizard";
-import { NetworkTab } from "./components/NetworkTab";
-import { PRStatusPanel } from "./components/PRStatusPanel";
-import { GitDiffView } from "./components/GitDiffView";
-import { CreatePRPanel } from "./components/CreatePRPanel";
-import { MemoryTab } from "./components/MemoryTab";
-import { ShellHistoryTab } from "./components/ShellHistoryTab";
-import { DeadEndsLog } from "./components/DeadEndsLog";
-import { DbSchemaTab } from "./components/DbSchemaTab";
-import { BrowserEvents } from "./components/BrowserEvents";
-import { DatabaseExplorer } from "./components/DatabaseExplorer";
-import { Dashboard } from "./components/Dashboard";
 import { StatusBar } from "./components/StatusBar";
 import { ContentToolbar } from "./components/ContentToolbar";
+
+// ---------------------------------------------------------------------------
+// Lazy-loaded components (behind boolean toggles / conditional panels)
+// ---------------------------------------------------------------------------
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const namedLazy = <K extends string>(
+  factory: () => Promise<Record<K, React.ComponentType<any>>>,
+  name: K,
+): React.LazyExoticComponent<React.ComponentType<any>> =>
+  lazy(() => factory().then((m) => ({ default: m[name] })));
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+const EnvPanel = namedLazy(() => import("./components/EnvPanel"), "EnvPanel");
+const SettingsTab = namedLazy(
+  () => import("./components/SettingsTab"),
+  "SettingsTab",
+);
+const Dashboard = namedLazy(
+  () => import("./components/Dashboard"),
+  "Dashboard",
+);
+const CommandBookmarks = namedLazy(
+  () => import("./components/CommandBookmarks"),
+  "CommandBookmarks",
+);
+const TerminalThemeSelector = namedLazy(
+  () => import("./components/TerminalThemeSelector"),
+  "TerminalThemeSelector",
+);
+const TaskRunner = namedLazy(
+  () => import("./components/TaskRunner"),
+  "TaskRunner",
+);
+const AppThemePicker = namedLazy(
+  () => import("./components/AppThemePicker"),
+  "AppThemePicker",
+);
+const KeyboardShortcuts = namedLazy(
+  () => import("./components/KeyboardShortcuts"),
+  "KeyboardShortcuts",
+);
+const ThemeEditor = namedLazy(
+  () => import("./components/ThemeEditor"),
+  "ThemeEditor",
+);
+const DensityPicker = namedLazy(
+  () => import("./components/DensityPicker"),
+  "DensityPicker",
+);
+const CustomCSSEditor = namedLazy(
+  () => import("./components/CustomCSSEditor"),
+  "CustomCSSEditor",
+);
+const StashManager = namedLazy(
+  () => import("./components/StashManager"),
+  "StashManager",
+);
+const CheckpointPanel = namedLazy(
+  () => import("./components/CheckpointPanel"),
+  "CheckpointPanel",
+);
+const MultiAgentPipelinePanel = namedLazy(
+  () => import("./components/MultiAgentPipelinePanel"),
+  "MultiAgentPipelinePanel",
+);
+const BlameView = namedLazy(
+  () => import("./components/BlameView"),
+  "BlameView",
+);
+const BranchCompare = namedLazy(
+  () => import("./components/BranchCompare"),
+  "BranchCompare",
+);
+const GitHooksManager = namedLazy(
+  () => import("./components/GitHooksManager"),
+  "GitHooksManager",
+);
+const ConflictResolver = namedLazy(
+  () => import("./components/ConflictResolver"),
+  "ConflictResolver",
+);
+const SecurityAudit = namedLazy(
+  () => import("./components/SecurityAudit"),
+  "SecurityAudit",
+);
+const SecretScanner = namedLazy(
+  () => import("./components/SecretScanner"),
+  "SecretScanner",
+);
+const LicenseReport = namedLazy(
+  () => import("./components/LicenseReport"),
+  "LicenseReport",
+);
+const SecurityHeaders = namedLazy(
+  () => import("./components/SecurityHeaders"),
+  "SecurityHeaders",
+);
+const TestRunnerPanel = namedLazy(
+  () => import("./components/TestRunnerPanel"),
+  "TestRunnerPanel",
+);
+const CoverageReport = namedLazy(
+  () => import("./components/CoverageReport"),
+  "CoverageReport",
+);
+const BenchmarkDashboard = namedLazy(
+  () => import("./components/BenchmarkDashboard"),
+  "BenchmarkDashboard",
+);
+const DockerPanel = namedLazy(
+  () => import("./components/DockerPanel"),
+  "DockerPanel",
+);
+const DockerImages = namedLazy(
+  () => import("./components/DockerImages"),
+  "DockerImages",
+);
+const ContainerMonitor = namedLazy(
+  () => import("./components/ContainerMonitor"),
+  "ContainerMonitor",
+);
+const FlakyTests = namedLazy(
+  () => import("./components/FlakyTests"),
+  "FlakyTests",
+);
+const NotificationCenter = namedLazy(
+  () => import("./components/NotificationCenter"),
+  "NotificationCenter",
+);
+const ActivityTimeline = namedLazy(
+  () => import("./components/ActivityTimeline"),
+  "ActivityTimeline",
+);
+const PluginManager = namedLazy(
+  () => import("./components/PluginManager"),
+  "PluginManager",
+);
+const BackupRestore = namedLazy(
+  () => import("./components/BackupRestore"),
+  "BackupRestore",
+);
+const AnalyticsDashboard = namedLazy(
+  () => import("./components/AnalyticsDashboard"),
+  "AnalyticsDashboard",
+);
+const AiChatSidebar = namedLazy(
+  () => import("./components/AiChatSidebar"),
+  "AiChatSidebar",
+);
+const UnifiedSearch = namedLazy(
+  () => import("./components/UnifiedSearch"),
+  "UnifiedSearch",
+);
+const SettingsPage = namedLazy(
+  () => import("./components/SettingsPage"),
+  "SettingsPage",
+);
+const TerminalRecording = namedLazy(
+  () => import("./components/TerminalRecording"),
+  "TerminalRecording",
+);
+const DoraMetrics = namedLazy(
+  () => import("./components/DoraMetrics"),
+  "DoraMetrics",
+);
+const WebhookEvents = namedLazy(
+  () => import("./components/WebhookEvents"),
+  "WebhookEvents",
+);
+const SshManager = namedLazy(
+  () => import("./components/SshManager"),
+  "SshManager",
+);
+const GitAnalytics = namedLazy(
+  () => import("./components/GitAnalytics"),
+  "GitAnalytics",
+);
+const SnippetManager = namedLazy(
+  () => import("./components/SnippetManager"),
+  "SnippetManager",
+);
+const EnvProfileDiff = namedLazy(
+  () => import("./components/EnvProfileDiff"),
+  "EnvProfileDiff",
+);
+const AppPerformance = namedLazy(
+  () => import("./components/AppPerformance"),
+  "AppPerformance",
+);
+const FileExplorer = namedLazy(
+  () => import("./components/FileExplorer"),
+  "FileExplorer",
+);
+const ProjectOverview = namedLazy(
+  () => import("./components/ProjectOverview"),
+  "ProjectOverview",
+);
+const WebVitals = namedLazy(
+  () => import("./components/WebVitals"),
+  "WebVitals",
+);
+const PluginRuntime = namedLazy(
+  () => import("./components/PluginRuntime"),
+  "PluginRuntime",
+);
+const DependencyAnalyzer = namedLazy(
+  () => import("./components/DependencyAnalyzer"),
+  "DependencyAnalyzer",
+);
+const PortScanner = namedLazy(
+  () => import("./components/PortScanner"),
+  "PortScanner",
+);
+const DirectoryStats = namedLazy(
+  () => import("./components/DirectoryStats"),
+  "DirectoryStats",
+);
+const TagManager = namedLazy(
+  () => import("./components/TagManager"),
+  "TagManager",
+);
+const GitLogViewer = namedLazy(
+  () => import("./components/GitLogViewer"),
+  "GitLogViewer",
+);
+const WorkspaceManager = namedLazy(
+  () => import("./components/WorkspaceManager"),
+  "WorkspaceManager",
+);
+const TaskScheduler = namedLazy(
+  () => import("./components/TaskScheduler"),
+  "TaskScheduler",
+);
+const ClipboardHistory = namedLazy(
+  () => import("./components/ClipboardHistory"),
+  "ClipboardHistory",
+);
+const TodoPanel = namedLazy(
+  () => import("./components/TodoPanel"),
+  "TodoPanel",
+);
+const QuickSwitcher = namedLazy(
+  () => import("./components/QuickSwitcher"),
+  "QuickSwitcher",
+);
+const ErrorDiagnosis = namedLazy(
+  () => import("./components/ErrorDiagnosis"),
+  "ErrorDiagnosis",
+);
+const MorningBriefing = namedLazy(
+  () => import("./components/MorningBriefing"),
+  "MorningBriefing",
+);
+const OnboardingWizard = namedLazy(
+  () => import("./components/OnboardingWizard"),
+  "OnboardingWizard",
+);
+const NetworkTab = namedLazy(
+  () => import("./components/NetworkTab"),
+  "NetworkTab",
+);
+const PRStatusPanel = namedLazy(
+  () => import("./components/PRStatusPanel"),
+  "PRStatusPanel",
+);
+const GitDiffView = namedLazy(
+  () => import("./components/GitDiffView"),
+  "GitDiffView",
+);
+const CreatePRPanel = namedLazy(
+  () => import("./components/CreatePRPanel"),
+  "CreatePRPanel",
+);
+const MemoryTab = namedLazy(
+  () => import("./components/MemoryTab"),
+  "MemoryTab",
+);
+const ShellHistoryTab = namedLazy(
+  () => import("./components/ShellHistoryTab"),
+  "ShellHistoryTab",
+);
+const DeadEndsLog = namedLazy(
+  () => import("./components/DeadEndsLog"),
+  "DeadEndsLog",
+);
+const DbSchemaTab = namedLazy(
+  () => import("./components/DbSchemaTab"),
+  "DbSchemaTab",
+);
+const BrowserEvents = namedLazy(
+  () => import("./components/BrowserEvents"),
+  "BrowserEvents",
+);
+const DatabaseExplorer = namedLazy(
+  () => import("./components/DatabaseExplorer"),
+  "DatabaseExplorer",
+);
 import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
 import { getAppThemeById } from "./themes/builtin";
-import { applyTheme, loadSavedThemeId } from "./themes/engine";
+import { applyTheme, loadSavedThemeId, type AppTheme } from "./themes/engine";
 import {
   applyDensity,
   loadSavedDensity,
@@ -1097,7 +1330,7 @@ function AppContent({
   }, []);
 
   return (
-    <>
+    <Suspense fallback={null}>
       {showSettings ? (
         <SettingsTab />
       ) : !selectedWorktreePath ? (
@@ -1190,7 +1423,7 @@ function AppContent({
         <ThemeEditor
           currentThemeId={appThemeId}
           onClose={() => closePanel("themeEditor")}
-          onThemeSave={(theme) => {
+          onThemeSave={(theme: AppTheme) => {
             applyTheme(theme);
             setAppThemeId(theme.id);
           }}
@@ -1344,7 +1577,7 @@ function AppContent({
       <UnifiedSearch
         open={panels.unifiedSearch}
         onClose={() => closePanel("unifiedSearch")}
-        onNavigate={(type, _data) => {
+        onNavigate={(type: string, _data: string) => {
           closePanel("unifiedSearch");
           if (type === "bookmark") openPanel("bookmarks");
           else if (type === "setting") openPanel("settingsPage");
@@ -1399,7 +1632,7 @@ function AppContent({
         <FileExplorer
           cwd={selectedWorktreePath}
           onClose={() => closePanel("fileExplorer")}
-          onFileSelect={(path) => {
+          onFileSelect={(path: string) => {
             closePanel("fileExplorer");
             setBlameFilePath(path);
             openPanel("blameView");
@@ -1703,7 +1936,7 @@ function AppContent({
         open={panels.quickSwitcher}
         onClose={() => closePanel("quickSwitcher")}
         selectedProjectId={selectedProjectId}
-        onSwitchProject={(id) => {
+        onSwitchProject={(id: number) => {
           setSelectedProjectId(id);
           closePanel("quickSwitcher");
         }}
@@ -1757,7 +1990,7 @@ function AppContent({
           </button>
         </div>
       )}
-    </>
+    </Suspense>
   );
 }
 
