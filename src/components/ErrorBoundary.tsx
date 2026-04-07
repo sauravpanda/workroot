@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode, type FC } from "react";
 
 interface Props {
   children: ReactNode;
@@ -58,3 +58,13 @@ export class ErrorBoundary extends Component<Props, State> {
     );
   }
 }
+
+/**
+ * Convenience wrapper – wraps children in an ErrorBoundary with a panel name.
+ * Use around individual panels / sections so a crash in one doesn't take down
+ * the rest of the app.
+ */
+export const PanelBoundary: FC<{ name: string; children: ReactNode }> = ({
+  name,
+  children,
+}) => <ErrorBoundary name={name}>{children}</ErrorBoundary>;
