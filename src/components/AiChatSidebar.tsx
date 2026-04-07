@@ -203,7 +203,12 @@ export function AiChatSidebar({ open, onClose }: AiChatSidebarProps) {
           >
             <GearIcon />
           </button>
-          <button className="ai-chat__icon-btn" onClick={onClose} title="Close" aria-label="Close">
+          <button
+            className="ai-chat__icon-btn"
+            onClick={onClose}
+            title="Close"
+            aria-label="Close"
+          >
             <CloseIcon />
           </button>
         </div>
