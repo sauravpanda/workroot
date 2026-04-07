@@ -174,13 +174,47 @@ export function WorktreeItem({
         </span>
         <span className="worktree-indicators">
           {isAgentNeedsAttention && !isAgentDone && (
-            <span
-              className="worktree-agent-attention"
-              title="Needs attention"
-            />
+            <span className="worktree-agent-attention" title="Needs attention">
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 10 10"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle cx="5" cy="5" r="5" fill="currentColor" />
+                <text
+                  x="5"
+                  y="7.5"
+                  textAnchor="middle"
+                  fontSize="7"
+                  fontWeight="bold"
+                  fill="var(--bg-base)"
+                >
+                  !
+                </text>
+              </svg>
+            </span>
           )}
           {isAgentDone && (
-            <span className="worktree-agent-done" title="Agent completed" />
+            <span className="worktree-agent-done" title="Agent completed">
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 10 10"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle cx="5" cy="5" r="5" fill="currentColor" />
+                <path
+                  d="M3 5.2L4.5 6.7L7 3.5"
+                  stroke="var(--bg-base)"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
           )}
           <span
             className={`worktree-status-dot ${statusClass}`}

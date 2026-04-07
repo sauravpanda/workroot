@@ -643,51 +643,53 @@
   box-shadow: 0 0 3px rgba(239, 68, 68, 0.4);
 }
 
-/* ---- Agent-done pulse ---- */
+/* ---- Agent-done badge (checkmark) ---- */
 
 .worktree-agent-done {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  background-color: var(--accent);
-  box-shadow: 0 0 5px var(--accent-glow);
-  animation: wt-agent-pulse 1.5s ease-in-out infinite;
+  color: var(--accent);
+  filter: drop-shadow(0 0 3px var(--accent-glow));
+  animation: wt-agent-done-flash 1.5s ease-out forwards;
 }
 
-@keyframes wt-agent-pulse {
-  0%,
+@keyframes wt-agent-done-flash {
+  0% {
+    filter: drop-shadow(0 0 8px var(--accent-glow))
+      drop-shadow(0 0 14px var(--accent-glow));
+    transform: scale(1.5);
+  }
+  40% {
+    filter: drop-shadow(0 0 5px var(--accent-glow));
+    transform: scale(1);
+  }
   100% {
-    opacity: 1;
-    box-shadow: 0 0 5px var(--accent-glow);
-  }
-  50% {
-    opacity: 0.6;
-    box-shadow: 0 0 10px var(--accent-glow);
+    filter: drop-shadow(0 0 3px var(--accent-glow));
+    transform: scale(1);
   }
 }
 
-/* ---- Agent needs-attention pulse ---- */
+/* ---- Agent needs-attention badge (!) ---- */
 
 .worktree-agent-attention {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  background-color: var(--warning);
-  box-shadow: 0 0 5px rgba(245, 158, 11, 0.6);
+  color: var(--warning);
+  filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.6));
   animation: wt-agent-attention 1s ease-in-out infinite;
 }
 
 @keyframes wt-agent-attention {
   0%,
   100% {
-    opacity: 1;
-    box-shadow: 0 0 5px rgba(245, 158, 11, 0.6);
+    filter: drop-shadow(0 0 3px rgba(245, 158, 11, 0.6));
   }
   50% {
-    opacity: 0.5;
-    box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+    filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.8));
   }
 }
 
