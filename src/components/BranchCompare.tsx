@@ -91,6 +91,7 @@ export function BranchCompare({ worktreeId, onClose }: BranchCompareProps) {
         <div className="brcompare-controls">
           <select
             className="brcompare-select"
+            aria-label="Base branch"
             value={base}
             onChange={(e) => setBase(e.target.value)}
           >
@@ -104,6 +105,7 @@ export function BranchCompare({ worktreeId, onClose }: BranchCompareProps) {
           <span className="brcompare-arrow">&larr;&rarr;</span>
           <select
             className="brcompare-select"
+            aria-label="Head branch"
             value={head}
             onChange={(e) => setHead(e.target.value)}
           >
@@ -138,15 +140,19 @@ export function BranchCompare({ worktreeId, onClose }: BranchCompareProps) {
                 </span>
               </div>
 
-              <div className="brcompare-tabs">
+              <div className="brcompare-tabs" role="tablist">
                 <button
                   className={`brcompare-tab ${tab === "commits" ? "active" : ""}`}
+                  role="tab"
+                  aria-selected={tab === "commits"}
                   onClick={() => setTab("commits")}
                 >
                   Commits ({result.commits.length})
                 </button>
                 <button
                   className={`brcompare-tab ${tab === "files" ? "active" : ""}`}
+                  role="tab"
+                  aria-selected={tab === "files"}
                   onClick={() => setTab("files")}
                 >
                   Files ({result.files.length})

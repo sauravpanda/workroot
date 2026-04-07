@@ -111,6 +111,7 @@ export function StashManager({ worktreeId, onClose }: StashManagerProps) {
             className="stash-input"
             type="text"
             placeholder="Stash message..."
+            aria-label="Stash message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             spellCheck={false}
@@ -156,12 +157,14 @@ export function StashManager({ worktreeId, onClose }: StashManagerProps) {
                 <div className="stash-item-actions">
                   <button
                     className="stash-action-btn"
+                    aria-label={`Apply stash ${stash.index}`}
                     onClick={() => handleApply(stash.index)}
                   >
                     Apply
                   </button>
                   <button
                     className="stash-action-btn"
+                    aria-label={`Pop stash ${stash.index}`}
                     onClick={() => handlePop(stash.index)}
                   >
                     Pop
@@ -170,12 +173,14 @@ export function StashManager({ worktreeId, onClose }: StashManagerProps) {
                     <>
                       <button
                         className="stash-action-btn stash-action-danger"
+                        aria-label={`Confirm drop stash ${stash.index}`}
                         onClick={() => handleDrop(stash.index)}
                       >
                         Confirm Drop
                       </button>
                       <button
                         className="stash-action-btn"
+                        aria-label="Cancel drop"
                         onClick={() => setConfirmDropIndex(null)}
                       >
                         Cancel
@@ -184,6 +189,7 @@ export function StashManager({ worktreeId, onClose }: StashManagerProps) {
                   ) : (
                     <button
                       className="stash-action-btn stash-action-danger"
+                      aria-label={`Drop stash ${stash.index}`}
                       onClick={() => setConfirmDropIndex(stash.index)}
                     >
                       Drop

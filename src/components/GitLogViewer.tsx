@@ -142,6 +142,7 @@ export function GitLogViewer({ worktreeId, onClose }: GitLogViewerProps) {
             className="gitlog-search"
             type="text"
             placeholder="Search commits..."
+            aria-label="Search commits"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             spellCheck={false}
@@ -175,6 +176,7 @@ export function GitLogViewer({ worktreeId, onClose }: GitLogViewerProps) {
                     </div>
                     <button
                       className={`gitlog-entry ${isExpanded ? "gitlog-entry-expanded" : ""}`}
+                      aria-expanded={isExpanded}
                       onClick={() => toggleExpand(commit.id)}
                     >
                       <div className="gitlog-entry-top">

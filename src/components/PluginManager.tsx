@@ -103,6 +103,9 @@ export function PluginManager({ onClose }: PluginManagerProps) {
                         <label className="plugmgr-toggle">
                           <input
                             type="checkbox"
+                            role="switch"
+                            aria-checked={p.enabled}
+                            aria-label={`Toggle ${p.name}`}
                             checked={p.enabled}
                             onChange={() => handleToggle(p.id, p.enabled)}
                             disabled={togglingId === p.id}

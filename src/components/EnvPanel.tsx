@@ -84,6 +84,7 @@ export function EnvPanel({ projectId }: EnvPanelProps) {
             <form className="env-var-add-form" onSubmit={handleAddVar}>
               <input
                 className="env-var-key-input"
+                aria-label="Environment variable key"
                 value={newKey}
                 onChange={(e) => setNewKey(e.target.value)}
                 placeholder="KEY"
@@ -91,6 +92,7 @@ export function EnvPanel({ projectId }: EnvPanelProps) {
               />
               <input
                 className="env-var-value-input"
+                aria-label="Environment variable value"
                 value={newValue}
                 onChange={(e) => setNewValue(e.target.value)}
                 placeholder="value"
