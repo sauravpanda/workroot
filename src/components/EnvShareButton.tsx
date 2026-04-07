@@ -192,6 +192,7 @@ export function EnvShareButton({
           <input
             className="env-share-input"
             type="text"
+            aria-label="Gist ID"
             value={gistId}
             onChange={(e) => setGistId(e.target.value)}
             placeholder="Gist ID"
@@ -201,6 +202,7 @@ export function EnvShareButton({
         <input
           className="env-share-input"
           type="password"
+          aria-label="Encryption passphrase"
           value={passphrase}
           onChange={(e) => setPassphrase(e.target.value)}
           placeholder="Encryption passphrase"

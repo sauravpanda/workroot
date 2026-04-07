@@ -116,7 +116,7 @@ export function NotificationCenter({ open, onClose }: NotificationCenterProps) {
           ) : notifications.length === 0 ? (
             <div className="notif-empty">No notifications.</div>
           ) : (
-            <div className="notif-list">
+            <div className="notif-list" aria-live="polite">
               {notifications.map((n) => (
                 <button
                   key={n.id}

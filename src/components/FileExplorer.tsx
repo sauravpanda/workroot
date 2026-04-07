@@ -340,9 +340,20 @@ export function FileExplorer({
                         .filter(Boolean)
                         .join(" ")}
                       style={{ paddingLeft: `${8 + node.depth * 16}px` }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={
+                        node.isDir ? `${node.name} folder` : node.name
+                      }
                       onClick={() =>
                         node.isDir ? toggleDir(node) : selectFile(node)
                       }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          node.isDir ? toggleDir(node) : selectFile(node);
+                        }
+                      }}
                       title={node.relPath}
                     >
                       {node.isDir ? (
