@@ -96,7 +96,10 @@ export function DirectoryStats({ cwd, onClose }: DirectoryStatsProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="dirstats-panel" aria-label="Directory Statistics">
+      <DialogContent
+        className="dirstats-panel"
+        aria-label="Directory Statistics"
+      >
         <div className="dirstats-header">
           <h3 className="dirstats-title">Directory Stats</h3>
           <div className="dirstats-header-actions">
