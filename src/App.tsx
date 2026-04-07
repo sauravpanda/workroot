@@ -12,14 +12,8 @@ import { ErrorBoundary, PanelBoundary } from "./components/ErrorBoundary";
 import { GlobalErrorToast } from "./components/GlobalErrorToast";
 import { invoke } from "@tauri-apps/api/core";
 import { MainLayout } from "./layouts/MainLayout";
-import { AuthButton } from "./components/AuthButton";
-import { RepoList } from "./components/RepoList";
-import { ActiveProjectBadge } from "./components/ActiveProjectBadge";
-import { TerminalPanel } from "./components/TerminalPanel";
-import { CommandPalette } from "./components/CommandPalette";
 import { QuickActions } from "./components/QuickActions";
 import { StatusBar } from "./components/StatusBar";
-import { ContentToolbar } from "./components/ContentToolbar";
 
 // ---------------------------------------------------------------------------
 // Lazy-loaded components (behind boolean toggles / conditional panels)
@@ -32,6 +26,27 @@ const namedLazy = <K extends string>(
   lazy(() => factory().then((m) => ({ default: m[name] })));
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+const AuthButton = namedLazy(
+  () => import("./components/AuthButton"),
+  "AuthButton",
+);
+const RepoList = namedLazy(() => import("./components/RepoList"), "RepoList");
+const ActiveProjectBadge = namedLazy(
+  () => import("./components/ActiveProjectBadge"),
+  "ActiveProjectBadge",
+);
+const TerminalPanel = namedLazy(
+  () => import("./components/TerminalPanel"),
+  "TerminalPanel",
+);
+const CommandPalette = namedLazy(
+  () => import("./components/CommandPalette"),
+  "CommandPalette",
+);
+const ContentToolbar = namedLazy(
+  () => import("./components/ContentToolbar"),
+  "ContentToolbar",
+);
 const EnvPanel = namedLazy(() => import("./components/EnvPanel"), "EnvPanel");
 const SettingsTab = namedLazy(
   () => import("./components/SettingsTab"),
