@@ -21,6 +21,7 @@ fn no_proxy_client() -> &'static reqwest::Client {
     NO_PROXY_CLIENT.get_or_init(|| {
         reqwest::Client::builder()
             .no_proxy()
+            .timeout(std::time::Duration::from_secs(30))
             .build()
             .unwrap_or_else(|_| reqwest::Client::new())
     })
@@ -136,7 +137,12 @@ async fn handle_connect(req: Request<Incoming>) -> Result<Response<BoxBody>, hyp
     Ok(Response::builder()
         .status(StatusCode::OK)
         .body(http_body_util::Full::new(hyper::body::Bytes::new()))
-        .unwrap())
+        .unwrap_or_else(|_| {
+            error_response(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to build CONNECT tunnel response",
+            )
+        }))
 }
 
 /// Forward an HTTP request, capturing request and response for logging.
@@ -294,5 +300,11 @@ fn error_response(status: StatusCode, message: &str) -> Response<BoxBody> {
         .body(http_body_util::Full::new(hyper::body::Bytes::from(
             message.to_string(),
         )))
-        .unwrap()
+        .unwrap_or_else(|_| {
+            // Fallback: bare 500 response with no headers — should never happen
+            // since we control status and header values above.
+            Response::new(http_body_util::Full::new(hyper::body::Bytes::from(
+                "Internal Server Error",
+            )))
+        })
 }
