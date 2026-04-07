@@ -349,7 +349,11 @@ export function useSplitPaneShortcuts(
         return;
       }
       // Cmd+Shift+W = close focused pane
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "W") {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.shiftKey &&
+        e.key.toUpperCase() === "W"
+      ) {
         e.preventDefault();
         onClosePane?.();
         return;
