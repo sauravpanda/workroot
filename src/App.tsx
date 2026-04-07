@@ -150,7 +150,19 @@ function AppContent({
     const check = () =>
       invoke<boolean>("github_check_auth")
         .then(setIsGitHubConnected)
-        .catch(() => setIsGitHubConnected(false));
+        .catch((err: unknown) => {
+          // Only mark as disconnected for auth failures, not network errors
+          const msg = String(err).toLowerCase();
+          if (
+            msg.includes("network") ||
+            msg.includes("fetch") ||
+            msg.includes("timeout")
+          ) {
+            // Network error — keep the previous auth state
+            return;
+          }
+          setIsGitHubConnected(false);
+        });
     check();
     const id = setInterval(check, 30_000);
     return () => clearInterval(id);
