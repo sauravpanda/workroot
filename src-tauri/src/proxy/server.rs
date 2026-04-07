@@ -208,7 +208,7 @@ async fn handle_websocket_upgrade(
         .header(hyper::header::CONNECTION, "Upgrade")
         .header(hyper::header::UPGRADE, "websocket")
         .body(http_body_util::Full::new(hyper::body::Bytes::new()))
-        .unwrap())
+        .unwrap_or_else(|_| error_response(StatusCode::INTERNAL_SERVER_ERROR, "Failed to build WebSocket upgrade response")))
 }
 
 /// Forwards a regular HTTP request to the target port.
@@ -294,7 +294,12 @@ fn error_response(status: StatusCode, message: &str) -> Response<BoxBody> {
         .body(http_body_util::Full::new(hyper::body::Bytes::from(
             message.to_string(),
         )))
-        .unwrap()
+        .unwrap_or_else(|_| {
+            // Last-resort fallback if even the error response builder fails
+            Response::new(http_body_util::Full::new(hyper::body::Bytes::from(
+                "Internal Server Error",
+            )))
+        })
 }
 
 /// Tauri command: get proxy status.
@@ -302,7 +307,7 @@ fn error_response(status: StatusCode, message: &str) -> Response<BoxBody> {
 pub fn get_proxy_status(state: State<'_, ProxyState>) -> Result<ProxyInfo, String> {
     let port = state.proxy_running.load(Ordering::Relaxed);
     let active_port = state.get_active_port();
-    let worktree_id = state.active_worktree_id.lock().map(|w| *w).unwrap_or(None);
+    let worktree_id = state.get_active_worktree_id();
 
     Ok(ProxyInfo {
         running: port > 0,

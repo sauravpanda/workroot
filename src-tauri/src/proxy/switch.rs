@@ -59,7 +59,7 @@ pub fn get_active_project(
     db: State<'_, AppDb>,
     proxy: State<'_, ProxyState>,
 ) -> Result<Option<ActiveProjectInfo>, String> {
-    let worktree_id = proxy.active_worktree_id.lock().map(|w| *w).unwrap_or(None);
+    let worktree_id = proxy.get_active_worktree_id();
 
     let worktree_id = match worktree_id {
         Some(id) => id,
