@@ -30,24 +30,27 @@ export function DockerPanel({ cwd, onClose }: DockerPanelProps) {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"containers" | "compose">("containers");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [dockerError, setDockerError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setDockerError(null);
     try {
       const isAvailable = await invoke<boolean>("detect_docker");
       setAvailable(isAvailable);
       if (isAvailable) {
-        const [ctrs, svcs] = await Promise.all([
+        const [ctrs, svcs] = await Promise.allSettled([
           invoke<ContainerInfo[]>("list_containers"),
-          invoke<ComposeService[]>("list_compose_services", { cwd }).catch(
-            () => [] as ComposeService[],
-          ),
+          invoke<ComposeService[]>("list_compose_services", { cwd }),
         ]);
-        setContainers(ctrs);
-        setComposeServices(svcs);
+        setContainers(ctrs.status === "fulfilled" ? ctrs.value : []);
+        setComposeServices(svcs.status === "fulfilled" ? svcs.value : []);
       }
-    } catch {
+    } catch (err) {
       setAvailable(false);
+      setDockerError(
+        err instanceof Error ? err.message : "Failed to detect Docker",
+      );
     }
     setLoading(false);
   }, [cwd]);
@@ -62,8 +65,10 @@ export function DockerPanel({ cwd, onClose }: DockerPanelProps) {
       try {
         await invoke(`${action}_container`, { containerId });
         await loadData();
-      } catch {
-        // action failed
+      } catch (err) {
+        setDockerError(
+          err instanceof Error ? err.message : `Failed to ${action} container`,
+        );
       }
       setActionLoading(null);
     },
@@ -99,6 +104,18 @@ export function DockerPanel({ cwd, onClose }: DockerPanelProps) {
             </button>
           </div>
         </div>
+
+        {dockerError && (
+          <div
+            style={{
+              color: "var(--error)",
+              padding: "8px 12px",
+              fontSize: "0.85em",
+            }}
+          >
+            {dockerError}
+          </div>
+        )}
 
         <div className="docker-body">
           {loading ? (
