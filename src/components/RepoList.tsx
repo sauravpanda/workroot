@@ -21,6 +21,7 @@ export function RepoList() {
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(
     null,
   );
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const registeredPaths = useMemo(
     () => new Set(projects.map((p) => p.local_path)),
@@ -39,34 +40,62 @@ export function RepoList() {
   }, [githubRepos, search]);
 
   const handleAddLocal = async () => {
-    const selected = await open({ directory: true, multiple: false });
-    if (selected) {
-      await registerLocal(selected);
+    setActionError(null);
+    try {
+      const selected = await open({ directory: true, multiple: false });
+      if (selected) {
+        await registerLocal(selected);
+      }
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Failed to register local project",
+      );
     }
   };
 
   const handleClone = async (repo: GitHubRepo) => {
-    if (!cloneDir) {
-      const dir = await open({ directory: true, multiple: false });
-      if (!dir) return;
-      setCloneDir(dir);
-      setCloningRepo(repo.full_name);
-      await cloneAndRegister(repo.clone_url, repo.name, dir, repo.html_url);
+    setActionError(null);
+    try {
+      if (!cloneDir) {
+        const dir = await open({ directory: true, multiple: false });
+        if (!dir) return;
+        setCloneDir(dir);
+        setCloningRepo(repo.full_name);
+        await cloneAndRegister(repo.clone_url, repo.name, dir, repo.html_url);
+        setCloningRepo(null);
+      } else {
+        setCloningRepo(repo.full_name);
+        await cloneAndRegister(
+          repo.clone_url,
+          repo.name,
+          cloneDir,
+          repo.html_url,
+        );
+        setCloningRepo(null);
+      }
+    } catch (err) {
       setCloningRepo(null);
-    } else {
-      setCloningRepo(repo.full_name);
-      await cloneAndRegister(
-        repo.clone_url,
-        repo.name,
-        cloneDir,
-        repo.html_url,
+      setActionError(
+        err instanceof Error ? err.message : `Failed to clone ${repo.name}`,
       );
-      setCloningRepo(null);
     }
   };
 
   return (
     <div className="repo-list">
+      {actionError && (
+        <div
+          style={{
+            color: "var(--error)",
+            padding: "8px 12px",
+            fontSize: "0.85em",
+            cursor: "pointer",
+          }}
+          onClick={() => setActionError(null)}
+        >
+          {actionError}
+        </div>
+      )}
       <div className="repo-tabs">
         <button
           className={`repo-tab ${view === "projects" ? "active" : ""}`}
