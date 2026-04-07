@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicegui/nicegui/main/.nicegui/schema/tauri-conf.json",
   "productName": "Workroot",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "identifier": "com.workroot.dev",
   "build": {
     "beforeDevCommand": "pnpm dev",
