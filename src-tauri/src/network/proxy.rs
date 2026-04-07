@@ -12,6 +12,19 @@ use tokio::net::TcpListener;
 
 use crate::db::AppDb;
 use crate::network::logging;
+use std::sync::OnceLock;
+
+/// Shared no-proxy client for the forward proxy (bypasses system proxy to avoid loops).
+static NO_PROXY_CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
+
+fn no_proxy_client() -> &'static reqwest::Client {
+    NO_PROXY_CLIENT.get_or_init(|| {
+        reqwest::Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap_or_else(|_| reqwest::Client::new())
+    })
+}
 
 type BoxBody = http_body_util::Full<hyper::body::Bytes>;
 
@@ -162,12 +175,8 @@ async fn handle_forward(
         Some(truncate_body(&body_bytes))
     };
 
-    // Forward the request
-    let client = reqwest::Client::builder()
-        .no_proxy()
-        .build()
-        .unwrap_or_else(|_| reqwest::Client::new());
-
+    // Forward the request (shared no-proxy client reuses connections)
+    let client = no_proxy_client();
     let mut builder = client.request(
         reqwest::Method::from_bytes(method.as_bytes()).unwrap_or(reqwest::Method::GET),
         &url,
