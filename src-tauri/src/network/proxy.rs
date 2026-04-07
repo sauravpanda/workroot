@@ -162,11 +162,8 @@ async fn handle_forward(
         Some(truncate_body(&body_bytes))
     };
 
-    // Forward the request
-    let client = reqwest::Client::builder()
-        .no_proxy()
-        .build()
-        .unwrap_or_else(|_| reqwest::Client::new());
+    // Forward the request (shared client reuses connections)
+    let client = crate::http_client::shared_no_proxy_client();
 
     let mut builder = client.request(
         reqwest::Method::from_bytes(method.as_bytes()).unwrap_or(reqwest::Method::GET),

@@ -90,7 +90,7 @@ pub async fn ai_chat_send(
         stream: false,
     };
 
-    let client = reqwest::Client::new();
+    let client = crate::http_client::shared_client();
     let response = client
         .post(&url)
         .json(&body)
@@ -125,7 +125,7 @@ pub async fn ai_chat_send(
 pub async fn ai_chat_list_models(endpoint: Option<String>) -> Result<Vec<String>, String> {
     let url = endpoint.unwrap_or_else(|| DEFAULT_TAGS_ENDPOINT.to_string());
 
-    let client = reqwest::Client::new();
+    let client = crate::http_client::shared_client();
     let response = client
         .get(&url)
         .send()

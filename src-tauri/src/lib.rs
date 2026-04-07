@@ -15,6 +15,7 @@ pub mod fileview;
 pub mod filewatcher;
 pub mod git;
 pub mod github;
+pub mod http_client;
 pub mod mcp;
 pub mod memory;
 pub mod metrics;

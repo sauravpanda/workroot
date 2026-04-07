@@ -36,7 +36,7 @@ async fn generate(
         stream: false,
     };
 
-    let client = reqwest::Client::new();
+    let client = crate::http_client::shared_client();
     let response = client
         .post(&url)
         .json(&body)

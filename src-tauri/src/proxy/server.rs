@@ -240,8 +240,8 @@ async fn forward_http_request(
         }
     };
 
-    // Forward with reqwest
-    let client = reqwest::Client::new();
+    // Forward with reqwest (shared client reuses connections)
+    let client = crate::http_client::shared_client();
     let mut builder = client.request(
         reqwest::Method::from_bytes(method.as_str().as_bytes()).unwrap_or(reqwest::Method::GET),
         &target_uri,

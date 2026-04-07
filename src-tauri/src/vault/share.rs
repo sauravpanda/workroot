@@ -94,7 +94,7 @@ pub async fn export_profile_to_gist(
 
     let token = auth::get_token()?.ok_or("Not authenticated with GitHub")?;
 
-    let client = reqwest::Client::new();
+    let client = crate::http_client::shared_client();
     let resp = client
         .post("https://api.github.com/gists")
         .header("Authorization", format!("Bearer {}", token))
@@ -143,7 +143,7 @@ pub async fn import_profile_from_gist(
 ) -> Result<i64, String> {
     let token = auth::get_token()?.ok_or("Not authenticated with GitHub")?;
 
-    let client = reqwest::Client::new();
+    let client = crate::http_client::shared_client();
     let resp = client
         .get(format!("https://api.github.com/gists/{}", gist_id))
         .header("Authorization", format!("Bearer {}", token))
@@ -212,7 +212,7 @@ pub async fn import_profile_from_gist(
 pub async fn list_shared_gists() -> Result<Vec<SharedGist>, String> {
     let token = auth::get_token()?.ok_or("Not authenticated with GitHub")?;
 
-    let client = reqwest::Client::new();
+    let client = crate::http_client::shared_client();
     let resp = client
         .get("https://api.github.com/gists")
         .header("Authorization", format!("Bearer {}", token))
