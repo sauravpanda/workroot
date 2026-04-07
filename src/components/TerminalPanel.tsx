@@ -433,6 +433,36 @@ async function loadTerminalSettings(): Promise<{
   };
 }
 
+// Image MIME types accepted for drag-and-drop into the terminal.
+const IMAGE_MIME_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "image/bmp",
+  "image/svg+xml",
+]);
+
+// Map MIME type to file extension for saving dropped images.
+function extensionForMime(mime: string): string {
+  switch (mime) {
+    case "image/png":
+      return "png";
+    case "image/jpeg":
+      return "jpg";
+    case "image/gif":
+      return "gif";
+    case "image/webp":
+      return "webp";
+    case "image/bmp":
+      return "bmp";
+    case "image/svg+xml":
+      return "svg";
+    default:
+      return "png";
+  }
+}
+
 // Patterns that suggest the agent is waiting for user input.
 const ATTENTION_PATTERNS = [
   /Do you want to proceed/i,
@@ -473,6 +503,60 @@ function TerminalInstance({
   onAgentNeedsAttentionRef.current = onAgentNeedsAttention;
   const lastAttentionTimeRef = useRef(0);
   const [dragOver, setDragOver] = useState(false);
+
+  // Handle HTML5 drag-and-drop so users can drop image files (screenshots)
+  // directly onto the terminal. The image is saved to a temp file via the
+  // backend and the resulting path is written to the PTY.
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    async (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragOver(false);
+
+      const files = Array.from(e.dataTransfer.files);
+      const imageFiles = files.filter((f) => IMAGE_MIME_TYPES.has(f.type));
+
+      if (imageFiles.length === 0) {
+        // Not images — let the Tauri native handler deal with regular files.
+        return;
+      }
+
+      if (!ptyRef.current || !active) return;
+
+      const paths: string[] = [];
+      for (const file of imageFiles) {
+        try {
+          const buffer = await file.arrayBuffer();
+          const data = Array.from(new Uint8Array(buffer));
+          const ext = extensionForMime(file.type);
+          const savedPath = await invoke<string>("save_dropped_image", {
+            data,
+            extension: ext,
+          });
+          paths.push(`"${savedPath}"`);
+        } catch (err) {
+          console.error("Failed to save dropped image:", err);
+        }
+      }
+
+      if (paths.length > 0 && ptyRef.current) {
+        ptyRef.current.write(paths.join(" "));
+      }
+    },
+    [active],
+  );
 
   // Create xterm + PTY on mount, destroy on unmount
   useEffect(() => {
@@ -762,6 +846,9 @@ function TerminalInstance({
     <div
       className={`terminal-container${dragOver ? " terminal-drag-over" : ""}`}
       ref={containerRef}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     />
   );
 }
