@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { getVersion } from "@tauri-apps/api/app";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { Dialog, DialogContent } from "./ui/dialog";
@@ -23,7 +24,8 @@ type SettingsSection =
   | "git"
   | "security"
   | "docker"
-  | "notifications";
+  | "notifications"
+  | "about";
 
 interface ToggleSettingConfig {
   key: string;
@@ -51,6 +53,7 @@ const SECTIONS: { id: SettingsSection; label: string; icon: string }[] = [
   { id: "security", label: "Security", icon: "S" },
   { id: "docker", label: "Docker", icon: "D" },
   { id: "notifications", label: "Notifications", icon: "N" },
+  { id: "about", label: "About", icon: "?" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -69,6 +72,12 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [confirmingReset, setConfirmingReset] = useState<string | null>(null);
+  const [appVersion, setAppVersion] = useState<string>("");
+
+  // Load app version on mount
+  useEffect(() => {
+    getVersion().then((v) => setAppVersion(v));
+  }, []);
 
   // Load all settings on mount
   useEffect(() => {
@@ -631,6 +640,43 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               "notification_badge",
               "notification_ci_failures",
             ])}
+          </div>
+        );
+
+      case "about":
+        return (
+          <div className="settings-page__section-content">
+            <h2 className="settings-page__section-title">About Workroot</h2>
+            <p className="settings-page__section-desc">
+              A local-first developer workspace for managing projects,
+              terminals, and Git workflows.
+            </p>
+
+            <div className="settings-page__field">
+              <div className="settings-page__field-label">Version</div>
+              <p className="settings-page__field-desc">
+                {appVersion ? `v${appVersion}` : "Loading..."}
+              </p>
+            </div>
+
+            <div className="settings-page__field">
+              <div className="settings-page__field-label">Source Code</div>
+              <p className="settings-page__field-desc">
+                <a
+                  href="https://github.com/sauravpanda/workroot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--color-accent, #58a6ff)" }}
+                >
+                  github.com/sauravpanda/workroot
+                </a>
+              </p>
+            </div>
+
+            <div className="settings-page__field">
+              <div className="settings-page__field-label">License</div>
+              <p className="settings-page__field-desc">MIT</p>
+            </div>
           </div>
         );
     }
