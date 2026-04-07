@@ -42,14 +42,12 @@ const SECURITY_HEADERS: &[ExpectedHeader] = &[
 
 /// Check a URL for security headers.
 #[tauri::command]
-pub async fn check_security_headers(url: String) -> Result<Vec<HeaderCheck>, String> {
-    let client = reqwest::Client::builder()
-        .redirect(reqwest::redirect::Policy::limited(5))
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("HTTP client: {}", e))?;
-
-    let response = client
+pub async fn check_security_headers(
+    http: tauri::State<'_, crate::HttpClient>,
+    url: String,
+) -> Result<Vec<HeaderCheck>, String> {
+    let response = http
+        .0
         .get(&url)
         .send()
         .await

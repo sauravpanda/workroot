@@ -181,12 +181,13 @@ pub async fn execute_plugin(
 
 /// Download a plugin manifest from a URL and create its directory structure.
 #[tauri::command]
-pub async fn install_plugin_from_url(cwd: String, url: String) -> Result<PluginManifest, String> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("HTTP client build failed: {e}"))?;
-    let body = client
+pub async fn install_plugin_from_url(
+    http: tauri::State<'_, crate::HttpClient>,
+    cwd: String,
+    url: String,
+) -> Result<PluginManifest, String> {
+    let body = http
+        .0
         .get(&url)
         .send()
         .await

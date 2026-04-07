@@ -28,7 +28,10 @@ pub struct VitalsHistory {
 /// First tries `npx lighthouse` with headless Chrome. If that is unavailable,
 /// falls back to a simple HTTP GET and measures TTFB.
 #[tauri::command]
-pub async fn run_lighthouse_audit(url: String) -> Result<WebVitalsReport, String> {
+pub async fn run_lighthouse_audit(
+    http: tauri::State<'_, crate::HttpClient>,
+    url: String,
+) -> Result<WebVitalsReport, String> {
     let now = chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
 
     // Try running lighthouse via npx
@@ -77,11 +80,8 @@ pub async fn run_lighthouse_audit(url: String) -> Result<WebVitalsReport, String
         _ => {
             // Fallback: measure TTFB with a simple GET request
             let start = std::time::Instant::now();
-            let client = reqwest::Client::builder()
-                .timeout(std::time::Duration::from_secs(10))
-                .build()
-                .map_err(|e| format!("HTTP client build failed: {e}"))?;
-            let resp = client
+            let resp = http
+                .0
                 .get(&url)
                 .send()
                 .await
