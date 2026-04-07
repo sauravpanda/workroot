@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -63,12 +64,13 @@ export function ErrorProvider({ children }: { children: React.ReactNode }) {
     setErrors([]);
   }, []);
 
+  const value = useMemo(
+    () => ({ errors, reportError, dismissError, clearErrors }),
+    [errors, reportError, dismissError, clearErrors],
+  );
+
   return (
-    <ErrorContext.Provider
-      value={{ errors, reportError, dismissError, clearErrors }}
-    >
-      {children}
-    </ErrorContext.Provider>
+    <ErrorContext.Provider value={value}>{children}</ErrorContext.Provider>
   );
 }
 
