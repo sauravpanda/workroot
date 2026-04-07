@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/file-explorer.css";
+import { useFocusTrap } from "../hooks/useFocusTrap";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -98,6 +99,7 @@ export function FileExplorer({
   onClose,
   onFileSelect,
 }: FileExplorerProps) {
+  const focusTrapRef = useFocusTrap();
   const [flatNodes, setFlatNodes] = useState<FlatNode[]>([]);
   const [gitStatuses, setGitStatuses] = useState<Map<string, string>>(
     new Map(),
@@ -251,7 +253,7 @@ export function FileExplorer({
   /* ---------------------------------------------------------------- */
 
   return (
-    <div className="fe-backdrop" onClick={onClose}>
+    <div className="fe-backdrop" ref={focusTrapRef} onClick={onClose}>
       <div
         className="fe-panel fe-panel--wide"
         onClick={(e) => e.stopPropagation()}
