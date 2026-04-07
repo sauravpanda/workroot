@@ -116,10 +116,16 @@ export function ContentToolbar({
   return (
     <div className="flex h-10 min-h-[40px] shrink-0 items-center border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
       {/* Breadcrumb */}
-      <div className="flex min-w-0 shrink items-center gap-[0.35em] overflow-hidden text-ellipsis whitespace-nowrap pl-3.5 pr-3 font-mono text-[11.5px] tracking-[-0.01em] text-[var(--text-secondary)] select-none">
+      <div
+        className="flex min-w-[80px] shrink-0 items-center gap-[0.35em] overflow-hidden text-ellipsis whitespace-nowrap pl-3.5 pr-3 font-mono text-[11.5px] tracking-[-0.01em] text-[var(--text-secondary)] select-none"
+        title={projectName ? `${projectName} / ${worktreeName}` : worktreeName}
+      >
         {projectName && (
           <>
-            <span className="overflow-hidden text-ellipsis whitespace-nowrap text-[var(--text-muted)]">
+            <span
+              className="overflow-hidden text-ellipsis whitespace-nowrap text-[var(--text-muted)]"
+              title={projectName}
+            >
               {projectName}
             </span>
             <span className="font-sans text-xs leading-none opacity-45 text-[var(--border-strong)]">
@@ -127,7 +133,10 @@ export function ContentToolbar({
             </span>
           </>
         )}
-        <span className="overflow-hidden text-ellipsis whitespace-nowrap font-medium">
+        <span
+          className="overflow-hidden text-ellipsis whitespace-nowrap font-medium"
+          title={worktreeName}
+        >
           {worktreeName}
         </span>
       </div>
@@ -139,10 +148,10 @@ export function ContentToolbar({
       <TabsRoot
         value={activeTab}
         onValueChange={onTabChange}
-        className="min-w-0 flex-1 self-stretch"
+        className="min-w-0 flex-1 overflow-hidden self-stretch"
       >
-        <ScrollArea className="h-full" type="scroll">
-          <TabsList className="h-10 flex-nowrap">
+        <ScrollArea className="h-full w-full" type="scroll">
+          <TabsList className="h-10 w-max flex-nowrap">
             {TABS.map((tab) => (
               <TabsTrigger key={tab.id} value={tab.id}>
                 <span className="opacity-50 transition-opacity duration-150 group-data-[state=active]:opacity-100 group-data-[state=active]:text-[var(--accent)]">
