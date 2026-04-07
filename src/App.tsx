@@ -8,7 +8,7 @@ import {
   useRef,
 } from "react";
 import { ErrorProvider } from "./contexts/ErrorContext";
-import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ErrorBoundary, PanelBoundary } from "./components/ErrorBoundary";
 import { GlobalErrorToast } from "./components/GlobalErrorToast";
 import { invoke } from "@tauri-apps/api/core";
 import { MainLayout } from "./layouts/MainLayout";
@@ -1332,19 +1332,31 @@ function AppContent({
   return (
     <Suspense fallback={null}>
       {showSettings ? (
-        <SettingsTab />
+        <PanelBoundary name="Settings">
+          <SettingsTab />
+        </PanelBoundary>
       ) : !selectedWorktreePath ? (
         <div className="content-scroll">
           <div className="content-inner">
-            <Dashboard
-              projectId={selectedProjectId}
-              onAction={handleDashboardAction}
-            />
-            <ActiveProjectBadge />
-            <AuthButton />
-            <RepoList />
+            <PanelBoundary name="Dashboard">
+              <Dashboard
+                projectId={selectedProjectId}
+                onAction={handleDashboardAction}
+              />
+            </PanelBoundary>
+            <PanelBoundary name="Active Project">
+              <ActiveProjectBadge />
+            </PanelBoundary>
+            <PanelBoundary name="Auth">
+              <AuthButton />
+            </PanelBoundary>
+            <PanelBoundary name="Repositories">
+              <RepoList />
+            </PanelBoundary>
             {selectedProjectId !== null && (
-              <EnvPanel projectId={selectedProjectId} />
+              <PanelBoundary name="Environment Variables">
+                <EnvPanel projectId={selectedProjectId} />
+              </PanelBoundary>
             )}
           </div>
         </div>
@@ -1363,30 +1375,36 @@ function AppContent({
             minHeight: 0,
           }}
         >
-          <ContentToolbar
-            activeTab={contentTab}
-            onTabChange={handleContentTabChange}
-            worktreeName={
-              selectedWorktreeName ?? lastWorktreeNameRef.current ?? "Shell"
-            }
-            projectName={selectedProjectName ?? undefined}
-          />
-          <TerminalPanel
-            cwd={lastWorktreePathRef.current}
-            worktreeName={
-              selectedWorktreeName ?? lastWorktreeNameRef.current ?? "Shell"
-            }
-            themeId={terminalThemeId}
-            onAgentComplete={handleAgentComplete}
-            onAgentNeedsAttention={handleAgentNeedsAttention}
-          />
+          <PanelBoundary name="Content Toolbar">
+            <ContentToolbar
+              activeTab={contentTab}
+              onTabChange={handleContentTabChange}
+              worktreeName={
+                selectedWorktreeName ?? lastWorktreeNameRef.current ?? "Shell"
+              }
+              projectName={selectedProjectName ?? undefined}
+            />
+          </PanelBoundary>
+          <PanelBoundary name="Terminal">
+            <TerminalPanel
+              cwd={lastWorktreePathRef.current}
+              worktreeName={
+                selectedWorktreeName ?? lastWorktreeNameRef.current ?? "Shell"
+              }
+              themeId={terminalThemeId}
+              onAgentComplete={handleAgentComplete}
+              onAgentNeedsAttention={handleAgentNeedsAttention}
+            />
+          </PanelBoundary>
         </div>
       )}
-      <StatusBar
-        projectName={selectedProjectName}
-        branchName={selectedWorktreeName}
-        isGitHubConnected={isGitHubConnected}
-      />
+      <PanelBoundary name="Status Bar">
+        <StatusBar
+          projectName={selectedProjectName}
+          branchName={selectedWorktreeName}
+          isGitHubConnected={isGitHubConnected}
+        />
+      </PanelBoundary>
       <CommandPalette
         open={panels.palette}
         onClose={handleClosePalette}
@@ -1394,310 +1412,420 @@ function AppContent({
         search={search}
       />
       {panels.bookmarks && (
-        <CommandBookmarks
-          projectId={selectedProjectId}
-          onClose={handleCloseBookmarks}
-        />
+        <PanelBoundary name="Bookmarks">
+          <CommandBookmarks
+            projectId={selectedProjectId}
+            onClose={handleCloseBookmarks}
+          />
+        </PanelBoundary>
       )}
       {panels.themeSelector && (
-        <TerminalThemeSelector
-          currentThemeId={terminalThemeId}
-          onThemeChange={setTerminalThemeId}
-          onClose={() => closePanel("themeSelector")}
-        />
+        <PanelBoundary name="Theme Selector">
+          <TerminalThemeSelector
+            currentThemeId={terminalThemeId}
+            onThemeChange={setTerminalThemeId}
+            onClose={() => closePanel("themeSelector")}
+          />
+        </PanelBoundary>
       )}
       {panels.taskRunner && selectedWorktreePath && (
-        <TaskRunner
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("taskRunner")}
-        />
+        <PanelBoundary name="Task Runner">
+          <TaskRunner
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("taskRunner")}
+          />
+        </PanelBoundary>
       )}
       {panels.appThemePicker && (
-        <AppThemePicker
-          currentThemeId={appThemeId}
-          onThemeChange={setAppThemeId}
-          onClose={() => closePanel("appThemePicker")}
-        />
+        <PanelBoundary name="App Theme Picker">
+          <AppThemePicker
+            currentThemeId={appThemeId}
+            onThemeChange={setAppThemeId}
+            onClose={() => closePanel("appThemePicker")}
+          />
+        </PanelBoundary>
       )}
       {panels.themeEditor && (
-        <ThemeEditor
-          currentThemeId={appThemeId}
-          onClose={() => closePanel("themeEditor")}
-          onThemeSave={(theme: AppTheme) => {
-            applyTheme(theme);
-            setAppThemeId(theme.id);
-          }}
-        />
+        <PanelBoundary name="Theme Editor">
+          <ThemeEditor
+            currentThemeId={appThemeId}
+            onClose={() => closePanel("themeEditor")}
+            onThemeSave={(theme: AppTheme) => {
+              applyTheme(theme);
+              setAppThemeId(theme.id);
+            }}
+          />
+        </PanelBoundary>
       )}
       {panels.densityPicker && (
-        <DensityPicker
-          currentMode={densityMode}
-          onModeChange={setDensityMode}
-          onClose={() => closePanel("densityPicker")}
-        />
+        <PanelBoundary name="Density Picker">
+          <DensityPicker
+            currentMode={densityMode}
+            onModeChange={setDensityMode}
+            onClose={() => closePanel("densityPicker")}
+          />
+        </PanelBoundary>
       )}
       {panels.shortcuts && (
-        <KeyboardShortcuts onClose={() => closePanel("shortcuts")} />
+        <PanelBoundary name="Keyboard Shortcuts">
+          <KeyboardShortcuts onClose={() => closePanel("shortcuts")} />
+        </PanelBoundary>
       )}
       {panels.cssEditor && (
-        <CustomCSSEditor onClose={() => closePanel("cssEditor")} />
+        <PanelBoundary name="CSS Editor">
+          <CustomCSSEditor onClose={() => closePanel("cssEditor")} />
+        </PanelBoundary>
       )}
       {panels.stashManager && selectedWorktreeId !== null && (
-        <StashManager
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("stashManager")}
-        />
+        <PanelBoundary name="Stash Manager">
+          <StashManager
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("stashManager")}
+          />
+        </PanelBoundary>
       )}
       {panels.checkpointManager && selectedWorktreeId !== null && (
-        <CheckpointPanel
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("checkpointManager")}
-        />
+        <PanelBoundary name="Checkpoint Manager">
+          <CheckpointPanel
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("checkpointManager")}
+          />
+        </PanelBoundary>
       )}
       {panels.multiAgentPipeline && selectedWorktreeId !== null && (
-        <MultiAgentPipelinePanel
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("multiAgentPipeline")}
-        />
+        <PanelBoundary name="Multi-Agent Pipeline">
+          <MultiAgentPipelinePanel
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("multiAgentPipeline")}
+          />
+        </PanelBoundary>
       )}
       {panels.blameView && selectedWorktreeId !== null && (
-        <BlameView
-          worktreeId={selectedWorktreeId}
-          filePath={blameFilePath}
-          onClose={() => closePanel("blameView")}
-        />
+        <PanelBoundary name="Blame View">
+          <BlameView
+            worktreeId={selectedWorktreeId}
+            filePath={blameFilePath}
+            onClose={() => closePanel("blameView")}
+          />
+        </PanelBoundary>
       )}
       {panels.branchCompare && selectedWorktreeId !== null && (
-        <BranchCompare
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("branchCompare")}
-        />
+        <PanelBoundary name="Branch Compare">
+          <BranchCompare
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("branchCompare")}
+          />
+        </PanelBoundary>
       )}
       {panels.gitHooks && selectedWorktreeId !== null && (
-        <GitHooksManager
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("gitHooks")}
-        />
+        <PanelBoundary name="Git Hooks Manager">
+          <GitHooksManager
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("gitHooks")}
+          />
+        </PanelBoundary>
       )}
       {panels.conflictResolver && selectedWorktreeId !== null && (
-        <ConflictResolver
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("conflictResolver")}
-        />
+        <PanelBoundary name="Conflict Resolver">
+          <ConflictResolver
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("conflictResolver")}
+          />
+        </PanelBoundary>
       )}
       {panels.securityAudit && selectedWorktreePath && (
-        <SecurityAudit
-          cwd={selectedWorktreePath}
-          onClose={() => {
-            closePanel("securityAudit");
-            setContentTab("terminal");
-          }}
-        />
+        <PanelBoundary name="Security Audit">
+          <SecurityAudit
+            cwd={selectedWorktreePath}
+            onClose={() => {
+              closePanel("securityAudit");
+              setContentTab("terminal");
+            }}
+          />
+        </PanelBoundary>
       )}
       {panels.secretScanner && selectedWorktreePath && (
-        <SecretScanner
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("secretScanner")}
-        />
+        <PanelBoundary name="Secret Scanner">
+          <SecretScanner
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("secretScanner")}
+          />
+        </PanelBoundary>
       )}
       {panels.licenseReport && selectedWorktreePath && (
-        <LicenseReport
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("licenseReport")}
-        />
+        <PanelBoundary name="License Report">
+          <LicenseReport
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("licenseReport")}
+          />
+        </PanelBoundary>
       )}
       {panels.securityHeaders && (
-        <SecurityHeaders onClose={() => closePanel("securityHeaders")} />
+        <PanelBoundary name="Security Headers">
+          <SecurityHeaders onClose={() => closePanel("securityHeaders")} />
+        </PanelBoundary>
       )}
       {panels.testRunnerPanel && selectedWorktreePath && (
-        <TestRunnerPanel
-          cwd={selectedWorktreePath}
-          onClose={() => {
-            closePanel("testRunnerPanel");
-            setContentTab("terminal");
-          }}
-        />
+        <PanelBoundary name="Test Runner">
+          <TestRunnerPanel
+            cwd={selectedWorktreePath}
+            onClose={() => {
+              closePanel("testRunnerPanel");
+              setContentTab("terminal");
+            }}
+          />
+        </PanelBoundary>
       )}
       {panels.coverageReport && selectedWorktreePath && (
-        <CoverageReport
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("coverageReport")}
-        />
+        <PanelBoundary name="Coverage Report">
+          <CoverageReport
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("coverageReport")}
+          />
+        </PanelBoundary>
       )}
       {panels.benchmark && selectedWorktreePath && (
-        <BenchmarkDashboard
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("benchmark")}
-        />
+        <PanelBoundary name="Benchmark Dashboard">
+          <BenchmarkDashboard
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("benchmark")}
+          />
+        </PanelBoundary>
       )}
       {panels.docker && selectedWorktreePath && (
-        <DockerPanel
-          cwd={selectedWorktreePath}
-          onClose={() => {
-            closePanel("docker");
-            setContentTab("terminal");
-          }}
-        />
+        <PanelBoundary name="Docker">
+          <DockerPanel
+            cwd={selectedWorktreePath}
+            onClose={() => {
+              closePanel("docker");
+              setContentTab("terminal");
+            }}
+          />
+        </PanelBoundary>
       )}
       {panels.dockerImages && (
-        <DockerImages onClose={() => closePanel("dockerImages")} />
+        <PanelBoundary name="Docker Images">
+          <DockerImages onClose={() => closePanel("dockerImages")} />
+        </PanelBoundary>
       )}
       {panels.containerMonitor && (
-        <ContainerMonitor onClose={() => closePanel("containerMonitor")} />
+        <PanelBoundary name="Container Monitor">
+          <ContainerMonitor onClose={() => closePanel("containerMonitor")} />
+        </PanelBoundary>
       )}
       {panels.flakyTests && selectedWorktreePath && (
-        <FlakyTests
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("flakyTests")}
-        />
+        <PanelBoundary name="Flaky Tests">
+          <FlakyTests
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("flakyTests")}
+          />
+        </PanelBoundary>
       )}
-      <NotificationCenter
-        open={panels.notifications}
-        onClose={() => closePanel("notifications")}
-      />
+      <PanelBoundary name="Notification Center">
+        <NotificationCenter
+          open={panels.notifications}
+          onClose={() => closePanel("notifications")}
+        />
+      </PanelBoundary>
       {panels.activityTimeline && (
-        <ActivityTimeline onClose={() => closePanel("activityTimeline")} />
+        <PanelBoundary name="Activity Timeline">
+          <ActivityTimeline onClose={() => closePanel("activityTimeline")} />
+        </PanelBoundary>
       )}
       {panels.pluginManager && (
-        <PluginManager onClose={() => closePanel("pluginManager")} />
+        <PanelBoundary name="Plugin Manager">
+          <PluginManager onClose={() => closePanel("pluginManager")} />
+        </PanelBoundary>
       )}
       {panels.backupRestore && (
-        <BackupRestore onClose={() => closePanel("backupRestore")} />
+        <PanelBoundary name="Backup & Restore">
+          <BackupRestore onClose={() => closePanel("backupRestore")} />
+        </PanelBoundary>
       )}
       {panels.analyticsDashboard && selectedWorktreePath && (
-        <AnalyticsDashboard
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("analyticsDashboard")}
+        <PanelBoundary name="Analytics Dashboard">
+          <AnalyticsDashboard
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("analyticsDashboard")}
+          />
+        </PanelBoundary>
+      )}
+      <PanelBoundary name="AI Chat">
+        <AiChatSidebar
+          open={panels.aiChat}
+          onClose={() => closePanel("aiChat")}
         />
-      )}
-      <AiChatSidebar
-        open={panels.aiChat}
-        onClose={() => closePanel("aiChat")}
-      />
-      <UnifiedSearch
-        open={panels.unifiedSearch}
-        onClose={() => closePanel("unifiedSearch")}
-        onNavigate={(type: string, _data: string) => {
-          closePanel("unifiedSearch");
-          if (type === "bookmark") openPanel("bookmarks");
-          else if (type === "setting") openPanel("settingsPage");
-        }}
-      />
-      {panels.settingsPage && (
-        <SettingsPage onClose={() => closePanel("settingsPage")} />
-      )}
-      {panels.terminalRecording && selectedWorktreeId !== null && (
-        <TerminalRecording
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("terminalRecording")}
-        />
-      )}
-      {panels.doraMetrics && selectedProjectId !== null && (
-        <DoraMetrics
-          projectId={selectedProjectId}
-          onClose={() => closePanel("doraMetrics")}
-        />
-      )}
-      {panels.webhookEvents && (
-        <WebhookEvents onClose={() => closePanel("webhookEvents")} />
-      )}
-      {panels.sshManager && (
-        <SshManager
-          onClose={() => closePanel("sshManager")}
-          onConnect={() => closePanel("sshManager")}
-        />
-      )}
-      {panels.gitAnalytics && selectedWorktreeId !== null && (
-        <GitAnalytics
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("gitAnalytics")}
-        />
-      )}
-      {panels.snippetManager && (
-        <SnippetManager
-          projectId={selectedProjectId}
-          onClose={() => closePanel("snippetManager")}
-        />
-      )}
-      {panels.envDiff && selectedProjectId !== null && (
-        <EnvProfileDiff
-          projectId={selectedProjectId}
-          onClose={() => closePanel("envDiff")}
-        />
-      )}
-      {panels.appPerformance && (
-        <AppPerformance onClose={() => closePanel("appPerformance")} />
-      )}
-      {panels.fileExplorer && selectedWorktreePath && (
-        <FileExplorer
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("fileExplorer")}
-          onFileSelect={(path: string) => {
-            closePanel("fileExplorer");
-            setBlameFilePath(path);
-            openPanel("blameView");
+      </PanelBoundary>
+      <PanelBoundary name="Search">
+        <UnifiedSearch
+          open={panels.unifiedSearch}
+          onClose={() => closePanel("unifiedSearch")}
+          onNavigate={(type: string, _data: string) => {
+            closePanel("unifiedSearch");
+            if (type === "bookmark") openPanel("bookmarks");
+            else if (type === "setting") openPanel("settingsPage");
           }}
         />
+      </PanelBoundary>
+      {panels.settingsPage && (
+        <PanelBoundary name="Settings">
+          <SettingsPage onClose={() => closePanel("settingsPage")} />
+        </PanelBoundary>
+      )}
+      {panels.terminalRecording && selectedWorktreeId !== null && (
+        <PanelBoundary name="Terminal Recording">
+          <TerminalRecording
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("terminalRecording")}
+          />
+        </PanelBoundary>
+      )}
+      {panels.doraMetrics && selectedProjectId !== null && (
+        <PanelBoundary name="DORA Metrics">
+          <DoraMetrics
+            projectId={selectedProjectId}
+            onClose={() => closePanel("doraMetrics")}
+          />
+        </PanelBoundary>
+      )}
+      {panels.webhookEvents && (
+        <PanelBoundary name="Webhook Events">
+          <WebhookEvents onClose={() => closePanel("webhookEvents")} />
+        </PanelBoundary>
+      )}
+      {panels.sshManager && (
+        <PanelBoundary name="SSH Manager">
+          <SshManager
+            onClose={() => closePanel("sshManager")}
+            onConnect={() => closePanel("sshManager")}
+          />
+        </PanelBoundary>
+      )}
+      {panels.gitAnalytics && selectedWorktreeId !== null && (
+        <PanelBoundary name="Git Analytics">
+          <GitAnalytics
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("gitAnalytics")}
+          />
+        </PanelBoundary>
+      )}
+      {panels.snippetManager && (
+        <PanelBoundary name="Snippet Manager">
+          <SnippetManager
+            projectId={selectedProjectId}
+            onClose={() => closePanel("snippetManager")}
+          />
+        </PanelBoundary>
+      )}
+      {panels.envDiff && selectedProjectId !== null && (
+        <PanelBoundary name="Env Profile Diff">
+          <EnvProfileDiff
+            projectId={selectedProjectId}
+            onClose={() => closePanel("envDiff")}
+          />
+        </PanelBoundary>
+      )}
+      {panels.appPerformance && (
+        <PanelBoundary name="App Performance">
+          <AppPerformance onClose={() => closePanel("appPerformance")} />
+        </PanelBoundary>
+      )}
+      {panels.fileExplorer && selectedWorktreePath && (
+        <PanelBoundary name="File Explorer">
+          <FileExplorer
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("fileExplorer")}
+            onFileSelect={(path: string) => {
+              closePanel("fileExplorer");
+              setBlameFilePath(path);
+              openPanel("blameView");
+            }}
+          />
+        </PanelBoundary>
       )}
       {panels.projectOverview && selectedProjectId !== null && (
-        <ProjectOverview
-          projectId={selectedProjectId}
-          onClose={() => closePanel("projectOverview")}
-        />
+        <PanelBoundary name="Project Overview">
+          <ProjectOverview
+            projectId={selectedProjectId}
+            onClose={() => closePanel("projectOverview")}
+          />
+        </PanelBoundary>
       )}
       {panels.webVitals && (
-        <WebVitals onClose={() => closePanel("webVitals")} />
+        <PanelBoundary name="Web Vitals">
+          <WebVitals onClose={() => closePanel("webVitals")} />
+        </PanelBoundary>
       )}
       {panels.pluginRuntime && selectedWorktreePath && (
-        <PluginRuntime
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("pluginRuntime")}
-        />
+        <PanelBoundary name="Plugin Runtime">
+          <PluginRuntime
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("pluginRuntime")}
+          />
+        </PanelBoundary>
       )}
       {panels.depAnalyzer && selectedWorktreePath && (
-        <DependencyAnalyzer
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("depAnalyzer")}
-        />
+        <PanelBoundary name="Dependency Analyzer">
+          <DependencyAnalyzer
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("depAnalyzer")}
+          />
+        </PanelBoundary>
       )}
       {panels.portScanner && (
-        <PortScanner onClose={() => closePanel("portScanner")} />
+        <PanelBoundary name="Port Scanner">
+          <PortScanner onClose={() => closePanel("portScanner")} />
+        </PanelBoundary>
       )}
       {panels.dirStats && selectedWorktreePath && (
-        <DirectoryStats
-          cwd={selectedWorktreePath}
-          onClose={() => closePanel("dirStats")}
-        />
+        <PanelBoundary name="Directory Stats">
+          <DirectoryStats
+            cwd={selectedWorktreePath}
+            onClose={() => closePanel("dirStats")}
+          />
+        </PanelBoundary>
       )}
       {panels.tagManager && selectedWorktreeId !== null && (
-        <TagManager
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("tagManager")}
-        />
+        <PanelBoundary name="Tag Manager">
+          <TagManager
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("tagManager")}
+          />
+        </PanelBoundary>
       )}
       {panels.gitLog && selectedWorktreeId !== null && (
-        <GitLogViewer
-          worktreeId={selectedWorktreeId}
-          onClose={() => closePanel("gitLog")}
-        />
+        <PanelBoundary name="Git Log">
+          <GitLogViewer
+            worktreeId={selectedWorktreeId}
+            onClose={() => closePanel("gitLog")}
+          />
+        </PanelBoundary>
       )}
       {panels.workspaceManager && (
-        <WorkspaceManager
-          onClose={() => closePanel("workspaceManager")}
-          onLoad={() => closePanel("workspaceManager")}
-        />
+        <PanelBoundary name="Workspace Manager">
+          <WorkspaceManager
+            onClose={() => closePanel("workspaceManager")}
+            onLoad={() => closePanel("workspaceManager")}
+          />
+        </PanelBoundary>
       )}
       {panels.taskScheduler && (
-        <TaskScheduler onClose={() => closePanel("taskScheduler")} />
+        <PanelBoundary name="Task Scheduler">
+          <TaskScheduler onClose={() => closePanel("taskScheduler")} />
+        </PanelBoundary>
       )}
       {panels.clipboardHistory && (
-        <ClipboardHistory onClose={() => closePanel("clipboardHistory")} />
+        <PanelBoundary name="Clipboard History">
+          <ClipboardHistory onClose={() => closePanel("clipboardHistory")} />
+        </PanelBoundary>
       )}
       {panels.todoPanel && (
-        <TodoPanel
-          projectId={selectedProjectId}
-          onClose={() => closePanel("todoPanel")}
-        />
+        <PanelBoundary name="Todo">
+          <TodoPanel
+            projectId={selectedProjectId}
+            onClose={() => closePanel("todoPanel")}
+          />
+        </PanelBoundary>
       )}
       {panels.morningBriefing && selectedProjectId && (
         <div
@@ -1714,7 +1842,9 @@ function AppContent({
                 &times;
               </button>
             </div>
-            <MorningBriefing projectId={selectedProjectId} />
+            <PanelBoundary name="Morning Briefing">
+              <MorningBriefing projectId={selectedProjectId} />
+            </PanelBoundary>
           </div>
         </div>
       )}
@@ -1724,10 +1854,12 @@ function AppContent({
             className="panel-dialog panel-dialog--wide"
             onClick={(e) => e.stopPropagation()}
           >
-            <OnboardingWizard
-              onComplete={() => closePanel("onboarding")}
-              onClose={() => closePanel("onboarding")}
-            />
+            <PanelBoundary name="Onboarding Wizard">
+              <OnboardingWizard
+                onComplete={() => closePanel("onboarding")}
+                onClose={() => closePanel("onboarding")}
+              />
+            </PanelBoundary>
           </div>
         </div>
       )}
@@ -1746,7 +1878,9 @@ function AppContent({
                 &times;
               </button>
             </div>
-            <NetworkTab />
+            <PanelBoundary name="Network Tab">
+              <NetworkTab />
+            </PanelBoundary>
           </div>
         </div>
       )}
@@ -1765,7 +1899,9 @@ function AppContent({
                 &times;
               </button>
             </div>
-            <PRStatusPanel worktreeId={selectedWorktreeId} />
+            <PanelBoundary name="PR Status">
+              <PRStatusPanel worktreeId={selectedWorktreeId} />
+            </PanelBoundary>
           </div>
         </div>
       )}
@@ -1793,14 +1929,16 @@ function AppContent({
                 &times;
               </button>
             </div>
-            <GitDiffView
-              worktreeId={selectedWorktreeId}
-              onCreatePR={() => {
-                closePanel("gitDiff");
-                openPanel("createPr");
-                setContentTab("pr");
-              }}
-            />
+            <PanelBoundary name="Git Diff">
+              <GitDiffView
+                worktreeId={selectedWorktreeId}
+                onCreatePR={() => {
+                  closePanel("gitDiff");
+                  openPanel("createPr");
+                  setContentTab("pr");
+                }}
+              />
+            </PanelBoundary>
           </div>
         </div>
       )}
@@ -1813,14 +1951,16 @@ function AppContent({
           }}
         >
           <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
-            <CreatePRPanel
-              worktreeId={selectedWorktreeId}
-              branch={selectedWorktreeName}
-              onClose={() => {
-                closePanel("createPr");
-                setContentTab("terminal");
-              }}
-            />
+            <PanelBoundary name="Create PR">
+              <CreatePRPanel
+                worktreeId={selectedWorktreeId}
+                branch={selectedWorktreeName}
+                onClose={() => {
+                  closePanel("createPr");
+                  setContentTab("terminal");
+                }}
+              />
+            </PanelBoundary>
           </div>
         </div>
       )}
@@ -1839,7 +1979,9 @@ function AppContent({
                 &times;
               </button>
             </div>
-            <MemoryTab worktreeId={selectedWorktreeId} />
+            <PanelBoundary name="Memory Tab">
+              <MemoryTab worktreeId={selectedWorktreeId} />
+            </PanelBoundary>
           </div>
         </div>
       )}
@@ -1861,10 +2003,12 @@ function AppContent({
                 &times;
               </button>
             </div>
-            <ShellHistoryTab
-              projectId={selectedProjectId}
-              branch={selectedWorktreeName ?? ""}
-            />
+            <PanelBoundary name="Shell History">
+              <ShellHistoryTab
+                projectId={selectedProjectId}
+                branch={selectedWorktreeName ?? ""}
+              />
+            </PanelBoundary>
           </div>
         </div>
       )}
@@ -1880,7 +2024,9 @@ function AppContent({
                 &times;
               </button>
             </div>
-            <DeadEndsLog worktreeId={selectedWorktreeId} />
+            <PanelBoundary name="Dead Ends Log">
+              <DeadEndsLog worktreeId={selectedWorktreeId} />
+            </PanelBoundary>
           </div>
         </div>
       )}
@@ -1899,7 +2045,9 @@ function AppContent({
                 &times;
               </button>
             </div>
-            <DbSchemaTab worktreeId={selectedWorktreeId} />
+            <PanelBoundary name="Database Schema">
+              <DbSchemaTab worktreeId={selectedWorktreeId} />
+            </PanelBoundary>
           </div>
         </div>
       )}
@@ -1912,10 +2060,12 @@ function AppContent({
             className="panel-dialog panel-dialog--wide"
             onClick={(e) => e.stopPropagation()}
           >
-            <BrowserEvents
-              worktreeId={selectedWorktreeId}
-              onClose={() => closePanel("browserEvents")}
-            />
+            <PanelBoundary name="Browser Events">
+              <BrowserEvents
+                worktreeId={selectedWorktreeId}
+                onClose={() => closePanel("browserEvents")}
+              />
+            </PanelBoundary>
           </div>
         </div>
       )}
@@ -1925,44 +2075,52 @@ function AppContent({
             className="panel-dialog panel-dialog--wide"
             onClick={(e) => e.stopPropagation()}
           >
-            <DatabaseExplorer
-              worktreeId={selectedWorktreeId}
-              onClose={() => closePanel("dbExplorer")}
-            />
+            <PanelBoundary name="Database Explorer">
+              <DatabaseExplorer
+                worktreeId={selectedWorktreeId}
+                onClose={() => closePanel("dbExplorer")}
+              />
+            </PanelBoundary>
           </div>
         </div>
       )}
-      <QuickSwitcher
-        open={panels.quickSwitcher}
-        onClose={() => closePanel("quickSwitcher")}
-        selectedProjectId={selectedProjectId}
-        onSwitchProject={(id: number) => {
-          setSelectedProjectId(id);
-          closePanel("quickSwitcher");
-        }}
-        onSwitchBranch={() => {
-          closePanel("quickSwitcher");
-        }}
-      />
-      <ErrorDiagnosis
-        open={panels.errorDiagnosis}
-        onClose={() => closePanel("errorDiagnosis")}
-      />
-      <QuickActions
-        worktreeId={selectedWorktreeId}
-        worktreePath={selectedWorktreePath}
-        projectId={selectedProjectId}
-        onAction={(action) => {
-          if (action === "commit") execute("git:commit");
-          else if (action === "stash") openPanel("stashManager");
-          else if (action === "diff") openPanel("blameView");
-          else if (action === "blame") {
-            setBlameFilePath("");
-            openPanel("blameView");
-          } else if (action === "record") openPanel("terminalRecording");
-          else if (action === "tests") openPanel("testRunnerPanel");
-        }}
-      />
+      <PanelBoundary name="Quick Switcher">
+        <QuickSwitcher
+          open={panels.quickSwitcher}
+          onClose={() => closePanel("quickSwitcher")}
+          selectedProjectId={selectedProjectId}
+          onSwitchProject={(id: number) => {
+            setSelectedProjectId(id);
+            closePanel("quickSwitcher");
+          }}
+          onSwitchBranch={() => {
+            closePanel("quickSwitcher");
+          }}
+        />
+      </PanelBoundary>
+      <PanelBoundary name="Error Diagnosis">
+        <ErrorDiagnosis
+          open={panels.errorDiagnosis}
+          onClose={() => closePanel("errorDiagnosis")}
+        />
+      </PanelBoundary>
+      <PanelBoundary name="Quick Actions">
+        <QuickActions
+          worktreeId={selectedWorktreeId}
+          worktreePath={selectedWorktreePath}
+          projectId={selectedProjectId}
+          onAction={(action) => {
+            if (action === "commit") execute("git:commit");
+            else if (action === "stash") openPanel("stashManager");
+            else if (action === "diff") openPanel("blameView");
+            else if (action === "blame") {
+              setBlameFilePath("");
+              openPanel("blameView");
+            } else if (action === "record") openPanel("terminalRecording");
+            else if (action === "tests") openPanel("testRunnerPanel");
+          }}
+        />
+      </PanelBoundary>
       {agentDoneToast && (
         <div className="fixed bottom-12 right-4 z-[9999] flex max-w-[300px] items-start gap-2.5 rounded-[6px] border border-[var(--accent-muted)] bg-[var(--bg-elevated)] px-3 py-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.4)] [border-left:3px_solid_var(--accent)]">
           <div className="flex min-w-0 flex-1 flex-col gap-1">

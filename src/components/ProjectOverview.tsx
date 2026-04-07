@@ -107,9 +107,11 @@ export function ProjectOverview({ projectId, onClose }: ProjectOverviewProps) {
     envProfiles: [],
   });
   const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setErrors({});
 
     const results = await Promise.allSettled([
       invoke<ProjectInfo[]>("list_projects"),
@@ -126,6 +128,24 @@ export function ProjectOverview({ projectId, onClose }: ProjectOverviewProps) {
       invoke<RepoPull[]>("list_repo_pulls", { projectId }),
       invoke<EnvProfile[]>("list_env_profiles", { projectId }),
     ]);
+
+    const sectionKeys = [
+      "projects",
+      "worktrees",
+      "activities",
+      "taskRuns",
+      "pulls",
+      "envProfiles",
+    ] as const;
+    const newErrors: Record<string, string> = {};
+    for (let i = 0; i < results.length; i++) {
+      if (results[i].status === "rejected") {
+        newErrors[sectionKeys[i]] = String(
+          (results[i] as PromiseRejectedResult).reason,
+        );
+      }
+    }
+    setErrors(newErrors);
 
     const projects =
       results[0].status === "fulfilled"
@@ -227,7 +247,14 @@ export function ProjectOverview({ projectId, onClose }: ProjectOverviewProps) {
                   <span className="po-card-badge">{data.worktrees.length}</span>
                 </div>
                 <div className="po-card-body">
-                  {data.worktrees.length === 0 ? (
+                  {errors.worktrees ? (
+                    <div className="po-card-empty po-card-error">
+                      Failed to load worktrees.{" "}
+                      <button className="po-retry-btn" onClick={loadData}>
+                        Retry
+                      </button>
+                    </div>
+                  ) : data.worktrees.length === 0 ? (
                     <div className="po-card-empty">No worktrees.</div>
                   ) : (
                     <div className="po-list">
@@ -256,7 +283,14 @@ export function ProjectOverview({ projectId, onClose }: ProjectOverviewProps) {
                   </span>
                 </div>
                 <div className="po-card-body">
-                  {data.activities.length === 0 ? (
+                  {errors.activities ? (
+                    <div className="po-card-empty po-card-error">
+                      Failed to load activity.{" "}
+                      <button className="po-retry-btn" onClick={loadData}>
+                        Retry
+                      </button>
+                    </div>
+                  ) : data.activities.length === 0 ? (
                     <div className="po-card-empty">No recent activity.</div>
                   ) : (
                     <div className="po-list">
@@ -281,7 +315,14 @@ export function ProjectOverview({ projectId, onClose }: ProjectOverviewProps) {
               <div className="po-card">
                 <div className="po-card-header">Recent Tasks</div>
                 <div className="po-card-body">
-                  {data.taskRuns.length === 0 ? (
+                  {errors.taskRuns ? (
+                    <div className="po-card-empty po-card-error">
+                      Failed to load tasks.{" "}
+                      <button className="po-retry-btn" onClick={loadData}>
+                        Retry
+                      </button>
+                    </div>
+                  ) : data.taskRuns.length === 0 ? (
                     <div className="po-card-empty">No recent task runs.</div>
                   ) : (
                     <div className="po-list">
@@ -315,7 +356,15 @@ export function ProjectOverview({ projectId, onClose }: ProjectOverviewProps) {
                   <span className="po-card-badge">{openPrCount}</span>
                 </div>
                 <div className="po-card-body">
-                  {data.pulls.filter((p) => p.state === "open").length === 0 ? (
+                  {errors.pulls ? (
+                    <div className="po-card-empty po-card-error">
+                      Failed to load pull requests.{" "}
+                      <button className="po-retry-btn" onClick={loadData}>
+                        Retry
+                      </button>
+                    </div>
+                  ) : data.pulls.filter((p) => p.state === "open").length ===
+                    0 ? (
                     <div className="po-card-empty">No open pull requests.</div>
                   ) : (
                     <div className="po-list">
@@ -349,7 +398,14 @@ export function ProjectOverview({ projectId, onClose }: ProjectOverviewProps) {
                   </span>
                 </div>
                 <div className="po-card-body">
-                  {data.envProfiles.length === 0 ? (
+                  {errors.envProfiles ? (
+                    <div className="po-card-empty po-card-error">
+                      Failed to load env profiles.{" "}
+                      <button className="po-retry-btn" onClick={loadData}>
+                        Retry
+                      </button>
+                    </div>
+                  ) : data.envProfiles.length === 0 ? (
                     <div className="po-card-empty">No env profiles.</div>
                   ) : (
                     <div className="po-list">
