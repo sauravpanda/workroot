@@ -87,8 +87,9 @@ async fn handle_request(
         return handle_websocket_upgrade(req, target_port).await;
     }
 
-    // Regular HTTP forwarding
-    forward_http_request(req, target_port).await
+    // Regular HTTP forwarding — reuse the shared reqwest client
+    let http_client = &app.state::<crate::HttpClient>().0;
+    forward_http_request(req, target_port, http_client).await
 }
 
 /// Detects WebSocket upgrade requests.
@@ -215,6 +216,7 @@ async fn handle_websocket_upgrade(
 async fn forward_http_request(
     req: Request<Incoming>,
     target_port: u16,
+    client: &reqwest::Client,
 ) -> Result<Response<BoxBody>, hyper::Error> {
     let uri = req.uri();
     let path_and_query = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
@@ -240,8 +242,7 @@ async fn forward_http_request(
         }
     };
 
-    // Forward with reqwest
-    let client = reqwest::Client::new();
+    // Forward with the shared reqwest client
     let mut builder = client.request(
         reqwest::Method::from_bytes(method.as_str().as_bytes()).unwrap_or(reqwest::Method::GET),
         &target_uri,
