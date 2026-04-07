@@ -199,6 +199,12 @@
   padding: 4px 6px 4px 4px;
 }
 
+.terminal-container.terminal-drag-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
 .terminal-container .xterm {
   height: 100%;
 }

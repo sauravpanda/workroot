@@ -5,6 +5,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { spawn } from "tauri-pty";
 import type { IPty } from "tauri-pty";
 import { getThemeById, DEFAULT_THEME_ID } from "../lib/terminalThemes";
@@ -472,6 +473,7 @@ function TerminalInstance({
   const onAgentNeedsAttentionRef = useRef(onAgentNeedsAttention);
   onAgentNeedsAttentionRef.current = onAgentNeedsAttention;
   const lastAttentionTimeRef = useRef(0);
+  const [dragOver, setDragOver] = useState(false);
 
   // Create xterm + PTY on mount, destroy on unmount
   useEffect(() => {
@@ -649,9 +651,32 @@ function TerminalInstance({
       }
     }, 100);
 
+    // Tauri native drag-drop listener — writes dropped file paths to the PTY.
+    let unlistenDrop: (() => void) | null = null;
+
+    getCurrentWebview()
+      .onDragDropEvent((event) => {
+        if (event.payload.type === "over") {
+          setDragOver(true);
+        } else if (event.payload.type === "drop") {
+          setDragOver(false);
+          const paths = event.payload.paths;
+          if (paths.length > 0 && ptyRef.current && active) {
+            const pathStr = paths.map((p: string) => `"${p}"`).join(" ");
+            ptyRef.current.write(pathStr);
+          }
+        } else if (event.payload.type === "leave") {
+          setDragOver(false);
+        }
+      })
+      .then((unlisten) => {
+        unlistenDrop = unlisten;
+      });
+
     return () => {
       cancelled = true;
       clearTimeout(initTimer);
+      unlistenDrop?.();
       if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
         idleTimerRef.current = null;
@@ -728,5 +753,10 @@ function TerminalInstance({
     return () => ro.disconnect();
   }, [visible]);
 
-  return <div className="terminal-container" ref={containerRef} />;
+  return (
+    <div
+      className={`terminal-container${dragOver ? " terminal-drag-over" : ""}`}
+      ref={containerRef}
+    />
+  );
 }
