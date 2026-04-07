@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import "../styles/log-viewer.css";
@@ -127,26 +127,33 @@ export function LogViewer({ processId }: LogViewerProps) {
 
   // Determine which logs to display
   const displayLogs = searchResults ?? logs;
-  const filteredLogs =
-    filter === "all"
-      ? displayLogs
-      : displayLogs.filter((l) => l.stream === filter);
+  const filteredLogs = useMemo(
+    () =>
+      filter === "all"
+        ? displayLogs
+        : displayLogs.filter((l) => l.stream === filter),
+    [displayLogs, filter],
+  );
 
   // Highlight search matches in content
-  const highlightContent = (content: string) => {
-    if (!searchQuery.trim()) return content;
-    const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const parts = content.split(new RegExp(`(${escaped})`, "gi"));
-    return parts.map((part, i) =>
-      part.toLowerCase() === searchQuery.toLowerCase() ? (
-        <mark key={i} className="log-highlight">
-          {part}
-        </mark>
-      ) : (
-        part
-      ),
-    );
-  };
+  const highlightContent = useCallback(
+    (content: string) => {
+      if (!searchQuery.trim()) return content;
+      const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`(${escaped})`, "gi");
+      const parts = content.split(regex);
+      return parts.map((part, i) =>
+        part.toLowerCase() === searchQuery.toLowerCase() ? (
+          <mark key={i} className="log-highlight">
+            {part}
+          </mark>
+        ) : (
+          part
+        ),
+      );
+    },
+    [searchQuery],
+  );
 
   return (
     <div className="log-viewer">
