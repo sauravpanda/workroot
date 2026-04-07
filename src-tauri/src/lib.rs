@@ -350,13 +350,17 @@ pub fn run() {
             // Start the reverse proxy on port 3000
             let proxy_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
+                eprintln!("[startup] Starting reverse proxy on port 3000...");
                 proxy::server::start_proxy(proxy_handle).await;
+                eprintln!("[startup] Reverse proxy exited unexpectedly");
             });
 
             // Start the HTTP forward proxy on port 8888
             let fwd_proxy_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
+                eprintln!("[startup] Starting forward proxy on port 8888...");
                 network::proxy::start_forward_proxy(fwd_proxy_handle).await;
+                eprintln!("[startup] Forward proxy exited unexpectedly");
             });
 
             // Start the MCP server on port 4444
@@ -367,13 +371,17 @@ pub fn run() {
                 .app_data_dir()
                 .unwrap_or_else(|_| std::path::PathBuf::from("."));
             tauri::async_runtime::spawn(async move {
+                eprintln!("[startup] Starting MCP server on port 4444...");
                 mcp::server::start_mcp_server(mcp_handle, mcp_data_dir).await;
+                eprintln!("[startup] MCP server exited unexpectedly");
             });
 
             // Start the webhook receiver on port 9999
             let webhook_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
+                eprintln!("[startup] Starting webhook server on port 9999...");
                 webhooks::start_webhook_server(webhook_handle).await;
+                eprintln!("[startup] Webhook server exited unexpectedly");
             });
 
             tray::setup_tray(app)?;
