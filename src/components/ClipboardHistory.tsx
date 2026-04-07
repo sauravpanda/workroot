@@ -167,7 +167,16 @@ export function ClipboardHistory({ onClose }: ClipboardHistoryProps) {
                 <div
                   key={entry.id}
                   className={`cliph-item ${isCopied ? "cliph-item-copied" : ""}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Copy: ${entry.content.slice(0, 50)}`}
                   onClick={() => handleCopy(entry)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleCopy(entry);
+                    }
+                  }}
                 >
                   <div className="cliph-item-top">
                     <pre className="cliph-preview">

@@ -201,11 +201,26 @@ export function OnboardingWizard({
           </>
         )}
 
-        <div className="onboarding-steps">
+        <div
+          className="onboarding-steps"
+          role="tablist"
+          aria-label="Setup steps"
+        >
           {(["welcome", "github", "project", "done"] as Step[]).map((s) => (
             <span
               key={s}
+              role="tab"
+              tabIndex={0}
+              aria-selected={s === step}
+              aria-label={`Step: ${s}`}
               className={`onboarding-dot ${s === step ? "onboarding-dot-active" : ""}`}
+              onClick={() => setStep(s)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setStep(s);
+                }
+              }}
             />
           ))}
         </div>
