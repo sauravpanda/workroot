@@ -245,6 +245,16 @@
   flex-shrink: 0;
 }
 
+.brcompare-hash-copyable {
+  cursor: pointer;
+  user-select: all;
+  transition: background 0.15s;
+}
+
+.brcompare-hash-copyable:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.1));
+}
+
 .brcompare-summary {
   font-size: 0.82em;
   color: var(--text-primary);

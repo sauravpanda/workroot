@@ -30,6 +30,7 @@ export function GitHooksManager({ worktreeId, onClose }: GitHooksManagerProps) {
   const [selectedHook, setSelectedHook] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const loadHooks = useCallback(async () => {
     setLoading(true);
@@ -55,8 +56,35 @@ export function GitHooksManager({ worktreeId, onClose }: GitHooksManagerProps) {
     [hooks],
   );
 
+  const validateHookContent = useCallback((content: string): string | null => {
+    const trimmed = content.trim();
+    if (!trimmed) return null;
+    if (!trimmed.startsWith("#!")) {
+      return "Hook script should start with a shebang line (e.g. #!/bin/sh)";
+    }
+    // Check for common syntax issues
+    const lines = trimmed.split("\n");
+    let openQuotes = 0;
+    for (const line of lines) {
+      const stripped = line.replace(/#.*$/, ""); // ignore comments
+      for (const ch of stripped) {
+        if (ch === '"') openQuotes++;
+      }
+    }
+    if (openQuotes % 2 !== 0) {
+      return "Script has unmatched double quotes — this may cause errors";
+    }
+    return null;
+  }, []);
+
   const handleSave = useCallback(async () => {
     if (!selectedHook) return;
+    const warning = validateHookContent(editContent);
+    if (warning) {
+      setValidationError(warning);
+      return;
+    }
+    setValidationError(null);
     setSaving(true);
     try {
       await invoke("set_hook_content", {
@@ -69,7 +97,7 @@ export function GitHooksManager({ worktreeId, onClose }: GitHooksManagerProps) {
       // save failed
     }
     setSaving(false);
-  }, [worktreeId, selectedHook, editContent, loadHooks]);
+  }, [worktreeId, selectedHook, editContent, loadHooks, validateHookContent]);
 
   const handleToggle = useCallback(
     async (hookName: string, enabled: boolean) => {
@@ -154,10 +182,38 @@ export function GitHooksManager({ worktreeId, onClose }: GitHooksManagerProps) {
                     </button>
                   </div>
                 </div>
+                {validationError && (
+                  <div className="githooks-validation-error">
+                    <span>{validationError}</span>
+                    <button
+                      className="githooks-force-save-btn"
+                      onClick={async () => {
+                        setValidationError(null);
+                        setSaving(true);
+                        try {
+                          await invoke("set_hook_content", {
+                            worktreeId,
+                            hookName: selectedHook,
+                            content: editContent,
+                          });
+                          await loadHooks();
+                        } catch {
+                          // save failed
+                        }
+                        setSaving(false);
+                      }}
+                    >
+                      Save Anyway
+                    </button>
+                  </div>
+                )}
                 <textarea
                   className="githooks-textarea"
                   value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
+                  onChange={(e) => {
+                    setEditContent(e.target.value);
+                    setValidationError(null);
+                  }}
                   spellCheck={false}
                   placeholder="#!/bin/sh"
                 />

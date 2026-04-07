@@ -158,9 +158,16 @@ export function CommitPanel({
           {generating ? "…" : "AI"}
         </Button>
         <span
-          className={`commit-char-count ${subject.length > 50 ? "over" : ""}`}
+          className={`commit-char-count ${subject.length > 72 ? "hard-over" : subject.length > 50 ? "over" : ""}`}
+          title={
+            subject.length > 72
+              ? "Subject exceeds 72 characters — consider shortening"
+              : subject.length > 50
+                ? "Subject exceeds 50 characters"
+                : ""
+          }
         >
-          {subject.length}/50
+          {subject.length}/72
         </span>
       </div>
 

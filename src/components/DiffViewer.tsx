@@ -1,3 +1,7 @@
+import { useState, useMemo } from "react";
+
+const HUNKS_PER_PAGE = 20;
+
 interface DiffLine {
   origin: string;
   content: string;
@@ -21,6 +25,15 @@ interface DiffViewerProps {
 }
 
 export function DiffViewer({ diff }: DiffViewerProps) {
+  const [visiblePages, setVisiblePages] = useState(1);
+
+  const visibleHunks = useMemo(
+    () => diff.hunks.slice(0, visiblePages * HUNKS_PER_PAGE),
+    [diff.hunks, visiblePages],
+  );
+
+  const hasMoreHunks = visibleHunks.length < diff.hunks.length;
+
   if (diff.is_binary) {
     return (
       <div className="p-6 text-center text-[13px] text-[var(--text-muted)]">
@@ -41,8 +54,13 @@ export function DiffViewer({ diff }: DiffViewerProps) {
     <div className="font-mono text-xs leading-[1.5]">
       <div className="border-b border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs text-[var(--text-muted)]">
         {diff.path}
+        {diff.hunks.length > HUNKS_PER_PAGE && (
+          <span className="ml-2 text-[10px] opacity-60">
+            ({diff.hunks.length} hunks)
+          </span>
+        )}
       </div>
-      {diff.hunks.map((hunk, hi) => (
+      {visibleHunks.map((hunk, hi) => (
         <div key={hi} className="border-b border-[var(--border)]">
           <div className="border-b border-[var(--border)] bg-[rgba(96,165,250,0.08)] px-3 py-1 text-[11px] text-[#60a5fa]">
             {hunk.header.trim()}
@@ -74,6 +92,17 @@ export function DiffViewer({ diff }: DiffViewerProps) {
           })}
         </div>
       ))}
+      {hasMoreHunks && (
+        <div className="flex justify-center border-b border-[var(--border)] py-2">
+          <button
+            className="rounded px-3 py-1 text-[11px] text-[#60a5fa] hover:bg-[rgba(96,165,250,0.12)]"
+            onClick={() => setVisiblePages((p) => p + 1)}
+          >
+            Show more hunks ({diff.hunks.length - visibleHunks.length}{" "}
+            remaining)
+          </button>
+        </div>
+      )}
     </div>
   );
 }

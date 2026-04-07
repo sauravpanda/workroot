@@ -61,6 +61,11 @@
   color: var(--warning);
 }
 
+.commit-char-count.hard-over {
+  color: var(--error, #f87171);
+  font-weight: 600;
+}
+
 /* -- Footer -- */
 
 .commit-footer {

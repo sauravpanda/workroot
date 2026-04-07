@@ -268,3 +268,32 @@
   color: var(--text-muted);
   font-size: 0.82em;
 }
+
+.githooks-validation-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: 0.78em;
+  color: #f87171;
+  margin-bottom: 6px;
+}
+
+.githooks-force-save-btn {
+  margin-left: auto;
+  padding: 2px 8px;
+  font-size: 0.85em;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: #f87171;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.githooks-force-save-btn:hover {
+  background: rgba(248, 113, 113, 0.15);
+}

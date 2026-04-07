@@ -103,6 +103,7 @@ export function GitLogViewer({ worktreeId, onClose }: GitLogViewerProps) {
       loadLog(0, false);
       return;
     }
+    setPage(0);
     setLoading(true);
     try {
       const result = await invoke<CommitEntry[]>("search_git_log", {
@@ -203,6 +204,12 @@ export function GitLogViewer({ worktreeId, onClose }: GitLogViewerProps) {
                             <span className="gitlog-detail-label">Author:</span>
                             <span className="gitlog-detail-value">
                               {commit.author} &lt;{commit.email}&gt;
+                            </span>
+                          </div>
+                          <div className="gitlog-detail-row">
+                            <span className="gitlog-detail-label">Date:</span>
+                            <span className="gitlog-detail-value">
+                              {commit.date}
                             </span>
                           </div>
                           {commit.parent_ids.length > 0 && (
