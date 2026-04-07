@@ -51,6 +51,7 @@ export function MemoryTab({ worktreeId }: MemoryTabProps) {
   const [editingNote, setEditingNote] = useState<MemoryEntry | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const loadNotesRef = useRef<() => void>(() => {});
 
   const loadNotes = useCallback(async () => {
     try {
@@ -73,24 +74,28 @@ export function MemoryTab({ worktreeId }: MemoryTabProps) {
     }
   }, [worktreeId, searchQuery, categoryFilter]);
 
+  // Keep ref in sync with latest loadNotes
+  loadNotesRef.current = loadNotes;
+
+  // Load immediately when worktreeId or categoryFilter change
   useEffect(() => {
     loadNotes();
-  }, [loadNotes]);
+  }, [worktreeId, categoryFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Debounced search
+  // Debounced search — only depends on searchQuery
   useEffect(() => {
     if (searchTimerRef.current) {
       clearTimeout(searchTimerRef.current);
     }
     searchTimerRef.current = setTimeout(() => {
-      loadNotes();
+      loadNotesRef.current();
     }, 300);
     return () => {
       if (searchTimerRef.current) {
         clearTimeout(searchTimerRef.current);
       }
     };
-  }, [searchQuery, loadNotes]);
+  }, [searchQuery]);
 
   const handleSave = async (content: string, category: string) => {
     try {
