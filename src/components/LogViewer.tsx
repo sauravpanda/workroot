@@ -1,4 +1,10 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import "../styles/log-viewer.css";
@@ -17,6 +23,46 @@ interface LogLineEvent {
   content: string;
   timestamp: string;
 }
+
+interface MemoizedLogLineProps {
+  line: LogLine;
+  showTimestamps: boolean;
+  searchRegex: RegExp | null;
+  searchQuery: string;
+}
+
+const MemoizedLogLine = React.memo(function MemoizedLogLine({
+  line,
+  showTimestamps,
+  searchRegex,
+  searchQuery,
+}: MemoizedLogLineProps) {
+  const highlighted = useMemo(() => {
+    if (!searchRegex) return line.content;
+    const parts = line.content.split(searchRegex);
+    const lowerQuery = searchQuery.toLowerCase();
+    return parts.map((part, i) =>
+      part.toLowerCase() === lowerQuery ? (
+        <mark key={i} className="log-highlight">
+          {part}
+        </mark>
+      ) : (
+        part
+      ),
+    );
+  }, [line.content, searchRegex, searchQuery]);
+
+  return (
+    <div
+      className={`log-line ${line.stream === "stderr" ? "log-stderr" : "log-stdout"}`}
+    >
+      {showTimestamps && (
+        <span className="log-timestamp">{line.timestamp}</span>
+      )}
+      <span className="log-content">{highlighted}</span>
+    </div>
+  );
+});
 
 interface LogViewerProps {
   processId: number;
@@ -126,7 +172,10 @@ export function LogViewer({ processId }: LogViewerProps) {
   }, [processId]);
 
   // Determine which logs to display
-  const displayLogs = searchResults ?? logs;
+  const displayLogs = useMemo(
+    () => searchResults ?? logs,
+    [searchResults, logs],
+  );
   const filteredLogs = useMemo(
     () =>
       filter === "all"
@@ -135,25 +184,12 @@ export function LogViewer({ processId }: LogViewerProps) {
     [displayLogs, filter],
   );
 
-  // Highlight search matches in content
-  const highlightContent = useCallback(
-    (content: string) => {
-      if (!searchQuery.trim()) return content;
-      const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const regex = new RegExp(`(${escaped})`, "gi");
-      const parts = content.split(regex);
-      return parts.map((part, i) =>
-        part.toLowerCase() === searchQuery.toLowerCase() ? (
-          <mark key={i} className="log-highlight">
-            {part}
-          </mark>
-        ) : (
-          part
-        ),
-      );
-    },
-    [searchQuery],
-  );
+  // Memoize the search regex so it is only rebuilt when searchQuery changes
+  const searchRegex = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(${escaped})`, "gi");
+  }, [searchQuery]);
 
   return (
     <div className="log-viewer">
@@ -211,17 +247,13 @@ export function LogViewer({ processId }: LogViewerProps) {
           <div className="log-empty">No log output yet</div>
         ) : (
           filteredLogs.map((line) => (
-            <div
+            <MemoizedLogLine
               key={line.id}
-              className={`log-line ${line.stream === "stderr" ? "log-stderr" : "log-stdout"}`}
-            >
-              {showTimestamps && (
-                <span className="log-timestamp">{line.timestamp}</span>
-              )}
-              <span className="log-content">
-                {highlightContent(line.content)}
-              </span>
-            </div>
+              line={line}
+              showTimestamps={showTimestamps}
+              searchRegex={searchRegex}
+              searchQuery={searchQuery}
+            />
           ))
         )}
       </div>
