@@ -39,6 +39,8 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "copyright": "© 2024-2026 Saurav Panda. All rights reserved.",
+    "shortDescription": "A local-first developer workspace for managing projects, terminals, and Git workflows.",
     "macOS": {
       "minimumSystemVersion": "10.15"
     },

@@ -2,6 +2,8 @@
 name = "workroot"
 version = "0.1.10"
 edition = "2021"
+authors = ["Saurav Panda <saurav@workroot.dev>"]
+description = "A local-first developer workspace for managing projects, terminals, and Git workflows."
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
