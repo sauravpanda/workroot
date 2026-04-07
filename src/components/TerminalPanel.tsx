@@ -733,22 +733,36 @@ function TerminalInstance({
     return () => window.removeEventListener("resize", handleResize);
   }, [visible]);
 
-  // Refit when container size changes (e.g. sidebar toggled)
+  // Refit when container size changes (e.g. sidebar toggled, split pane resized)
   useEffect(() => {
     const el = containerRef.current;
     if (!el || !visible) return;
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const ro = new ResizeObserver((entries) => {
       // Skip refit when container is hidden (display:none gives zero size)
       const { width, height } = entries[0].contentRect;
       if (width === 0 || height === 0) return;
-      try {
-        fitAddonRef.current?.fit();
-      } catch {
-        // ignore
-      }
+      // Debounce to avoid excessive refits during split-pane drag resizing
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        debounceTimer = null;
+        try {
+          fitAddonRef.current?.fit();
+        } catch {
+          // ignore
+        }
+      }, 80);
     });
     ro.observe(el);
-    return () => ro.disconnect();
+    // Also observe the parent element (the stable pane container from the
+    // portal) so that split-pane drag resizes are detected even when the
+    // inner terminal-container div hasn't changed yet.
+    const parent = el.parentElement;
+    if (parent) ro.observe(parent);
+    return () => {
+      ro.disconnect();
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
   }, [visible]);
 
   return (

@@ -21,7 +21,7 @@ export function RepoList() {
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<number | null>(
     null,
   );
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const registeredPaths = useMemo(
     () => new Set(projects.map((p) => p.local_path)),
@@ -40,21 +40,21 @@ export function RepoList() {
   }, [githubRepos, search]);
 
   const handleAddLocal = async () => {
-    setError(null);
+    setActionError(null);
     try {
       const selected = await open({ directory: true, multiple: false });
       if (selected) {
         await registerLocal(selected);
       }
     } catch (err) {
-      setError(
+      setActionError(
         err instanceof Error ? err.message : "Failed to register local project",
       );
     }
   };
 
   const handleClone = async (repo: GitHubRepo) => {
-    setError(null);
+    setActionError(null);
     try {
       if (!cloneDir) {
         const dir = await open({ directory: true, multiple: false });
@@ -75,7 +75,7 @@ export function RepoList() {
       }
     } catch (err) {
       setCloningRepo(null);
-      setError(
+      setActionError(
         err instanceof Error ? err.message : `Failed to clone ${repo.name}`,
       );
     }
@@ -83,7 +83,7 @@ export function RepoList() {
 
   return (
     <div className="repo-list">
-      {error && (
+      {actionError && (
         <div
           style={{
             color: "var(--error)",
@@ -91,9 +91,9 @@ export function RepoList() {
             fontSize: "0.85em",
             cursor: "pointer",
           }}
-          onClick={() => setError(null)}
+          onClick={() => setActionError(null)}
         >
-          {error}
+          {actionError}
         </div>
       )}
       <div className="repo-tabs">
