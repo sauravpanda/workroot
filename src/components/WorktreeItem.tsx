@@ -53,9 +53,12 @@ export function WorktreeItem({
     setShowSettings,
     agentDoneWorktreeIds,
     clearAgentDone,
+    agentNeedsAttentionIds,
+    clearAgentNeedsAttention,
   } = useUiStore();
   const isSelected = selectedWorktreeId === worktree.id;
   const isAgentDone = agentDoneWorktreeIds.has(worktree.id);
+  const isAgentNeedsAttention = agentNeedsAttentionIds.has(worktree.id);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -70,6 +73,7 @@ export function WorktreeItem({
     setSelectedWorktreeName(worktree.branch_name);
     setShowSettings(false);
     clearAgentDone(worktree.id);
+    clearAgentNeedsAttention(worktree.id);
   }, [
     worktree.id,
     worktree.path,
@@ -79,6 +83,7 @@ export function WorktreeItem({
     setSelectedWorktreeName,
     setShowSettings,
     clearAgentDone,
+    clearAgentNeedsAttention,
   ]);
 
   const handleContextMenu = useCallback(
@@ -168,6 +173,9 @@ export function WorktreeItem({
           <HighlightedText text={worktree.branch_name} query={highlight} />
         </span>
         <span className="worktree-indicators">
+          {isAgentNeedsAttention && !isAgentDone && (
+            <span className="worktree-agent-attention" title="Needs attention" />
+          )}
           {isAgentDone && (
             <span className="worktree-agent-done" title="Agent completed" />
           )}

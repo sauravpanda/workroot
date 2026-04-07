@@ -90,6 +90,9 @@ export function MainLayout({
   const [agentDoneWorktreeIds, setAgentDoneWorktreeIds] = useState<Set<number>>(
     () => new Set(),
   );
+  const [agentNeedsAttentionIds, setAgentNeedsAttentionIds] = useState<Set<number>>(
+    () => new Set(),
+  );
 
   // Project tabs state
   const [allProjects, setAllProjects] = useState<ProjectTab[]>([]);
@@ -177,6 +180,18 @@ export function MainLayout({
 
   const clearAgentDone = useCallback((id: number) => {
     setAgentDoneWorktreeIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const markAgentNeedsAttention = useCallback((id: number) => {
+    setAgentNeedsAttentionIds((prev) => new Set(prev).add(id));
+  }, []);
+
+  const clearAgentNeedsAttention = useCallback((id: number) => {
+    setAgentNeedsAttentionIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
@@ -272,6 +287,9 @@ export function MainLayout({
         agentDoneWorktreeIds,
         markAgentDone,
         clearAgentDone,
+        agentNeedsAttentionIds,
+        markAgentNeedsAttention,
+        clearAgentNeedsAttention,
       }}
     >
       {showTabBar && (
