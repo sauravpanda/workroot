@@ -40,13 +40,16 @@ export function ContainerMonitor({ onClose }: ContainerMonitorProps) {
     setLoading(false);
   }, []);
 
+  const loadStatsRef = useRef(loadStats);
+  loadStatsRef.current = loadStats;
+
   useEffect(() => {
-    loadStats();
-    intervalRef.current = setInterval(loadStats, 5000);
+    loadStatsRef.current();
+    intervalRef.current = setInterval(() => loadStatsRef.current(), 5000);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [loadStats]);
+  }, []);
 
   const handleAction = useCallback(
     async (containerId: string, action: "start" | "stop" | "restart") => {

@@ -36,15 +36,18 @@ export function AppPerformance({ onClose }: AppPerformanceProps) {
     setLoading(false);
   }, []);
 
+  const loadMetricsRef = useRef(loadMetrics);
+  loadMetricsRef.current = loadMetrics;
+
   useEffect(() => {
-    loadMetrics();
-    intervalRef.current = setInterval(loadMetrics, 30000);
+    loadMetricsRef.current();
+    intervalRef.current = setInterval(() => loadMetricsRef.current(), 30000);
     return () => {
       if (intervalRef.current !== null) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [loadMetrics]);
+  }, []);
 
   const handleRefresh = useCallback(() => {
     setLoading(true);
