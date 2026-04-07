@@ -37,6 +37,7 @@ pub struct SharedGist {
 #[tauri::command]
 pub async fn export_profile_to_gist(
     db: State<'_, AppDb>,
+    http: State<'_, crate::HttpClient>,
     profile_id: i64,
     passphrase: String,
 ) -> Result<ShareResult, String> {
@@ -94,8 +95,8 @@ pub async fn export_profile_to_gist(
 
     let token = auth::get_token()?.ok_or("Not authenticated with GitHub")?;
 
-    let client = reqwest::Client::new();
-    let resp = client
+    let resp = http
+        .0
         .post("https://api.github.com/gists")
         .header("Authorization", format!("Bearer {}", token))
         .header("User-Agent", "Workroot")
@@ -137,14 +138,15 @@ pub async fn export_profile_to_gist(
 #[tauri::command]
 pub async fn import_profile_from_gist(
     db: State<'_, AppDb>,
+    http: State<'_, crate::HttpClient>,
     project_id: i64,
     gist_id: String,
     passphrase: String,
 ) -> Result<i64, String> {
     let token = auth::get_token()?.ok_or("Not authenticated with GitHub")?;
 
-    let client = reqwest::Client::new();
-    let resp = client
+    let resp = http
+        .0
         .get(format!("https://api.github.com/gists/{}", gist_id))
         .header("Authorization", format!("Bearer {}", token))
         .header("User-Agent", "Workroot")
@@ -209,11 +211,13 @@ pub async fn import_profile_from_gist(
 
 /// List user's Workroot-related Gists.
 #[tauri::command]
-pub async fn list_shared_gists() -> Result<Vec<SharedGist>, String> {
+pub async fn list_shared_gists(
+    http: State<'_, crate::HttpClient>,
+) -> Result<Vec<SharedGist>, String> {
     let token = auth::get_token()?.ok_or("Not authenticated with GitHub")?;
 
-    let client = reqwest::Client::new();
-    let resp = client
+    let resp = http
+        .0
         .get("https://api.github.com/gists")
         .header("Authorization", format!("Bearer {}", token))
         .header("User-Agent", "Workroot")
