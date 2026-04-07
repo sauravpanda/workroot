@@ -21,10 +21,61 @@ pub struct PluginExecResult {
     pub duration_ms: u64,
 }
 
+/// Validate that a cwd is absolute and resolve the plugins directory,
+/// ensuring the resolved path stays within the expected boundary.
+fn validated_plugins_dir(cwd: &str) -> Result<PathBuf, String> {
+    let cwd_path = PathBuf::from(cwd);
+    if !cwd_path.is_absolute() {
+        return Err("cwd must be an absolute path".to_string());
+    }
+
+    let plugins_dir = cwd_path.join(".workroot").join("plugins");
+    Ok(plugins_dir)
+}
+
+/// Resolve a plugin directory and verify it is contained within the
+/// expected plugins root. Returns the canonicalized plugin path.
+fn validated_plugin_dir(cwd: &str, plugin_name: &str) -> Result<PathBuf, String> {
+    // Reject plugin names that contain path separators or parent refs
+    if plugin_name.contains('/')
+        || plugin_name.contains('\\')
+        || plugin_name.contains("..")
+        || plugin_name.is_empty()
+    {
+        return Err(format!(
+            "Invalid plugin name: '{}'. Must not contain path separators or '..'",
+            plugin_name
+        ));
+    }
+
+    let plugins_dir = validated_plugins_dir(cwd)?;
+    let plugin_dir = plugins_dir.join(plugin_name);
+
+    if !plugin_dir.exists() {
+        return Err(format!("Plugin '{}' not found", plugin_name));
+    }
+
+    let canonical_plugins = plugins_dir
+        .canonicalize()
+        .map_err(|e| format!("Failed to resolve plugins directory: {e}"))?;
+    let canonical_plugin = plugin_dir
+        .canonicalize()
+        .map_err(|e| format!("Failed to resolve plugin directory: {e}"))?;
+
+    if !canonical_plugin.starts_with(&canonical_plugins) {
+        return Err(format!(
+            "Plugin path escapes the plugins directory: '{}'",
+            plugin_name
+        ));
+    }
+
+    Ok(canonical_plugin)
+}
+
 /// Scan the `.workroot/plugins/` directory for plugin manifests.
 #[tauri::command]
 pub fn discover_plugins(cwd: String) -> Result<Vec<PluginManifest>, String> {
-    let plugins_dir = PathBuf::from(&cwd).join(".workroot").join("plugins");
+    let plugins_dir = validated_plugins_dir(&cwd)?;
 
     if !plugins_dir.exists() {
         return Ok(vec![]);
@@ -59,14 +110,11 @@ pub async fn execute_plugin(
     plugin_name: String,
     args: Vec<String>,
 ) -> Result<PluginExecResult, String> {
-    let plugin_dir = PathBuf::from(&cwd)
-        .join(".workroot")
-        .join("plugins")
-        .join(&plugin_name);
+    let plugin_dir = validated_plugin_dir(&cwd, &plugin_name)?;
 
     let manifest_path = plugin_dir.join("plugin.json");
     if !manifest_path.exists() {
-        return Err(format!("Plugin '{}' not found", plugin_name));
+        return Err(format!("Plugin '{}' manifest not found", plugin_name));
     }
 
     let contents =
@@ -74,7 +122,18 @@ pub async fn execute_plugin(
     let manifest: PluginManifest =
         serde_json::from_str(&contents).map_err(|e| format!("Parse manifest: {e}"))?;
 
+    // Validate entry_point doesn't escape the plugin directory
+    if manifest.entry_point.contains("..") || manifest.entry_point.starts_with('/') {
+        return Err(format!("Invalid entry_point in plugin '{}'", plugin_name));
+    }
+
     let entry_path = plugin_dir.join(&manifest.entry_point);
+    let canonical_entry = entry_path
+        .canonicalize()
+        .map_err(|e| format!("Failed to resolve entry point: {e}"))?;
+    if !canonical_entry.starts_with(&plugin_dir) {
+        return Err(format!("Entry point escapes plugin directory: '{}'", manifest.entry_point));
+    }
 
     let (program, mut cmd_args) = match manifest.language.as_str() {
         "node" => (
@@ -130,10 +189,20 @@ pub async fn install_plugin_from_url(cwd: String, url: String) -> Result<PluginM
     let manifest: PluginManifest =
         serde_json::from_str(&body).map_err(|e| format!("Parse manifest: {e}"))?;
 
-    let plugin_dir = PathBuf::from(&cwd)
-        .join(".workroot")
-        .join("plugins")
-        .join(&manifest.name);
+    // Validate plugin name from manifest before using it as a path component
+    if manifest.name.contains('/')
+        || manifest.name.contains('\\')
+        || manifest.name.contains("..")
+        || manifest.name.is_empty()
+    {
+        return Err(format!(
+            "Invalid plugin name in manifest: '{}'. Must not contain path separators or '..'",
+            manifest.name
+        ));
+    }
+
+    let plugins_dir = validated_plugins_dir(&cwd)?;
+    let plugin_dir = plugins_dir.join(&manifest.name);
 
     std::fs::create_dir_all(&plugin_dir).map_err(|e| format!("Create plugin dir: {e}"))?;
 
