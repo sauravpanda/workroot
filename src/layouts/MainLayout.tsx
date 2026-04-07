@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Sidebar } from "../components/Sidebar";
 import { GitHubSidebar } from "../components/GitHubSidebar";
@@ -90,9 +90,9 @@ export function MainLayout({
   const [agentDoneWorktreeIds, setAgentDoneWorktreeIds] = useState<Set<number>>(
     () => new Set(),
   );
-  const [agentNeedsAttentionIds, setAgentNeedsAttentionIds] = useState<Set<number>>(
-    () => new Set(),
-  );
+  const [agentNeedsAttentionIds, setAgentNeedsAttentionIds] = useState<
+    Set<number>
+  >(() => new Set());
 
   // Project tabs state
   const [allProjects, setAllProjects] = useState<ProjectTab[]>([]);
@@ -271,26 +271,43 @@ export function MainLayout({
 
   return (
     <UiContext.Provider
-      value={{
-        selectedProjectId,
-        setSelectedProjectId,
-        selectedWorktreeId,
-        setSelectedWorktreeId,
-        selectedWorktreePath,
-        setSelectedWorktreePath,
-        selectedWorktreeName,
-        setSelectedWorktreeName,
-        showSettings,
-        setShowSettings,
-        showRightSidebar,
-        setShowRightSidebar,
-        agentDoneWorktreeIds,
-        markAgentDone,
-        clearAgentDone,
-        agentNeedsAttentionIds,
-        markAgentNeedsAttention,
-        clearAgentNeedsAttention,
-      }}
+      value={useMemo(
+        () => ({
+          selectedProjectId,
+          setSelectedProjectId,
+          selectedWorktreeId,
+          setSelectedWorktreeId,
+          selectedWorktreePath,
+          setSelectedWorktreePath,
+          selectedWorktreeName,
+          setSelectedWorktreeName,
+          showSettings,
+          setShowSettings,
+          showRightSidebar,
+          setShowRightSidebar,
+          agentDoneWorktreeIds,
+          markAgentDone,
+          clearAgentDone,
+          agentNeedsAttentionIds,
+          markAgentNeedsAttention,
+          clearAgentNeedsAttention,
+        }),
+        [
+          selectedProjectId,
+          setSelectedProjectId,
+          selectedWorktreeId,
+          selectedWorktreePath,
+          selectedWorktreeName,
+          showSettings,
+          showRightSidebar,
+          agentDoneWorktreeIds,
+          markAgentDone,
+          clearAgentDone,
+          agentNeedsAttentionIds,
+          markAgentNeedsAttention,
+          clearAgentNeedsAttention,
+        ],
+      )}
     >
       {showTabBar && (
         <ProjectTabBar
