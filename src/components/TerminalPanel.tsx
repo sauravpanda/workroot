@@ -328,7 +328,8 @@ export function TerminalPanel({
                         // Create a stable container for this pane on first use.
                         if (!paneContainersRef.current.has(paneId)) {
                           const div = document.createElement("div");
-                          div.style.cssText = "width:100%;height:100%;";
+                          div.style.cssText =
+                            "width:100%;height:100%;display:flex;flex-direction:column;";
                           paneContainersRef.current.set(paneId, div);
                           triggerUpdate();
                         }
