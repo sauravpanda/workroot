@@ -27,7 +27,7 @@ pub async fn get_container_stats() -> Result<Vec<ContainerStats>, String> {
             .output(),
     )
     .await
-    .map_err(|_| "docker stats timed out after 10 seconds".to_string())?
+    .map_err(|_| "Docker stats timed out after 10s".to_string())?
     .map_err(|e| format!("Run docker stats: {}", e))?;
 
     if !output.status.success() {
@@ -72,7 +72,7 @@ pub async fn get_container_logs(container_id: String, tail: Option<u32>) -> Resu
             .output(),
     )
     .await
-    .map_err(|_| "docker logs timed out after 10 seconds".to_string())?
+    .map_err(|_| "Docker logs timed out after 10s".to_string())?
     .map_err(|e| format!("Run docker logs: {}", e))?;
 
     if !output.status.success() {
@@ -123,7 +123,7 @@ pub async fn container_action(container_id: String, action: String) -> Result<()
         Command::new("docker").args(&args).output(),
     )
     .await
-    .map_err(|_| format!("docker {} timed out after 30 seconds", cmd))?
+    .map_err(|_| format!("Docker {} timed out after 30s", cmd))?
     .map_err(|e| format!("Run docker {}: {}", cmd, e))?;
 
     if !output.status.success() {

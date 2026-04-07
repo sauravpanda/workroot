@@ -21,6 +21,7 @@ struct OllamaGenerateResponse {
 
 /// Send a single-shot prompt to the local LLM via the `/api/generate` endpoint.
 async fn generate(
+    client: &reqwest::Client,
     system: &str,
     prompt: &str,
     model: Option<String>,
@@ -36,7 +37,6 @@ async fn generate(
         stream: false,
     };
 
-    let client = reqwest::Client::new();
     let response = client
         .post(&url)
         .json(&body)
@@ -67,6 +67,7 @@ async fn generate(
 /// Conventional Commits specification (e.g. `feat:`, `fix:`, `refactor:`).
 #[tauri::command]
 pub async fn ai_generate_commit_message(
+    http: tauri::State<'_, crate::HttpClient>,
     diff: String,
     model: Option<String>,
     endpoint: Option<String>,
@@ -91,7 +92,7 @@ markdown code blocks.";
         diff
     );
 
-    generate(system, &prompt, model, endpoint).await
+    generate(&http.0, system, &prompt, model, endpoint).await
 }
 
 /// Generate a structured PR description from a title, branch name, and diff.
@@ -100,6 +101,7 @@ markdown code blocks.";
 /// sections.
 #[tauri::command]
 pub async fn ai_generate_pr_description(
+    http: tauri::State<'_, crate::HttpClient>,
     title: String,
     branch_name: String,
     diff: String,
@@ -131,7 +133,7 @@ Output ONLY the markdown description. Do not include the PR title itself.";
         title, branch_name, diff
     );
 
-    generate(system, &prompt, model, endpoint).await
+    generate(&http.0, system, &prompt, model, endpoint).await
 }
 
 /// Diagnose an error message and suggest a fix.
@@ -140,6 +142,7 @@ Output ONLY the markdown description. Do not include the PR title itself.";
 /// returns an explanation of the error along with a suggested fix.
 #[tauri::command]
 pub async fn ai_diagnose_error(
+    http: tauri::State<'_, crate::HttpClient>,
     error_message: String,
     file_path: Option<String>,
     language: Option<String>,
@@ -168,7 +171,7 @@ Be specific and actionable. If you are unsure, say so rather than guessing.";
         prompt.push_str(&format!("\nLanguage: {}", lang));
     }
 
-    generate(system, &prompt, model, endpoint).await
+    generate(&http.0, system, &prompt, model, endpoint).await
 }
 
 /// Explain what a code snippet does.
@@ -177,6 +180,7 @@ Be specific and actionable. If you are unsure, say so rather than guessing.";
 /// human-readable explanation of the code's behaviour.
 #[tauri::command]
 pub async fn ai_explain_code(
+    http: tauri::State<'_, crate::HttpClient>,
     code: String,
     language: Option<String>,
     model: Option<String>,
@@ -202,5 +206,5 @@ Write for a developer audience. Be concise but thorough.";
     }
     prompt.push_str(&format!("```\n{}\n```", code));
 
-    generate(system, &prompt, model, endpoint).await
+    generate(&http.0, system, &prompt, model, endpoint).await
 }
