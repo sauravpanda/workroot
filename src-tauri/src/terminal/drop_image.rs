@@ -10,9 +10,7 @@ pub fn save_dropped_image(data: Vec<u8>, extension: String) -> Result<String, St
     let ext = if extension.is_empty() {
         "png".to_string()
     } else {
-        extension
-            .trim_start_matches('.')
-            .to_string()
+        extension.trim_start_matches('.').to_string()
     };
 
     let tmp_dir = std::env::temp_dir().join("workroot-drops");
