@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import AnsiToHtml from "ansi-to-html";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -65,6 +66,12 @@ export function TerminalRecording({
   const [recordings, setRecordings] = useState<Recording[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // ANSI-to-HTML converter (memoised so we create it once)
+  const ansiConverter = useMemo(
+    () => new AnsiToHtml({ fg: "#ccc", bg: "transparent", newline: true }),
+    [],
+  );
 
   // Replay state
   const [activeRecording, setActiveRecording] = useState<Recording | null>(
@@ -408,7 +415,12 @@ export function TerminalRecording({
                     <span className="trec-terminal__prefix">
                       {ev.event_type === "input" ? "$" : ">"}
                     </span>
-                    <span className="trec-terminal__text">{ev.data}</span>
+                    <span
+                      className="trec-terminal__text"
+                      dangerouslySetInnerHTML={{
+                        __html: ansiConverter.toHtml(ev.data),
+                      }}
+                    />
                   </div>
                 ))
               )}
