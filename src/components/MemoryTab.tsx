@@ -51,18 +51,26 @@ export function MemoryTab({ worktreeId }: MemoryTabProps) {
   const [editingNote, setEditingNote] = useState<MemoryEntry | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const loadNotesRef = useRef<() => void>(() => {});
+  const searchQueryRef = useRef(searchQuery);
+  const categoryFilterRef = useRef(categoryFilter);
 
+  // Keep refs in sync with latest values
+  searchQueryRef.current = searchQuery;
+  categoryFilterRef.current = categoryFilter;
+
+  // Stable function — reads current values from refs, never changes identity
   const loadNotes = useCallback(async () => {
     try {
-      if (searchQuery.trim()) {
+      const query = searchQueryRef.current;
+      const filter = categoryFilterRef.current;
+      if (query.trim()) {
         const results = await invoke<MemoryEntry[]>("search_memory_notes", {
           worktreeId,
-          query: searchQuery.trim(),
+          query: query.trim(),
         });
         setNotes(results);
       } else {
-        const category = categoryFilter !== "all" ? categoryFilter : null;
+        const category = filter !== "all" ? filter : null;
         const results = await invoke<MemoryEntry[]>("get_memory_notes", {
           worktreeId,
           category,
@@ -72,15 +80,12 @@ export function MemoryTab({ worktreeId }: MemoryTabProps) {
     } catch (err) {
       console.error("Failed to load notes:", err);
     }
-  }, [worktreeId, searchQuery, categoryFilter]);
-
-  // Keep ref in sync with latest loadNotes
-  loadNotesRef.current = loadNotes;
+  }, [worktreeId]);
 
   // Load immediately when worktreeId or categoryFilter change
   useEffect(() => {
     loadNotes();
-  }, [worktreeId, categoryFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [worktreeId, categoryFilter, loadNotes]);
 
   // Debounced search — only depends on searchQuery
   useEffect(() => {
@@ -88,14 +93,14 @@ export function MemoryTab({ worktreeId }: MemoryTabProps) {
       clearTimeout(searchTimerRef.current);
     }
     searchTimerRef.current = setTimeout(() => {
-      loadNotesRef.current();
+      loadNotes();
     }, 300);
     return () => {
       if (searchTimerRef.current) {
         clearTimeout(searchTimerRef.current);
       }
     };
-  }, [searchQuery]);
+  }, [searchQuery, loadNotes]);
 
   const handleSave = async (content: string, category: string) => {
     try {
