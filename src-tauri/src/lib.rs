@@ -213,6 +213,7 @@ pub fn run() {
             browser::correlate::get_browser_events,
             browser::correlate::get_correlated_event,
             settings::get_setting,
+            settings::get_terminal_settings,
             settings::set_setting,
             settings::get_all_settings,
             settings::delete_setting,

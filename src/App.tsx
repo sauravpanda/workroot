@@ -36,10 +36,8 @@ const ActiveProjectBadge = namedLazy(
   () => import("./components/ActiveProjectBadge"),
   "ActiveProjectBadge",
 );
-const TerminalPanel = namedLazy(
-  () => import("./components/TerminalPanel"),
-  "TerminalPanel",
-);
+const loadTerminalPanel = () => import("./components/TerminalPanel");
+const TerminalPanel = namedLazy(loadTerminalPanel, "TerminalPanel");
 const CommandPalette = namedLazy(
   () => import("./components/CommandPalette"),
   "CommandPalette",
@@ -333,6 +331,12 @@ const DatabaseExplorer = namedLazy(
   () => import("./components/DatabaseExplorer"),
   "DatabaseExplorer",
 );
+
+interface TerminalSettingsSnapshot {
+  shell: string | null;
+  initCommand: string | null;
+  themeId: string | null;
+}
 import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
 import { getAppThemeById } from "./themes/builtin";
 import { applyTheme, loadSavedThemeId, type AppTheme } from "./themes/engine";
@@ -497,17 +501,36 @@ function AppContent({
   const [densityMode, setDensityMode] = useState<DensityMode>("comfortable");
   const [appThemeId, setAppThemeId] = useState("midnight");
   const [terminalThemeId, setTerminalThemeId] = useState(DEFAULT_THEME_ID);
+  const [terminalShell, setTerminalShell] = useState(() =>
+    navigator.platform.toLowerCase().includes("win")
+      ? "powershell.exe"
+      : "/bin/zsh",
+  );
+  const [terminalInitCommand, setTerminalInitCommand] = useState<string | null>(
+    null,
+  );
   const { register, execute, search } = useCommandRegistry();
 
   // Load saved app theme, terminal theme, density mode, and custom CSS
   useEffect(() => {
+    const preloadTimer = window.setTimeout(() => {
+      void loadTerminalPanel();
+    }, 0);
+
     loadSavedThemeId().then((id) => {
       setAppThemeId(id);
       applyTheme(getAppThemeById(id));
     });
-    invoke<string | null>("get_setting", { key: "terminal_theme" }).then(
-      (val) => {
-        if (val?.trim()) setTerminalThemeId(val.trim());
+
+    invoke<TerminalSettingsSnapshot>("get_terminal_settings").then(
+      (settings) => {
+        if (settings.themeId?.trim()) {
+          setTerminalThemeId(settings.themeId.trim());
+        }
+        if (settings.shell?.trim()) {
+          setTerminalShell(settings.shell.trim());
+        }
+        setTerminalInitCommand(settings.initCommand?.trim() || null);
       },
       () => {},
     );
@@ -516,6 +539,8 @@ function AppContent({
       applyDensity(m);
     });
     loadCustomCSS();
+
+    return () => clearTimeout(preloadTimer);
   }, []);
 
   // Fetch projects and worktrees for quick switcher commands
@@ -1401,6 +1426,8 @@ function AppContent({
               worktreeName={
                 selectedWorktreeName ?? lastWorktreeNameRef.current ?? "Shell"
               }
+              shell={terminalShell}
+              initCommand={terminalInitCommand}
               themeId={terminalThemeId}
               onAgentComplete={handleAgentComplete}
               onAgentNeedsAttention={handleAgentNeedsAttention}
