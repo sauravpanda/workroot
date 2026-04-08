@@ -476,7 +476,7 @@ button:disabled {
    ========================================================== */
 
 .panel-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 9000;
   background: rgba(6, 6, 8, 0.65);
