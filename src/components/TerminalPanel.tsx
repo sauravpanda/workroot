@@ -593,15 +593,36 @@ function TerminalInstance({
         window.open(url, "_blank", "noopener");
       }),
     );
-    term.open(el);
 
-    // GPU-accelerated renderer; fall back silently if WebGL is unavailable.
-    try {
-      const webgl = new WebglAddon();
-      webgl.onContextLoss(() => webgl.dispose());
-      term.loadAddon(webgl);
-    } catch {
-      // WebGL not available — xterm falls back to its canvas renderer.
+    // xterm requires the container to have non-zero dimensions when open()
+    // is called.  Defer open() until layout is ready — handles the case
+    // where the parent transitions from display:none.
+    let opened = false;
+    const openWhenReady = () => {
+      if (cancelled || opened) return;
+      if (el.offsetWidth > 0 && el.offsetHeight > 0) {
+        term.open(el);
+        opened = true;
+
+        // GPU-accelerated renderer; fall back silently if WebGL is unavailable.
+        try {
+          const webgl = new WebglAddon();
+          webgl.onContextLoss(() => webgl.dispose());
+          term.loadAddon(webgl);
+        } catch {
+          // WebGL not available — xterm falls back to its canvas renderer.
+        }
+      }
+    };
+
+    // Try immediately, then poll briefly if container has zero size.
+    openWhenReady();
+    if (!opened) {
+      const openPoller = setInterval(() => {
+        openWhenReady();
+        if (opened || cancelled) clearInterval(openPoller);
+      }, 30);
+      setTimeout(() => clearInterval(openPoller), 3000);
     }
 
     termRef.current = term;
@@ -621,9 +642,29 @@ function TerminalInstance({
     };
     window.addEventListener("keydown", preventBrowserNav, true);
 
-    // Load settings, fit, spawn
+    // Wait for term.open() to complete before fitting and spawning.
+    const waitForOpen = (): Promise<void> => {
+      return new Promise((resolve) => {
+        const check = (attempts: number) => {
+          if (cancelled || opened) {
+            resolve();
+            return;
+          }
+          if (attempts > 100) {
+            resolve();
+            return;
+          }
+          setTimeout(() => check(attempts + 1), 30);
+        };
+        check(0);
+      });
+    };
+
     const initTimer = setTimeout(async () => {
       if (cancelled) return;
+
+      await waitForOpen();
+      if (cancelled || !opened) return;
 
       try {
         fitAddon.fit();

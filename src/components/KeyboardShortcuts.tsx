@@ -54,11 +54,11 @@ interface KeyboardShortcutsProps {
 export function KeyboardShortcuts({ onClose }: KeyboardShortcutsProps) {
   return (
     <div
-      className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm [animation:cmd-backdrop-in_0.12s_ease-out]"
+      className="fixed inset-0 z-[9400] bg-black/60 backdrop-blur-sm [animation:cmd-backdrop-in_0.12s_ease-out]"
       onClick={onClose}
     >
       <div
-        className="fixed left-1/2 top-[15%] flex max-h-[65vh] w-[440px] max-w-[calc(100vw-40px)] -translate-x-1/2 flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_24px_64px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)] [animation:cmd-palette-in_0.15s_ease-out] z-[9999]"
+        className="fixed left-1/2 top-[15%] flex max-h-[65vh] w-[440px] max-w-[calc(100vw-40px)] -translate-x-1/2 flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--bg-surface)] shadow-[0_24px_64px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)] [animation:cmd-palette-in_0.15s_ease-out] z-[9500]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
