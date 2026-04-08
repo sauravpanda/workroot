@@ -45,7 +45,7 @@ export function BenchmarkDashboard({ cwd, onClose }: BenchmarkDashboardProps) {
       try {
         const result = await invoke<BenchmarkEntry[]>("get_benchmark_history", {
           cwd,
-          metricName,
+          metric_name: metricName,
         });
         setHistory(result);
       } catch {
@@ -71,7 +71,7 @@ export function BenchmarkDashboard({ cwd, onClose }: BenchmarkDashboardProps) {
     try {
       await invoke("record_benchmark", {
         cwd,
-        metricName: newMetric.trim(),
+        metric_name: newMetric.trim(),
         value: val,
         unit: newUnit,
       });

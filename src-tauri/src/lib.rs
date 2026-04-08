@@ -249,6 +249,7 @@ pub fn run() {
             testing::runner::run_tests,
             testing::coverage::parse_coverage,
             testing::benchmarks::record_benchmark,
+            testing::benchmarks::list_benchmark_metrics,
             testing::benchmarks::get_benchmark_history,
             docker::detect::detect_docker,
             docker::detect::list_containers,
