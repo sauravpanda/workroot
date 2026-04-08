@@ -594,6 +594,10 @@ function TerminalInstance({
       }),
     );
 
+    // Clear any leftover DOM from a previous terminal instance
+    // (e.g. React StrictMode double-mount in dev).
+    el.replaceChildren();
+
     term.open(el);
 
     // GPU-accelerated renderer; fall back silently if WebGL is unavailable.
@@ -622,120 +626,123 @@ function TerminalInstance({
     };
     window.addEventListener("keydown", preventBrowserNav, true);
 
-    // Use requestAnimationFrame to ensure the DOM is laid out before
-    // fitting and spawning the PTY — setTimeout(100) can fire before
-    // the browser has painted the terminal container.
-    const initTimer = requestAnimationFrame(async () => {
+    // Delay fit + spawn to allow the container to reach its final
+    // dimensions after layout.  Use setTimeout(0) + rAF to ensure
+    // we run after the browser has completed layout and paint.
+    const initTimer = setTimeout(() => {
       if (cancelled) return;
+      requestAnimationFrame(async () => {
+        if (cancelled) return;
 
-      try {
-        fitAddon.fit();
-      } catch {
-        // fit can throw if dimensions are 0
-      }
-
-      const settings = await loadTerminalSettings();
-
-      if (cancelled || !termRef.current) return;
-
-      // Apply the saved theme (may differ from initial)
-      term.options.theme = settings.theme.theme;
-
-      try {
-        const pty = spawn(settings.shell, [], {
-          name: "xterm-256color",
-          cols: Math.max(term.cols, 1),
-          rows: Math.max(term.rows, 1),
-          cwd,
-          env: {
-            TERM: "xterm-256color",
-            TERM_PROGRAM: "workroot",
-            COLORTERM: "truecolor",
-          },
-        });
-
-        // Check cancelled after spawn — cwd/theme may have changed during spawn
-        if (cancelled) {
-          try {
-            pty.kill();
-          } catch {
-            // ignore
-          }
-          return;
+        try {
+          fitAddon.fit();
+        } catch {
+          // fit can throw if dimensions are 0
         }
 
-        ptyRef.current = pty;
+        const settings = await loadTerminalSettings();
 
-        pty.onData((data: Uint8Array) => {
-          if (!termRef.current) return;
-          term.write(data);
+        if (cancelled || !termRef.current) return;
 
-          // Check for patterns that suggest the agent needs user input.
-          const text = new TextDecoder().decode(data);
-          const now = Date.now();
-          if (now - lastAttentionTimeRef.current >= ATTENTION_COOLDOWN_MS) {
-            for (const pattern of ATTENTION_PATTERNS) {
-              if (pattern.test(text)) {
-                lastAttentionTimeRef.current = now;
-                onAgentNeedsAttentionRef.current?.();
-                break;
+        // Apply the saved theme (may differ from initial)
+        term.options.theme = settings.theme.theme;
+
+        try {
+          const pty = spawn(settings.shell, [], {
+            name: "xterm-256color",
+            cols: Math.max(term.cols, 1),
+            rows: Math.max(term.rows, 1),
+            cwd,
+            env: {
+              TERM: "xterm-256color",
+              TERM_PROGRAM: "workroot",
+              COLORTERM: "truecolor",
+            },
+          });
+
+          // Check cancelled after spawn — cwd/theme may have changed during spawn
+          if (cancelled) {
+            try {
+              pty.kill();
+            } catch {
+              // ignore
+            }
+            return;
+          }
+
+          ptyRef.current = pty;
+
+          pty.onData((data: Uint8Array) => {
+            if (!termRef.current) return;
+            term.write(data);
+
+            // Check for patterns that suggest the agent needs user input.
+            const text = new TextDecoder().decode(data);
+            const now = Date.now();
+            if (now - lastAttentionTimeRef.current >= ATTENTION_COOLDOWN_MS) {
+              for (const pattern of ATTENTION_PATTERNS) {
+                if (pattern.test(text)) {
+                  lastAttentionTimeRef.current = now;
+                  onAgentNeedsAttentionRef.current?.();
+                  break;
+                }
               }
             }
-          }
 
-          // Activity tracking for agent-complete detection.
-          activityBytesRef.current += data.length;
-          if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-          if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
-            idleTimerRef.current = setTimeout(() => {
+            // Activity tracking for agent-complete detection.
+            activityBytesRef.current += data.length;
+            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+            if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
+              idleTimerRef.current = setTimeout(() => {
+                idleTimerRef.current = null;
+                if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
+                  onAgentCompleteRef.current?.();
+                }
+                activityBytesRef.current = 0;
+              }, IDLE_TIMEOUT_MS);
+            }
+          });
+
+          pty.onExit(() => {
+            if (termRef.current) {
+              term.write("\r\n\x1b[90m[Process exited]\x1b[0m\r\n");
+            }
+            if (idleTimerRef.current) {
+              clearTimeout(idleTimerRef.current);
               idleTimerRef.current = null;
-              if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
-                onAgentCompleteRef.current?.();
-              }
-              activityBytesRef.current = 0;
-            }, IDLE_TIMEOUT_MS);
-          }
-        });
+            }
+            activityBytesRef.current = 0;
+          });
 
-        pty.onExit(() => {
-          if (termRef.current) {
-            term.write("\r\n\x1b[90m[Process exited]\x1b[0m\r\n");
-          }
-          if (idleTimerRef.current) {
-            clearTimeout(idleTimerRef.current);
-            idleTimerRef.current = null;
-          }
-          activityBytesRef.current = 0;
-        });
+          term.onData((data: string) => {
+            if (!ptyRef.current) return;
+            pty.write(data);
+          });
 
-        term.onData((data: string) => {
-          if (!ptyRef.current) return;
-          pty.write(data);
-        });
+          term.onResize((e) => {
+            if (!ptyRef.current) return;
+            try {
+              pty.resize(e.cols, e.rows);
+            } catch {
+              // pty may already be dead
+            }
+          });
 
-        term.onResize((e) => {
-          if (!ptyRef.current) return;
-          try {
-            pty.resize(e.cols, e.rows);
-          } catch {
-            // pty may already be dead
+          // Run init commands after shell is ready
+          if (settings.initCommand) {
+            const cmd = settings.initCommand;
+            setTimeout(() => {
+              if (cancelled || !ptyRef.current) return;
+              pty.write(cmd + "\n");
+            }, 400);
           }
-        });
-
-        // Run init commands after shell is ready
-        if (settings.initCommand) {
-          const cmd = settings.initCommand;
-          setTimeout(() => {
-            if (cancelled || !ptyRef.current) return;
-            pty.write(cmd + "\n");
-          }, 400);
+        } catch (err) {
+          if (!cancelled && termRef.current) {
+            term.write(`\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`);
+          }
         }
-      } catch (err) {
-        if (!cancelled && termRef.current) {
-          term.write(`\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`);
-        }
-      }
-    });
+      });
+    }, 0);
 
     // Tauri native drag-drop listener — writes dropped file paths to the PTY.
     let unlistenDrop: (() => void) | null = null;
@@ -761,7 +768,7 @@ function TerminalInstance({
 
     return () => {
       cancelled = true;
-      cancelAnimationFrame(initTimer);
+      clearTimeout(initTimer);
       unlistenDrop?.();
       if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
