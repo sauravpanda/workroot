@@ -143,13 +143,37 @@ export function TerminalPanel({
           const idx = s.tabs.findIndex((t) => t.id === id);
           newActiveTabId = next[Math.min(idx, next.length - 1)].id;
         }
-        return { ...s, tabs: next, activeTabId: newActiveTabId };
+        const nextActiveTab = next.find((t) => t.id === newActiveTabId);
+        const nextLeafIds = nextActiveTab
+          ? collectLeafIds(nextActiveTab.paneTree)
+          : [];
+        const nextFocusedPaneId = nextLeafIds.includes(s.focusedPaneId ?? "")
+          ? s.focusedPaneId
+          : (nextLeafIds[0] ?? null);
+        return {
+          ...s,
+          tabs: next,
+          activeTabId: newActiveTabId,
+          focusedPaneId: nextFocusedPaneId,
+        };
       });
     },
     [updateCurrentPath],
   );
 
   const activeTab = tabs.find((t) => t.id === activeTabId);
+
+  useEffect(() => {
+    if (!activeTab) return;
+    const leafIds = collectLeafIds(activeTab.paneTree);
+    const nextFocusedPaneId =
+      focusedPaneId && leafIds.includes(focusedPaneId)
+        ? focusedPaneId
+        : (leafIds[0] ?? null);
+    if (nextFocusedPaneId !== focusedPaneId) {
+      updateCurrentPath((s) => ({ ...s, focusedPaneId: nextFocusedPaneId }));
+    }
+  }, [activeTab, focusedPaneId, updateCurrentPath]);
 
   const updatePaneTree = useCallback(
     (newTree: PaneNode) => {
@@ -164,7 +188,17 @@ export function TerminalPanel({
   );
 
   const setActiveTabId = useCallback(
-    (id: string) => updateCurrentPath((s) => ({ ...s, activeTabId: id })),
+    (id: string) =>
+      updateCurrentPath((s) => {
+        const nextActiveTab = s.tabs.find((t) => t.id === id);
+        return {
+          ...s,
+          activeTabId: id,
+          focusedPaneId: nextActiveTab
+            ? (collectLeafIds(nextActiveTab.paneTree)[0] ?? null)
+            : s.focusedPaneId,
+        };
+      }),
     [updateCurrentPath],
   );
 
@@ -501,6 +535,8 @@ function TerminalInstance({
   onAgentCompleteRef.current = onAgentComplete;
   const onAgentNeedsAttentionRef = useRef(onAgentNeedsAttention);
   onAgentNeedsAttentionRef.current = onAgentNeedsAttention;
+  const activeRef = useRef(active);
+  activeRef.current = active;
   const lastAttentionTimeRef = useRef(0);
   const [dragOver, setDragOver] = useState(false);
 
@@ -754,7 +790,7 @@ function TerminalInstance({
         } else if (event.payload.type === "drop") {
           setDragOver(false);
           const paths = event.payload.paths;
-          if (paths.length > 0 && ptyRef.current && active) {
+          if (paths.length > 0 && ptyRef.current && activeRef.current) {
             const pathStr = paths.map((p: string) => `"${p}"`).join(" ");
             ptyRef.current.write(pathStr);
           }

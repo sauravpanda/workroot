@@ -9,6 +9,7 @@ import {
 } from "react";
 import { ErrorProvider } from "./contexts/ErrorContext";
 import { ErrorBoundary, PanelBoundary } from "./components/ErrorBoundary";
+import { FocusTrapOverlay } from "./components/FocusTrapOverlay";
 import { GlobalErrorToast } from "./components/GlobalErrorToast";
 import { invoke } from "@tauri-apps/api/core";
 import { MainLayout } from "./layouts/MainLayout";
@@ -1840,10 +1841,7 @@ function AppContent({
       )}
       {panels.morningBriefing && selectedProjectId && (
         <PanelBoundary name="MorningBriefing">
-          <div
-            className="panel-overlay"
-            onClick={() => closePanel("morningBriefing")}
-          >
+          <FocusTrapOverlay onClick={() => closePanel("morningBriefing")}>
             <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
               <div className="panel-dialog-header">
                 <span>Morning Briefing</span>
@@ -1856,15 +1854,12 @@ function AppContent({
               </div>
               <MorningBriefing projectId={selectedProjectId} />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.onboarding && (
         <PanelBoundary name="Onboarding">
-          <div
-            className="panel-overlay"
-            onClick={() => closePanel("onboarding")}
-          >
+          <FocusTrapOverlay onClick={() => closePanel("onboarding")}>
             <div
               className="panel-dialog panel-dialog--wide"
               onClick={(e) => e.stopPropagation()}
@@ -1874,15 +1869,12 @@ function AppContent({
                 onClose={() => closePanel("onboarding")}
               />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.networkTab && (
         <PanelBoundary name="NetworkTab">
-          <div
-            className="panel-overlay"
-            onClick={() => closePanel("networkTab")}
-          >
+          <FocusTrapOverlay onClick={() => closePanel("networkTab")}>
             <div
               className="panel-dialog panel-dialog--wide"
               onClick={(e) => e.stopPropagation()}
@@ -1898,12 +1890,12 @@ function AppContent({
               </div>
               <NetworkTab />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.prStatus && selectedWorktreeId && (
         <PanelBoundary name="PRStatus">
-          <div className="panel-overlay" onClick={() => closePanel("prStatus")}>
+          <FocusTrapOverlay onClick={() => closePanel("prStatus")}>
             <div
               className="panel-dialog panel-dialog--wide"
               onClick={(e) => e.stopPropagation()}
@@ -1919,13 +1911,12 @@ function AppContent({
               </div>
               <PRStatusPanel worktreeId={selectedWorktreeId} />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.gitDiff && selectedWorktreeId && (
         <PanelBoundary name="GitDiff">
-          <div
-            className="panel-overlay"
+          <FocusTrapOverlay
             onClick={() => {
               closePanel("gitDiff");
               setContentTab("terminal");
@@ -1956,13 +1947,12 @@ function AppContent({
                 }}
               />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.createPr && selectedWorktreeId && selectedWorktreeName && (
         <PanelBoundary name="CreatePR">
-          <div
-            className="panel-overlay"
+          <FocusTrapOverlay
             onClick={() => {
               closePanel("createPr");
               setContentTab("terminal");
@@ -1978,15 +1968,12 @@ function AppContent({
                 }}
               />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.memoryTab && selectedWorktreeId && (
         <PanelBoundary name="MemoryTab">
-          <div
-            className="panel-overlay"
-            onClick={() => closePanel("memoryTab")}
-          >
+          <FocusTrapOverlay onClick={() => closePanel("memoryTab")}>
             <div
               className="panel-dialog panel-dialog--wide"
               onClick={(e) => e.stopPropagation()}
@@ -2002,15 +1989,12 @@ function AppContent({
               </div>
               <MemoryTab worktreeId={selectedWorktreeId} />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.shellHistory && selectedProjectId && (
         <PanelBoundary name="ShellHistory">
-          <div
-            className="panel-overlay"
-            onClick={() => closePanel("shellHistory")}
-          >
+          <FocusTrapOverlay onClick={() => closePanel("shellHistory")}>
             <div
               className="panel-dialog panel-dialog--wide"
               onClick={(e) => e.stopPropagation()}
@@ -2029,12 +2013,12 @@ function AppContent({
                 branch={selectedWorktreeName ?? ""}
               />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.deadEnds && selectedWorktreeId && (
         <PanelBoundary name="DeadEnds">
-          <div className="panel-overlay" onClick={() => closePanel("deadEnds")}>
+          <FocusTrapOverlay onClick={() => closePanel("deadEnds")}>
             <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
               <div className="panel-dialog-header">
                 <span>Dead Ends Log</span>
@@ -2047,12 +2031,12 @@ function AppContent({
               </div>
               <DeadEndsLog worktreeId={selectedWorktreeId} />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.dbSchema && selectedWorktreeId && (
         <PanelBoundary name="DbSchema">
-          <div className="panel-overlay" onClick={() => closePanel("dbSchema")}>
+          <FocusTrapOverlay onClick={() => closePanel("dbSchema")}>
             <div
               className="panel-dialog panel-dialog--wide"
               onClick={(e) => e.stopPropagation()}
@@ -2068,15 +2052,12 @@ function AppContent({
               </div>
               <DbSchemaTab worktreeId={selectedWorktreeId} />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.browserEvents && selectedWorktreeId && (
         <PanelBoundary name="BrowserEvents">
-          <div
-            className="panel-overlay"
-            onClick={() => closePanel("browserEvents")}
-          >
+          <FocusTrapOverlay onClick={() => closePanel("browserEvents")}>
             <div
               className="panel-dialog panel-dialog--wide"
               onClick={(e) => e.stopPropagation()}
@@ -2086,15 +2067,12 @@ function AppContent({
                 onClose={() => closePanel("browserEvents")}
               />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.dbExplorer && selectedWorktreeId && (
         <PanelBoundary name="DatabaseExplorer">
-          <div
-            className="panel-overlay"
-            onClick={() => closePanel("dbExplorer")}
-          >
+          <FocusTrapOverlay onClick={() => closePanel("dbExplorer")}>
             <div
               className="panel-dialog panel-dialog--wide"
               onClick={(e) => e.stopPropagation()}
@@ -2104,7 +2082,7 @@ function AppContent({
                 onClose={() => closePanel("dbExplorer")}
               />
             </div>
-          </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       <PanelBoundary name="QuickSwitcher">

@@ -21,18 +21,26 @@ export function useFocusTrap<
   const containerRef = useRef<T | null>(null);
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    if (!containerRef.current) return;
+    const containerEl = containerRef.current as T;
+    const previousActiveElement =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+
+    const getFocusableElements = () =>
+      Array.from(
+        containerEl.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter((el) => el.getClientRects().length > 0);
 
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key !== "Tab") return;
 
-      const focusable = Array.from(
-        container!.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-      ).filter((el) => el.offsetParent !== null);
+      const focusable = getFocusableElements();
 
       if (focusable.length === 0) {
         e.preventDefault();
+        containerEl.focus();
         return;
       }
 
@@ -42,7 +50,7 @@ export function useFocusTrap<
       if (e.shiftKey) {
         if (
           document.activeElement === first ||
-          !container!.contains(document.activeElement)
+          !containerEl.contains(document.activeElement)
         ) {
           e.preventDefault();
           last.focus();
@@ -50,7 +58,7 @@ export function useFocusTrap<
       } else {
         if (
           document.activeElement === last ||
-          !container!.contains(document.activeElement)
+          !containerEl.contains(document.activeElement)
         ) {
           e.preventDefault();
           first.focus();
@@ -59,14 +67,27 @@ export function useFocusTrap<
     }
 
     // Focus the first focusable element on mount
-    const focusable =
-      container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+    if (!containerEl.hasAttribute("tabindex")) {
+      containerEl.tabIndex = -1;
+    }
+    const focusable = getFocusableElements();
     if (focusable.length > 0) {
       focusable[0].focus();
+    } else {
+      containerEl.focus();
     }
 
-    container.addEventListener("keydown", handleKeyDown);
-    return () => container.removeEventListener("keydown", handleKeyDown);
+    containerEl.addEventListener("keydown", handleKeyDown);
+    return () => {
+      containerEl.removeEventListener("keydown", handleKeyDown);
+      if (
+        previousActiveElement &&
+        previousActiveElement.isConnected &&
+        !containerEl.contains(previousActiveElement)
+      ) {
+        previousActiveElement.focus();
+      }
+    };
   }, []);
 
   return containerRef;
