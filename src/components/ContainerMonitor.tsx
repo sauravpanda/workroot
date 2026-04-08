@@ -52,7 +52,7 @@ export function ContainerMonitor({ onClose }: ContainerMonitorProps) {
     async (containerId: string, action: "start" | "stop" | "restart") => {
       setActionLoading(containerId);
       try {
-        await invoke(`${action}_container`, { containerId });
+        await invoke("container_action", { containerId, action });
         await loadStats();
       } catch (e) {
         setError(String(e));

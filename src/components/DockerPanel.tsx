@@ -63,7 +63,7 @@ export function DockerPanel({ cwd, onClose }: DockerPanelProps) {
     async (containerId: string, action: "start" | "stop") => {
       setActionLoading(containerId);
       try {
-        await invoke(`${action}_container`, { containerId });
+        await invoke("container_action", { containerId, action });
         await loadData();
       } catch (err) {
         setDockerError(
