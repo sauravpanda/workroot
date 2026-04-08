@@ -16,11 +16,6 @@ pub struct SshConnection {
     pub created_at: String,
 }
 
-#[derive(Debug, Serialize)]
-pub struct SshQuickConnect {
-    pub command: String,
-}
-
 /// List all saved SSH connections.
 #[tauri::command]
 pub fn list_ssh_connections(db: State<'_, AppDb>) -> Result<Vec<SshConnection>, String> {
@@ -51,7 +46,112 @@ pub fn list_ssh_connections(db: State<'_, AppDb>) -> Result<Vec<SshConnection>, 
         .map_err(|e| format!("DB: {}", e))
 }
 
-/// Create or update an SSH connection profile.
+#[allow(clippy::too_many_arguments)]
+fn persist_ssh_connection(
+    conn: &rusqlite::Connection,
+    id: Option<i64>,
+    name: String,
+    host: String,
+    port: u16,
+    username: String,
+    auth_type: String,
+    key_path: Option<String>,
+    jump_host: Option<String>,
+) -> Result<i64, String> {
+    match id {
+        Some(id) => {
+            let updated = conn
+                .execute(
+                    "UPDATE ssh_connections
+                     SET name = ?1, host = ?2, port = ?3, username = ?4, auth_type = ?5, key_path = ?6, jump_host = ?7
+                     WHERE id = ?8",
+                    params![
+                        name,
+                        host,
+                        port as i64,
+                        username,
+                        auth_type,
+                        key_path,
+                        jump_host,
+                        id,
+                    ],
+                )
+                .map_err(|e| format!("DB: {}", e))?;
+
+            if updated == 0 {
+                return Err(format!("SSH connection not found: {}", id));
+            }
+
+            Ok(id)
+        }
+        None => {
+            conn.execute(
+                "INSERT INTO ssh_connections (name, host, port, username, auth_type, key_path, jump_host)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                params![
+                    name,
+                    host,
+                    port as i64,
+                    username,
+                    auth_type,
+                    key_path,
+                    jump_host
+                ],
+            )
+            .map_err(|e| format!("DB: {}", e))?;
+            Ok(conn.last_insert_rowid())
+        }
+    }
+}
+
+/// Create an SSH connection profile.
+#[tauri::command]
+#[allow(clippy::too_many_arguments)]
+pub fn create_ssh_connection(
+    db: State<'_, AppDb>,
+    name: String,
+    host: String,
+    port: u16,
+    username: String,
+    auth_type: String,
+    key_path: Option<String>,
+    jump_host: Option<String>,
+) -> Result<i64, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
+    persist_ssh_connection(
+        &conn, None, name, host, port, username, auth_type, key_path, jump_host,
+    )
+}
+
+/// Update an SSH connection profile.
+#[tauri::command]
+#[allow(clippy::too_many_arguments)]
+pub fn update_ssh_connection(
+    db: State<'_, AppDb>,
+    id: i64,
+    name: String,
+    host: String,
+    port: u16,
+    username: String,
+    auth_type: String,
+    key_path: Option<String>,
+    jump_host: Option<String>,
+) -> Result<i64, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
+    persist_ssh_connection(
+        &conn,
+        Some(id),
+        name,
+        host,
+        port,
+        username,
+        auth_type,
+        key_path,
+        jump_host,
+    )
+}
+
+/// Backward-compatible create command retained for older callers.
 #[tauri::command]
 #[allow(clippy::too_many_arguments)]
 pub fn save_ssh_connection(
@@ -64,22 +164,9 @@ pub fn save_ssh_connection(
     key_path: Option<String>,
     jump_host: Option<String>,
 ) -> Result<i64, String> {
-    let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
-    conn.execute(
-        "INSERT INTO ssh_connections (name, host, port, username, auth_type, key_path, jump_host)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-        params![
-            name,
-            host,
-            port as i64,
-            username,
-            auth_type,
-            key_path,
-            jump_host
-        ],
+    create_ssh_connection(
+        db, name, host, port, username, auth_type, key_path, jump_host,
     )
-    .map_err(|e| format!("DB: {}", e))?;
-    Ok(conn.last_insert_rowid())
 }
 
 /// Delete an SSH connection by ID.
@@ -110,7 +197,7 @@ fn validate_ssh_field(field: &str, name: &str) -> Result<(), String> {
 
 /// Build the ssh command string from a saved connection profile.
 #[tauri::command]
-pub fn build_ssh_command(db: State<'_, AppDb>, id: i64) -> Result<SshQuickConnect, String> {
+pub fn build_ssh_command(db: State<'_, AppDb>, id: i64) -> Result<String, String> {
     let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
     let mut stmt = conn
         .prepare(
@@ -167,9 +254,7 @@ pub fn build_ssh_command(db: State<'_, AppDb>, id: i64) -> Result<SshQuickConnec
 
     parts.push(shell_quote(&format!("{}@{}", username, host)));
 
-    Ok(SshQuickConnect {
-        command: parts.join(" "),
-    })
+    Ok(parts.join(" "))
 }
 
 /// Test TCP connectivity to an SSH host:port with a 5 second timeout.
@@ -272,6 +357,62 @@ mod tests {
             );
             assert!(result.is_err());
         }
+    }
+
+    #[test]
+    fn test_update_ssh_connection_updates_existing_row() {
+        let db = setup_db();
+        let conn = db.0.lock().unwrap();
+
+        let original_id = persist_ssh_connection(
+            &conn,
+            None,
+            "prod".into(),
+            "old.example.com".into(),
+            22,
+            "deploy".into(),
+            "key".into(),
+            Some("/tmp/id_rsa".into()),
+            None,
+        )
+        .unwrap();
+
+        let updated_id = persist_ssh_connection(
+            &conn,
+            Some(original_id),
+            "prod".into(),
+            "new.example.com".into(),
+            2222,
+            "deploy".into(),
+            "password".into(),
+            None,
+            Some("jump.example.com".into()),
+        )
+        .unwrap();
+
+        assert_eq!(updated_id, original_id);
+
+        let row: (String, i64, String, Option<String>, Option<String>) = conn
+            .query_row(
+                "SELECT host, port, auth_type, key_path, jump_host FROM ssh_connections WHERE id = ?1",
+                params![original_id],
+                |row| {
+                    Ok((
+                        row.get(0)?,
+                        row.get(1)?,
+                        row.get(2)?,
+                        row.get(3)?,
+                        row.get(4)?,
+                    ))
+                },
+            )
+            .unwrap();
+
+        assert_eq!(row.0, "new.example.com");
+        assert_eq!(row.1, 2222);
+        assert_eq!(row.2, "password");
+        assert_eq!(row.3, None);
+        assert_eq!(row.4, Some("jump.example.com".to_string()));
     }
 
     #[test]
