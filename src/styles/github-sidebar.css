@@ -15,10 +15,13 @@
   flex-shrink: 0;
   overflow: hidden;
   animation: ghSidebarFadeIn 0.15s ease-out;
+  transition: width 0.15s ease-out;
 }
 
 .gh-sidebar--collapsed {
   width: 28px;
+  min-width: 28px;
+  max-width: 28px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -26,6 +29,7 @@
   background-color: var(--bg-surface);
   border-left: 1px solid var(--border-subtle);
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 @keyframes ghSidebarFadeIn {

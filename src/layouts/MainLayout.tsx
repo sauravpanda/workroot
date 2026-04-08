@@ -346,11 +346,12 @@ export function MainLayout({
               className="resize-handle resize-handle--right"
               onMouseDown={handleRightMouseDown}
             />
-            <div style={{ width: rightSidebarWidth, flexShrink: 0 }}>
-              <ErrorBoundary name="GitHub Sidebar">
-                <GitHubSidebar projectId={selectedProjectId} />
-              </ErrorBoundary>
-            </div>
+            <ErrorBoundary name="GitHub Sidebar">
+              <GitHubSidebar
+                projectId={selectedProjectId}
+                width={rightSidebarWidth}
+              />
+            </ErrorBoundary>
           </>
         )}
       </div>

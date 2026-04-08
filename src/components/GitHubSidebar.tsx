@@ -41,6 +41,7 @@ type Tab = "prs" | "issues" | "activity";
 
 interface GitHubSidebarProps {
   projectId: number | null;
+  width?: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -165,7 +166,7 @@ interface DeviceCodeInfo {
   interval: number;
 }
 
-export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
+export function GitHubSidebar({ projectId, width }: GitHubSidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>("prs");
   const [collapsed, setCollapsed] = useState(false);
 
@@ -359,7 +360,7 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
   /* ---- Null project ---- */
   if (projectId === null) {
     return (
-      <div className="gh-sidebar">
+      <div className="gh-sidebar" style={width ? { width } : undefined}>
         <div className="gh-sidebar__header">
           <span className="gh-sidebar__title">GitHub</span>
           <div className="gh-sidebar__header-actions">
@@ -378,7 +379,7 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
   }
 
   return (
-    <div className="gh-sidebar">
+    <div className="gh-sidebar" style={width ? { width } : undefined}>
       {/* Header */}
       <div className="gh-sidebar__header">
         <span className="gh-sidebar__title">GitHub</span>
