@@ -622,7 +622,10 @@ function TerminalInstance({
     };
     window.addEventListener("keydown", preventBrowserNav, true);
 
-    const initTimer = setTimeout(async () => {
+    // Use requestAnimationFrame to ensure the DOM is laid out before
+    // fitting and spawning the PTY — setTimeout(100) can fire before
+    // the browser has painted the terminal container.
+    const initTimer = requestAnimationFrame(async () => {
       if (cancelled) return;
 
       try {
@@ -732,7 +735,7 @@ function TerminalInstance({
           term.write(`\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`);
         }
       }
-    }, 100);
+    });
 
     // Tauri native drag-drop listener — writes dropped file paths to the PTY.
     let unlistenDrop: (() => void) | null = null;
@@ -758,7 +761,7 @@ function TerminalInstance({
 
     return () => {
       cancelled = true;
-      clearTimeout(initTimer);
+      cancelAnimationFrame(initTimer);
       unlistenDrop?.();
       if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
