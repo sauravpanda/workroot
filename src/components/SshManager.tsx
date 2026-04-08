@@ -73,9 +73,9 @@ export function SshManager({ onClose, onConnect }: SshManagerProps) {
           host: form.host.trim(),
           port: form.port,
           username: form.username.trim(),
-          authType: form.auth_type,
-          keyPath: form.key_path.trim() || null,
-          jumpHost: form.jump_host.trim() || null,
+          auth_type: form.auth_type,
+          key_path: form.key_path.trim() || null,
+          jump_host: form.jump_host.trim() || null,
         });
       } else {
         await invoke("create_ssh_connection", {
@@ -83,9 +83,9 @@ export function SshManager({ onClose, onConnect }: SshManagerProps) {
           host: form.host.trim(),
           port: form.port,
           username: form.username.trim(),
-          authType: form.auth_type,
-          keyPath: form.key_path.trim() || null,
-          jumpHost: form.jump_host.trim() || null,
+          auth_type: form.auth_type,
+          key_path: form.key_path.trim() || null,
+          jump_host: form.jump_host.trim() || null,
         });
       }
       setForm(EMPTY_FORM);
@@ -135,13 +135,16 @@ export function SshManager({ onClose, onConnect }: SshManagerProps) {
     [onConnect],
   );
 
-  const handleTest = useCallback(async (id: number) => {
-    setTestingId(id);
+  const handleTest = useCallback(async (conn: SshConnection) => {
+    setTestingId(conn.id);
     try {
-      const success = await invoke<boolean>("test_ssh_connection", { id });
-      setTestResults((prev) => ({ ...prev, [id]: success }));
+      const success = await invoke<boolean>("test_ssh_connection", {
+        host: conn.host,
+        port: conn.port,
+      });
+      setTestResults((prev) => ({ ...prev, [conn.id]: success }));
     } catch {
-      setTestResults((prev) => ({ ...prev, [id]: false }));
+      setTestResults((prev) => ({ ...prev, [conn.id]: false }));
     }
     setTestingId(null);
   }, []);
@@ -337,7 +340,7 @@ export function SshManager({ onClose, onConnect }: SshManagerProps) {
                     </button>
                     <button
                       className="ssh-action-btn"
-                      onClick={() => handleTest(conn.id)}
+                      onClick={() => handleTest(conn)}
                       disabled={testingId === conn.id}
                     >
                       {testingId === conn.id ? "Testing..." : "Test"}

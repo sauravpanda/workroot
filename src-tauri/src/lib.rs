@@ -295,6 +295,8 @@ pub fn run() {
             webhooks::clear_webhook_events,
             webhooks::get_webhook_config,
             ssh::connections::list_ssh_connections,
+            ssh::connections::create_ssh_connection,
+            ssh::connections::update_ssh_connection,
             ssh::connections::save_ssh_connection,
             ssh::connections::delete_ssh_connection,
             ssh::connections::build_ssh_command,
