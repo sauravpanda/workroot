@@ -9,6 +9,14 @@ pub struct SettingEntry {
     pub value: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct TerminalSettingsSnapshot {
+    pub shell: Option<String>,
+    pub init_command: Option<String>,
+    pub theme_id: Option<String>,
+}
+
 /// Get a single setting value by key.
 #[tauri::command]
 pub fn get_setting(db: State<'_, AppDb>, key: String) -> Result<Option<String>, String> {
@@ -23,6 +31,13 @@ pub fn get_setting(db: State<'_, AppDb>, key: String) -> Result<Option<String>, 
         Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
         Err(e) => Err(format!("Query error: {}", e)),
     }
+}
+
+/// Get terminal-related settings in a single query path.
+#[tauri::command]
+pub fn get_terminal_settings(db: State<'_, AppDb>) -> Result<TerminalSettingsSnapshot, String> {
+    let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
+    Ok(get_terminal_settings_value(&conn))
 }
 
 /// Set a setting value. Creates or updates.
@@ -80,12 +95,23 @@ pub fn get_setting_value(conn: &rusqlite::Connection, key: &str) -> Option<Strin
     .ok()
 }
 
+/// Helper (not a command): read terminal launch settings together.
+pub fn get_terminal_settings_value(conn: &rusqlite::Connection) -> TerminalSettingsSnapshot {
+    TerminalSettingsSnapshot {
+        shell: get_setting_value(conn, "terminal_shell"),
+        init_command: get_setting_value(conn, "terminal_init_command"),
+        theme_id: get_setting_value(conn, "terminal_theme"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::db::init_test_db;
     use rusqlite::params;
 
-    use super::{get_setting_value, SettingEntry};
+    use super::{
+        get_setting_value, get_terminal_settings_value, SettingEntry, TerminalSettingsSnapshot,
+    };
 
     /// Helper: upsert a setting directly.
     fn set_setting(conn: &rusqlite::Connection, key: &str, value: &str) {
@@ -168,5 +194,24 @@ mod tests {
 
         let val = get_setting_value(&conn, "temp_key");
         assert_eq!(val, None);
+    }
+
+    #[test]
+    fn test_terminal_settings_snapshot() {
+        let conn = init_test_db();
+        set_setting(&conn, "terminal_shell", "/bin/bash");
+        set_setting(&conn, "terminal_init_command", "source ~/.profile");
+        set_setting(&conn, "terminal_theme", "solarized");
+
+        let snapshot = get_terminal_settings_value(&conn);
+
+        assert_eq!(
+            snapshot,
+            TerminalSettingsSnapshot {
+                shell: Some("/bin/bash".to_string()),
+                init_command: Some("source ~/.profile".to_string()),
+                theme_id: Some("solarized".to_string()),
+            }
+        );
     }
 }

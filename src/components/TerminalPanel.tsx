@@ -9,7 +9,6 @@ import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { spawn } from "tauri-pty";
 import type { IPty } from "tauri-pty";
 import { getThemeById, DEFAULT_THEME_ID } from "../lib/terminalThemes";
-import type { TerminalTheme } from "../lib/terminalThemes";
 import "@xterm/xterm/css/xterm.css";
 import "../styles/terminal.css";
 import {
@@ -31,6 +30,8 @@ interface TerminalTab {
 interface TerminalPanelProps {
   cwd: string;
   worktreeName: string;
+  shell: string;
+  initCommand: string | null;
   themeId?: string;
   onAgentComplete?: () => void;
   onAgentNeedsAttention?: () => void;
@@ -74,6 +75,8 @@ function makeInitialPathState(worktreeName: string, cwd: string): PathTabState {
 export function TerminalPanel({
   cwd,
   worktreeName,
+  shell,
+  initCommand,
   themeId,
   onAgentComplete,
   onAgentNeedsAttention,
@@ -410,6 +413,8 @@ export function TerminalPanel({
                       cwd={path}
                       active={isActivePathAndTab && isFocusedPane}
                       visible={isActivePathAndTab}
+                      shell={shell}
+                      initCommand={initCommand}
                       themeId={themeId}
                       onAgentComplete={
                         isActivePathAndTab ? onAgentComplete : undefined
@@ -435,36 +440,11 @@ interface TerminalInstanceProps {
   cwd: string;
   active: boolean;
   visible?: boolean;
+  shell: string;
+  initCommand: string | null;
   themeId?: string;
   onAgentComplete?: () => void;
   onAgentNeedsAttention?: () => void;
-}
-
-async function loadTerminalSettings(): Promise<{
-  shell: string;
-  initCommand: string | null;
-  theme: TerminalTheme;
-}> {
-  const defaultShell = navigator.platform.toLowerCase().includes("win")
-    ? "powershell.exe"
-    : "/bin/zsh";
-
-  const [shellResult, initResult, themeResult] = await Promise.allSettled([
-    invoke<string | null>("get_setting", { key: "terminal_shell" }),
-    invoke<string | null>("get_setting", { key: "terminal_init_command" }),
-    invoke<string | null>("get_setting", { key: "terminal_theme" }),
-  ]);
-  return {
-    shell:
-      (shellResult.status === "fulfilled" && shellResult.value?.trim()) ||
-      defaultShell,
-    initCommand:
-      (initResult.status === "fulfilled" && initResult.value?.trim()) || null,
-    theme: getThemeById(
-      (themeResult.status === "fulfilled" && themeResult.value?.trim()) ||
-        DEFAULT_THEME_ID,
-    ),
-  };
 }
 
 // Image MIME types accepted for drag-and-drop into the terminal.
@@ -521,10 +501,13 @@ function TerminalInstance({
   cwd,
   active,
   visible = true,
+  shell,
+  initCommand,
   themeId,
   onAgentComplete,
   onAgentNeedsAttention,
 }: TerminalInstanceProps) {
+  const initialThemeIdRef = useRef(themeId || DEFAULT_THEME_ID);
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const ptyRef = useRef<IPty | null>(null);
@@ -601,7 +584,7 @@ function TerminalInstance({
 
     let cancelled = false;
 
-    const initialTheme = getThemeById(themeId || DEFAULT_THEME_ID);
+    const initialTheme = getThemeById(initialThemeIdRef.current);
     const term = new Terminal({
       fontFamily: "'JetBrains Mono', 'Menlo', 'Monaco', monospace",
       fontSize: 13,
@@ -662,123 +645,112 @@ function TerminalInstance({
     };
     window.addEventListener("keydown", preventBrowserNav, true);
 
-    // Delay fit + spawn to allow the container to reach its final
-    // dimensions after layout.  Use setTimeout(0) + rAF to ensure
-    // we run after the browser has completed layout and paint.
-    const initTimer = setTimeout(() => {
-      if (cancelled) return;
-      requestAnimationFrame(async () => {
-        if (cancelled) return;
+    let initCommandTimer: ReturnType<typeof setTimeout> | null = null;
 
-        try {
-          fitAddon.fit();
-        } catch {
-          // fit can throw if dimensions are 0
+    // Wait one frame for layout, then start the PTY immediately using the
+    // settings the app already prefetched during startup.
+    const initFrame = requestAnimationFrame(() => {
+      if (cancelled) return;
+
+      try {
+        fitAddon.fit();
+      } catch {
+        // fit can throw if dimensions are 0
+      }
+
+      try {
+        const pty = spawn(shell, [], {
+          name: "xterm-256color",
+          cols: Math.max(term.cols, 1),
+          rows: Math.max(term.rows, 1),
+          cwd,
+          env: {
+            TERM: "xterm-256color",
+            TERM_PROGRAM: "workroot",
+            COLORTERM: "truecolor",
+          },
+        });
+
+        // Check cancelled after spawn — cwd may have changed during startup.
+        if (cancelled) {
+          try {
+            pty.kill();
+          } catch {
+            // ignore
+          }
+          return;
         }
 
-        const settings = await loadTerminalSettings();
+        ptyRef.current = pty;
 
-        if (cancelled || !termRef.current) return;
+        pty.onData((data: Uint8Array) => {
+          if (!termRef.current) return;
+          term.write(data);
 
-        // Apply the saved theme (may differ from initial)
-        term.options.theme = settings.theme.theme;
-
-        try {
-          const pty = spawn(settings.shell, [], {
-            name: "xterm-256color",
-            cols: Math.max(term.cols, 1),
-            rows: Math.max(term.rows, 1),
-            cwd,
-            env: {
-              TERM: "xterm-256color",
-              TERM_PROGRAM: "workroot",
-              COLORTERM: "truecolor",
-            },
-          });
-
-          // Check cancelled after spawn — cwd/theme may have changed during spawn
-          if (cancelled) {
-            try {
-              pty.kill();
-            } catch {
-              // ignore
-            }
-            return;
-          }
-
-          ptyRef.current = pty;
-
-          pty.onData((data: Uint8Array) => {
-            if (!termRef.current) return;
-            term.write(data);
-
-            // Check for patterns that suggest the agent needs user input.
-            const text = new TextDecoder().decode(data);
-            const now = Date.now();
-            if (now - lastAttentionTimeRef.current >= ATTENTION_COOLDOWN_MS) {
-              for (const pattern of ATTENTION_PATTERNS) {
-                if (pattern.test(text)) {
-                  lastAttentionTimeRef.current = now;
-                  onAgentNeedsAttentionRef.current?.();
-                  break;
-                }
+          // Check for patterns that suggest the agent needs user input.
+          const text = new TextDecoder().decode(data);
+          const now = Date.now();
+          if (now - lastAttentionTimeRef.current >= ATTENTION_COOLDOWN_MS) {
+            for (const pattern of ATTENTION_PATTERNS) {
+              if (pattern.test(text)) {
+                lastAttentionTimeRef.current = now;
+                onAgentNeedsAttentionRef.current?.();
+                break;
               }
             }
+          }
 
-            // Activity tracking for agent-complete detection.
-            activityBytesRef.current += data.length;
-            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-            if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
-              idleTimerRef.current = setTimeout(() => {
-                idleTimerRef.current = null;
-                if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
-                  onAgentCompleteRef.current?.();
-                }
-                activityBytesRef.current = 0;
-              }, IDLE_TIMEOUT_MS);
-            }
-          });
-
-          pty.onExit(() => {
-            if (termRef.current) {
-              term.write("\r\n\x1b[90m[Process exited]\x1b[0m\r\n");
-            }
-            if (idleTimerRef.current) {
-              clearTimeout(idleTimerRef.current);
+          // Activity tracking for agent-complete detection.
+          activityBytesRef.current += data.length;
+          if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+          if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
+            idleTimerRef.current = setTimeout(() => {
               idleTimerRef.current = null;
-            }
-            activityBytesRef.current = 0;
-          });
-
-          term.onData((data: string) => {
-            if (!ptyRef.current) return;
-            pty.write(data);
-          });
-
-          term.onResize((e) => {
-            if (!ptyRef.current) return;
-            try {
-              pty.resize(e.cols, e.rows);
-            } catch {
-              // pty may already be dead
-            }
-          });
-
-          // Run init commands after shell is ready
-          if (settings.initCommand) {
-            const cmd = settings.initCommand;
-            setTimeout(() => {
-              if (cancelled || !ptyRef.current) return;
-              pty.write(cmd + "\n");
-            }, 400);
+              if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
+                onAgentCompleteRef.current?.();
+              }
+              activityBytesRef.current = 0;
+            }, IDLE_TIMEOUT_MS);
           }
-        } catch (err) {
-          if (!cancelled && termRef.current) {
-            term.write(`\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`);
+        });
+
+        pty.onExit(() => {
+          if (termRef.current) {
+            term.write("\r\n\x1b[90m[Process exited]\x1b[0m\r\n");
           }
+          if (idleTimerRef.current) {
+            clearTimeout(idleTimerRef.current);
+            idleTimerRef.current = null;
+          }
+          activityBytesRef.current = 0;
+        });
+
+        term.onData((data: string) => {
+          if (!ptyRef.current) return;
+          pty.write(data);
+        });
+
+        term.onResize((e) => {
+          if (!ptyRef.current) return;
+          try {
+            pty.resize(e.cols, e.rows);
+          } catch {
+            // pty may already be dead
+          }
+        });
+
+        if (initCommand) {
+          initCommandTimer = setTimeout(() => {
+            if (cancelled || !ptyRef.current) return;
+            pty.write(initCommand + "\n");
+          }, 400);
         }
-      });
-    }, 0);
+      } catch (err) {
+        if (!cancelled && termRef.current) {
+          term.write(`\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`);
+        }
+      }
+    });
 
     // Tauri native drag-drop listener — writes dropped file paths to the PTY.
     let unlistenDrop: (() => void) | null = null;
@@ -804,7 +776,10 @@ function TerminalInstance({
 
     return () => {
       cancelled = true;
-      clearTimeout(initTimer);
+      cancelAnimationFrame(initFrame);
+      if (initCommandTimer) {
+        clearTimeout(initCommandTimer);
+      }
       unlistenDrop?.();
       if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
@@ -822,10 +797,7 @@ function TerminalInstance({
       ptyRef.current = null;
       fitAddonRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- themeId is
-    // intentionally excluded: theme changes are handled by the effect below
-    // without destroying/recreating the PTY session.
-  }, [cwd]);
+  }, [cwd, initCommand, shell]);
 
   // Update theme when themeId prop changes (without recreating the PTY).
   // Also reapply when the terminal becomes visible, because hidden terminals
