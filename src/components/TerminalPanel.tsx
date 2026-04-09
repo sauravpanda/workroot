@@ -518,8 +518,6 @@ function TerminalInstance({
   onAgentCompleteRef.current = onAgentComplete;
   const onAgentNeedsAttentionRef = useRef(onAgentNeedsAttention);
   onAgentNeedsAttentionRef.current = onAgentNeedsAttention;
-  const activeRef = useRef(active);
-  activeRef.current = active;
   const lastAttentionTimeRef = useRef(0);
   const [dragOver, setDragOver] = useState(false);
 
@@ -752,35 +750,12 @@ function TerminalInstance({
       }
     });
 
-    // Tauri native drag-drop listener — writes dropped file paths to the PTY.
-    let unlistenDrop: (() => void) | null = null;
-
-    getCurrentWebview()
-      .onDragDropEvent((event) => {
-        if (event.payload.type === "over") {
-          setDragOver(true);
-        } else if (event.payload.type === "drop") {
-          setDragOver(false);
-          const paths = event.payload.paths;
-          if (paths.length > 0 && ptyRef.current && activeRef.current) {
-            const pathStr = paths.map((p: string) => `"${p}"`).join(" ");
-            ptyRef.current.write(pathStr);
-          }
-        } else if (event.payload.type === "leave") {
-          setDragOver(false);
-        }
-      })
-      .then((unlisten) => {
-        unlistenDrop = unlisten;
-      });
-
     return () => {
       cancelled = true;
       cancelAnimationFrame(initFrame);
       if (initCommandTimer) {
         clearTimeout(initCommandTimer);
       }
-      unlistenDrop?.();
       if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
         idleTimerRef.current = null;
@@ -798,6 +773,50 @@ function TerminalInstance({
       fitAddonRef.current = null;
     };
   }, [cwd, initCommand, shell]);
+
+  // Only the currently visible terminal should react to native file drops.
+  useEffect(() => {
+    if (!visible || !active) return;
+
+    let unlistenDrop: (() => void) | null = null;
+    let disposed = false;
+
+    getCurrentWebview()
+      .onDragDropEvent((event) => {
+        if (event.payload.type === "over") {
+          setDragOver(true);
+          return;
+        }
+
+        if (event.payload.type === "leave") {
+          setDragOver(false);
+          return;
+        }
+
+        setDragOver(false);
+        const paths = event.payload.paths;
+        if (paths.length === 0 || !ptyRef.current) return;
+        const pathStr = paths.map((p: string) => `"${p}"`).join(" ");
+        ptyRef.current.write(pathStr);
+      })
+      .then((unlisten) => {
+        if (disposed) {
+          unlisten();
+          return;
+        }
+        unlistenDrop = unlisten;
+      })
+      .catch(() => {
+        // Ignore webview drag listener registration failures and keep the
+        // terminal usable with standard keyboard input.
+      });
+
+    return () => {
+      disposed = true;
+      setDragOver(false);
+      unlistenDrop?.();
+    };
+  }, [active, visible]);
 
   // Update theme when themeId prop changes (without recreating the PTY).
   // Also reapply when the terminal becomes visible, because hidden terminals
