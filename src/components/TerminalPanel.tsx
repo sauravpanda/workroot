@@ -584,14 +584,14 @@ function TerminalInstance({
   );
 
   // Create xterm + PTY on mount, destroy on unmount.
-  // Initialization is deferred until the container has non-zero dimensions so
-  // that xterm and its WebGL renderer start with a valid canvas size.
+  // This follows the v0.1.10 init pattern that is proven to work:
+  // 1. Open terminal synchronously (xterm needs to be in the DOM immediately)
+  // 2. setTimeout(100) to let layout settle, then fit + spawn PTY
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     let cancelled = false;
-    let rafId: number | null = null;
 
     const initialTheme = getThemeById(initialThemeIdRef.current);
     const term = new Terminal({
@@ -622,11 +622,29 @@ function TerminalInstance({
       }),
     );
 
+    // Clear any leftover DOM from a previous terminal instance
+    // (e.g. React StrictMode double-mount in dev).
+    el.replaceChildren();
+
+    // Open the terminal synchronously so xterm's DOM is in the document
+    // immediately.  The ResizeObserver refit effect will correct dimensions
+    // once layout settles.
+    term.open(el);
+
+    // GPU-accelerated renderer; fall back silently if WebGL is unavailable.
+    try {
+      const webgl = new WebglAddon();
+      webgl.onContextLoss(() => webgl.dispose());
+      term.loadAddon(webgl);
+    } catch {
+      // WebGL not available — xterm falls back to its canvas renderer.
+    }
+
+    termRef.current = term;
+    fitAddonRef.current = fitAddon;
+
     // Prevent WebKit/WKWebView from consuming Backspace/Delete as browser
-    // navigation before xterm can handle them. Capture phase so we run first;
-    // only fires when this terminal container holds focus so other inputs
-    // (search boxes, etc.) are unaffected. xterm still processes the key
-    // through its own listener — preventDefault() only blocks browser defaults.
+    // navigation before xterm can handle them.
     const preventBrowserNav = (e: KeyboardEvent) => {
       if (e.key === "Backspace" || e.key === "Delete") {
         if (el.contains(document.activeElement)) {
@@ -638,35 +656,14 @@ function TerminalInstance({
 
     let initCommandTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // Core initialization: open terminal, load WebGL, fit, spawn PTY.
-    // Only called once the container has non-zero dimensions.
-    const doInit = () => {
+    // Wait 100ms for layout to settle, then fit and spawn the PTY.
+    const initTimer = setTimeout(() => {
       if (cancelled) return;
-
-      // Clear any leftover DOM from a previous terminal instance
-      // (e.g. React StrictMode double-mount in dev).
-      el.replaceChildren();
-
-      term.open(el);
-
-      // GPU-accelerated renderer; fall back silently if WebGL is unavailable.
-      // Loaded AFTER open and AFTER confirming non-zero dimensions so the
-      // WebGL context is created on a properly-sized canvas.
-      try {
-        const webgl = new WebglAddon();
-        webgl.onContextLoss(() => webgl.dispose());
-        term.loadAddon(webgl);
-      } catch {
-        // WebGL not available — xterm falls back to its canvas renderer.
-      }
-
-      termRef.current = term;
-      fitAddonRef.current = fitAddon;
 
       try {
         fitAddon.fit();
       } catch {
-        // fit can throw if dimensions are still problematic
+        // fit can throw if dimensions are 0
       }
 
       try {
@@ -750,11 +747,6 @@ function TerminalInstance({
           }
         });
 
-        // Focus the terminal once the PTY is ready
-        if (active) {
-          term.focus();
-        }
-
         if (initCommandRef.current) {
           const cmd = initCommandRef.current;
           initCommandTimer = setTimeout(() => {
@@ -767,54 +759,11 @@ function TerminalInstance({
           term.write(`\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`);
         }
       }
-    };
-
-    // Wait for the container to have non-zero dimensions before initializing.
-    // The container may start at 0×0 when lazy-loaded or when the parent is
-    // toggled from display:none.  We poll via rAF (up to ~1s at 60fps) then
-    // fall back to a ResizeObserver so we never miss the transition.
-    let retries = 0;
-    const MAX_RETRIES = 60; // ~1 second at 60fps
-    let dimensionObserver: ResizeObserver | null = null;
-
-    const waitForDimensions = () => {
-      if (cancelled) return;
-      const { width, height } = el.getBoundingClientRect();
-      if (width > 0 && height > 0) {
-        doInit();
-        return;
-      }
-      if (retries++ < MAX_RETRIES) {
-        rafId = requestAnimationFrame(waitForDimensions);
-        return;
-      }
-      // rAF polling exhausted — switch to ResizeObserver so we still
-      // initialise even if the container appears much later.
-      dimensionObserver = new ResizeObserver((entries) => {
-        if (cancelled) {
-          dimensionObserver?.disconnect();
-          return;
-        }
-        const { width: w, height: h } = entries[0].contentRect;
-        if (w > 0 && h > 0) {
-          dimensionObserver?.disconnect();
-          dimensionObserver = null;
-          doInit();
-        }
-      });
-      dimensionObserver.observe(el);
-    };
-
-    // Kick off after a microtask so React's commit phase completes first.
-    const initTimer = setTimeout(() => {
-      if (!cancelled) waitForDimensions();
-    }, 0);
+    }, 100);
 
     return () => {
       cancelled = true;
       clearTimeout(initTimer);
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      dimensionObserver?.disconnect();
       if (initCommandTimer) {
         clearTimeout(initCommandTimer);
       }
@@ -834,9 +783,6 @@ function TerminalInstance({
       ptyRef.current = null;
       fitAddonRef.current = null;
     };
-    // shell and initCommand are read from refs so the terminal is not
-    // destroyed/recreated when the async settings load resolves.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cwd]);
 
   // Only the currently visible terminal should react to native file drops.
