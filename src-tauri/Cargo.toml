@@ -1,6 +1,6 @@
 [package]
 name = "workroot"
-version = "0.1.13"
+version = "0.1.14"
 edition = "2021"
 authors = ["Saurav Panda <saurav@workroot.dev>"]
 description = "A local-first developer workspace for managing projects, terminals, and Git workflows."

@@ -594,12 +594,15 @@ function TerminalInstance({
     [active],
   );
 
-  // Create xterm + PTY on mount, destroy on unmount
+  // Create xterm + PTY on mount, destroy on unmount.
+  // Initialization is deferred until the container has non-zero dimensions so
+  // that xterm and its WebGL renderer start with a valid canvas size.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     let cancelled = false;
+    let rafId: number | null = null;
 
     const initialTheme = getThemeById(themeId || DEFAULT_THEME_ID);
     const term = new Terminal({
@@ -630,24 +633,6 @@ function TerminalInstance({
       }),
     );
 
-    // Clear any leftover DOM from a previous terminal instance
-    // (e.g. React StrictMode double-mount in dev).
-    el.replaceChildren();
-
-    term.open(el);
-
-    // GPU-accelerated renderer; fall back silently if WebGL is unavailable.
-    try {
-      const webgl = new WebglAddon();
-      webgl.onContextLoss(() => webgl.dispose());
-      term.loadAddon(webgl);
-    } catch {
-      // WebGL not available — xterm falls back to its canvas renderer.
-    }
-
-    termRef.current = term;
-    fitAddonRef.current = fitAddon;
-
     // Prevent WebKit/WKWebView from consuming Backspace/Delete as browser
     // navigation before xterm can handle them. Capture phase so we run first;
     // only fires when this terminal container holds focus so other inputs
@@ -662,122 +647,184 @@ function TerminalInstance({
     };
     window.addEventListener("keydown", preventBrowserNav, true);
 
-    // Delay fit + spawn to allow the container to reach its final
-    // dimensions after layout.  Use setTimeout(0) + rAF to ensure
-    // we run after the browser has completed layout and paint.
-    const initTimer = setTimeout(() => {
+    // Core initialization: open terminal, load WebGL, fit, spawn PTY.
+    // Only called once the container has non-zero dimensions.
+    const doInit = async () => {
       if (cancelled) return;
-      requestAnimationFrame(async () => {
-        if (cancelled) return;
 
-        try {
-          fitAddon.fit();
-        } catch {
-          // fit can throw if dimensions are 0
+      // Clear any leftover DOM from a previous terminal instance
+      // (e.g. React StrictMode double-mount in dev).
+      el.replaceChildren();
+
+      term.open(el);
+
+      // GPU-accelerated renderer; fall back silently if WebGL is unavailable.
+      // Loaded AFTER open and AFTER confirming non-zero dimensions so the
+      // WebGL context is created on a properly-sized canvas.
+      try {
+        const webgl = new WebglAddon();
+        webgl.onContextLoss(() => webgl.dispose());
+        term.loadAddon(webgl);
+      } catch {
+        // WebGL not available — xterm falls back to its canvas renderer.
+      }
+
+      termRef.current = term;
+      fitAddonRef.current = fitAddon;
+
+      try {
+        fitAddon.fit();
+      } catch {
+        // fit can throw if dimensions are still problematic
+      }
+
+      const settings = await loadTerminalSettings();
+
+      if (cancelled || !termRef.current) return;
+
+      // Apply the saved theme (may differ from initial)
+      term.options.theme = settings.theme.theme;
+
+      try {
+        const pty = spawn(settings.shell, [], {
+          name: "xterm-256color",
+          cols: Math.max(term.cols, 1),
+          rows: Math.max(term.rows, 1),
+          cwd,
+          env: {
+            TERM: "xterm-256color",
+            TERM_PROGRAM: "workroot",
+            COLORTERM: "truecolor",
+          },
+        });
+
+        // Check cancelled after spawn — cwd/theme may have changed during spawn
+        if (cancelled) {
+          try {
+            pty.kill();
+          } catch {
+            // ignore
+          }
+          return;
         }
 
-        const settings = await loadTerminalSettings();
+        ptyRef.current = pty;
 
-        if (cancelled || !termRef.current) return;
+        pty.onData((data: Uint8Array) => {
+          if (!termRef.current) return;
+          term.write(data);
 
-        // Apply the saved theme (may differ from initial)
-        term.options.theme = settings.theme.theme;
-
-        try {
-          const pty = spawn(settings.shell, [], {
-            name: "xterm-256color",
-            cols: Math.max(term.cols, 1),
-            rows: Math.max(term.rows, 1),
-            cwd,
-            env: {
-              TERM: "xterm-256color",
-              TERM_PROGRAM: "workroot",
-              COLORTERM: "truecolor",
-            },
-          });
-
-          // Check cancelled after spawn — cwd/theme may have changed during spawn
-          if (cancelled) {
-            try {
-              pty.kill();
-            } catch {
-              // ignore
-            }
-            return;
-          }
-
-          ptyRef.current = pty;
-
-          pty.onData((data: Uint8Array) => {
-            if (!termRef.current) return;
-            term.write(data);
-
-            // Check for patterns that suggest the agent needs user input.
-            const text = new TextDecoder().decode(data);
-            const now = Date.now();
-            if (now - lastAttentionTimeRef.current >= ATTENTION_COOLDOWN_MS) {
-              for (const pattern of ATTENTION_PATTERNS) {
-                if (pattern.test(text)) {
-                  lastAttentionTimeRef.current = now;
-                  onAgentNeedsAttentionRef.current?.();
-                  break;
-                }
+          // Check for patterns that suggest the agent needs user input.
+          const text = new TextDecoder().decode(data);
+          const now = Date.now();
+          if (now - lastAttentionTimeRef.current >= ATTENTION_COOLDOWN_MS) {
+            for (const pattern of ATTENTION_PATTERNS) {
+              if (pattern.test(text)) {
+                lastAttentionTimeRef.current = now;
+                onAgentNeedsAttentionRef.current?.();
+                break;
               }
             }
+          }
 
-            // Activity tracking for agent-complete detection.
-            activityBytesRef.current += data.length;
-            if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-            if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
-              idleTimerRef.current = setTimeout(() => {
-                idleTimerRef.current = null;
-                if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
-                  onAgentCompleteRef.current?.();
-                }
-                activityBytesRef.current = 0;
-              }, IDLE_TIMEOUT_MS);
-            }
-          });
-
-          pty.onExit(() => {
-            if (termRef.current) {
-              term.write("\r\n\x1b[90m[Process exited]\x1b[0m\r\n");
-            }
-            if (idleTimerRef.current) {
-              clearTimeout(idleTimerRef.current);
+          // Activity tracking for agent-complete detection.
+          activityBytesRef.current += data.length;
+          if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+          if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
+            idleTimerRef.current = setTimeout(() => {
               idleTimerRef.current = null;
-            }
-            activityBytesRef.current = 0;
-          });
-
-          term.onData((data: string) => {
-            if (!ptyRef.current) return;
-            pty.write(data);
-          });
-
-          term.onResize((e) => {
-            if (!ptyRef.current) return;
-            try {
-              pty.resize(e.cols, e.rows);
-            } catch {
-              // pty may already be dead
-            }
-          });
-
-          // Run init commands after shell is ready
-          if (settings.initCommand) {
-            const cmd = settings.initCommand;
-            setTimeout(() => {
-              if (cancelled || !ptyRef.current) return;
-              pty.write(cmd + "\n");
-            }, 400);
+              if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
+                onAgentCompleteRef.current?.();
+              }
+              activityBytesRef.current = 0;
+            }, IDLE_TIMEOUT_MS);
           }
-        } catch (err) {
-          if (!cancelled && termRef.current) {
-            term.write(`\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`);
+        });
+
+        pty.onExit(() => {
+          if (termRef.current) {
+            term.write("\r\n\x1b[90m[Process exited]\x1b[0m\r\n");
           }
+          if (idleTimerRef.current) {
+            clearTimeout(idleTimerRef.current);
+            idleTimerRef.current = null;
+          }
+          activityBytesRef.current = 0;
+        });
+
+        term.onData((data: string) => {
+          if (!ptyRef.current) return;
+          pty.write(data);
+        });
+
+        term.onResize((e) => {
+          if (!ptyRef.current) return;
+          try {
+            pty.resize(e.cols, e.rows);
+          } catch {
+            // pty may already be dead
+          }
+        });
+
+        // Focus the terminal once the PTY is ready
+        if (activeRef.current) {
+          term.focus();
+        }
+
+        // Run init commands after shell is ready
+        if (settings.initCommand) {
+          const cmd = settings.initCommand;
+          setTimeout(() => {
+            if (cancelled || !ptyRef.current) return;
+            pty.write(cmd + "\n");
+          }, 400);
+        }
+      } catch (err) {
+        if (!cancelled && termRef.current) {
+          term.write(`\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`);
+        }
+      }
+    };
+
+    // Wait for the container to have non-zero dimensions before initializing.
+    // The container may start at 0×0 when lazy-loaded or when the parent is
+    // toggled from display:none.  We poll via rAF (up to ~1s at 60fps) then
+    // fall back to a ResizeObserver so we never miss the transition.
+    let retries = 0;
+    const MAX_RETRIES = 60; // ~1 second at 60fps
+    let dimensionObserver: ResizeObserver | null = null;
+
+    const waitForDimensions = () => {
+      if (cancelled) return;
+      const { width, height } = el.getBoundingClientRect();
+      if (width > 0 && height > 0) {
+        doInit();
+        return;
+      }
+      if (retries++ < MAX_RETRIES) {
+        rafId = requestAnimationFrame(waitForDimensions);
+        return;
+      }
+      // rAF polling exhausted — switch to ResizeObserver so we still
+      // initialise even if the container appears much later.
+      dimensionObserver = new ResizeObserver((entries) => {
+        if (cancelled) {
+          dimensionObserver?.disconnect();
+          return;
+        }
+        const { width: w, height: h } = entries[0].contentRect;
+        if (w > 0 && h > 0) {
+          dimensionObserver?.disconnect();
+          dimensionObserver = null;
+          doInit();
         }
       });
+      dimensionObserver.observe(el);
+    };
+
+    // Kick off after a microtask so React's commit phase completes first.
+    const initTimer = setTimeout(() => {
+      if (!cancelled) waitForDimensions();
     }, 0);
 
     // Tauri native drag-drop listener — writes dropped file paths to the PTY.
@@ -805,6 +852,8 @@ function TerminalInstance({
     return () => {
       cancelled = true;
       clearTimeout(initTimer);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      dimensionObserver?.disconnect();
       unlistenDrop?.();
       if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
@@ -822,9 +871,9 @@ function TerminalInstance({
       ptyRef.current = null;
       fitAddonRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- themeId is
-    // intentionally excluded: theme changes are handled by the effect below
-    // without destroying/recreating the PTY session.
+    // themeId is intentionally excluded: theme changes are handled by the
+    // effect below without destroying/recreating the PTY session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cwd]);
 
   // Update theme when themeId prop changes (without recreating the PTY).
