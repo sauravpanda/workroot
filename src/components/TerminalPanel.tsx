@@ -518,6 +518,14 @@ function TerminalInstance({
   onAgentCompleteRef.current = onAgentComplete;
   const onAgentNeedsAttentionRef = useRef(onAgentNeedsAttention);
   onAgentNeedsAttentionRef.current = onAgentNeedsAttention;
+  // Keep shell/initCommand in refs so the main useEffect only depends on
+  // `cwd`.  Otherwise the terminal is destroyed and recreated when the async
+  // settings load resolves (shell goes from default "/bin/zsh" → saved value),
+  // causing a blank terminal on cold start.
+  const shellRef = useRef(shell);
+  shellRef.current = shell;
+  const initCommandRef = useRef(initCommand);
+  initCommandRef.current = initCommand;
   const lastAttentionTimeRef = useRef(0);
   const [dragOver, setDragOver] = useState(false);
 
@@ -662,7 +670,7 @@ function TerminalInstance({
       }
 
       try {
-        const pty = spawn(shell, [], {
+        const pty = spawn(shellRef.current, [], {
           name: "xterm-256color",
           cols: Math.max(term.cols, 1),
           rows: Math.max(term.rows, 1),
@@ -747,10 +755,11 @@ function TerminalInstance({
           term.focus();
         }
 
-        if (initCommand) {
+        if (initCommandRef.current) {
+          const cmd = initCommandRef.current;
           initCommandTimer = setTimeout(() => {
             if (cancelled || !ptyRef.current) return;
-            pty.write(initCommand + "\n");
+            pty.write(cmd + "\n");
           }, 400);
         }
       } catch (err) {
@@ -825,8 +834,10 @@ function TerminalInstance({
       ptyRef.current = null;
       fitAddonRef.current = null;
     };
+    // shell and initCommand are read from refs so the terminal is not
+    // destroyed/recreated when the async settings load resolves.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cwd, initCommand, shell]);
+  }, [cwd]);
 
   // Only the currently visible terminal should react to native file drops.
   useEffect(() => {
