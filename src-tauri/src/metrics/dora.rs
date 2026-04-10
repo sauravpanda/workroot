@@ -26,7 +26,7 @@ pub struct DoraMetrics {
 
 /// Records a deployment event. Returns the deployment ID.
 #[tauri::command]
-pub fn record_deployment(
+pub async fn record_deployment(
     db: State<'_, AppDb>,
     project_id: i64,
     version: String,
@@ -45,7 +45,7 @@ pub fn record_deployment(
 
 /// Calculates DORA metrics for a project over a given period.
 #[tauri::command]
-pub fn get_dora_metrics(
+pub async fn get_dora_metrics(
     db: State<'_, AppDb>,
     project_id: i64,
     period_days: i64,
@@ -186,7 +186,7 @@ fn classify_rating(freq: f64, lead_time: f64, cfr: f64, mttr: f64, period_days: 
 
 /// Lists recent deployments for a project with an optional limit.
 #[tauri::command]
-pub fn list_deployments(
+pub async fn list_deployments(
     db: State<'_, AppDb>,
     project_id: i64,
     limit: Option<i64>,
