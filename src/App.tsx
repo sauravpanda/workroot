@@ -392,8 +392,6 @@ function AppContent({
     setSelectedWorktreeId,
     setSelectedWorktreePath,
     setSelectedWorktreeName,
-    showRightSidebar,
-    setShowRightSidebar,
     markAgentDone,
     markAgentNeedsAttention,
   } = useUiStore();
@@ -708,14 +706,6 @@ function AppContent({
         icon: "\u25B6",
         enabled: () => selectedWorktreePath !== null,
         action: () => openPanel("taskRunner"),
-      },
-      {
-        id: "github:toggle",
-        label: showRightSidebar ? "Hide GitHub Sidebar" : "Show GitHub Sidebar",
-        category: "Panels",
-        shortcut: "\u2318G",
-        icon: "\uD83D\uDC19",
-        action: () => setShowRightSidebar(!showRightSidebar),
       },
       // Git tools
       {
@@ -1218,7 +1208,6 @@ function AppContent({
     selectedProjectId,
     selectedWorktreePath,
     selectedWorktreeId,
-    showRightSidebar,
     allProjects,
     allWorktrees,
     selectWorktree,
@@ -1227,7 +1216,6 @@ function AppContent({
     setSelectedWorktreeId,
     setSelectedWorktreePath,
     setSelectedWorktreeName,
-    setShowRightSidebar,
     openPanel,
     togglePanel,
   ]);
@@ -1260,11 +1248,6 @@ function AppContent({
           setSelectedWorktreePath(null);
           setSelectedWorktreeName(null);
         },
-      },
-      {
-        key: "g",
-        meta: true,
-        action: () => setShowRightSidebar(!showRightSidebar),
       },
       {
         key: "n",
@@ -1305,12 +1288,10 @@ function AppContent({
       },
     ],
     [
-      showRightSidebar,
       setShowSettings,
       setSelectedWorktreeId,
       setSelectedWorktreePath,
       setSelectedWorktreeName,
-      setShowRightSidebar,
       togglePanel,
     ],
   );
@@ -1349,12 +1330,6 @@ function AppContent({
         case "search":
           openPanel("unifiedSearch");
           break;
-        case "security":
-          openPanel("securityAudit");
-          break;
-        case "docker":
-          openPanel("docker");
-          break;
       }
     },
     [openPanel],
@@ -1369,15 +1344,6 @@ function AppContent({
           break;
         case "pr":
           openPanel("createPr");
-          break;
-        case "tests":
-          openPanel("testRunnerPanel");
-          break;
-        case "security":
-          openPanel("securityAudit");
-          break;
-        case "docker":
-          openPanel("docker");
           break;
       }
     },
