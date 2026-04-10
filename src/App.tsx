@@ -210,6 +210,14 @@ function AppContent({
         const projects = await invoke<ProjectInfo[]>("list_projects");
         setAllProjects(projects);
 
+        // Auto-show onboarding for first-time users (no projects, never completed)
+        if (
+          projects.length === 0 &&
+          !localStorage.getItem("workroot:onboarded")
+        ) {
+          openPanel("onboarding");
+        }
+
         // Fetch worktrees for each project
         const wtResults = await Promise.all(
           projects.map(async (p) => {
@@ -230,7 +238,7 @@ function AppContent({
       }
     }
     loadSwitcherData();
-  }, [selectedProjectId, selectedWorktreeId]);
+  }, [selectedProjectId, selectedWorktreeId, openPanel]);
 
   // Stable refs for worktree selection actions
   const selectWorktree = useCallback(
@@ -1368,7 +1376,12 @@ function AppContent({
       {panels.onboarding && (
         <div className="panel-overlay">
           <div className="panel-dialog panel-dialog--wide">
-            <OnboardingWizard onComplete={() => closePanel("onboarding")} />
+            <OnboardingWizard
+              onComplete={() => {
+                localStorage.setItem("workroot:onboarded", "true");
+                closePanel("onboarding");
+              }}
+            />
           </div>
         </div>
       )}
