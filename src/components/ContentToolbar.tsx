@@ -50,61 +50,6 @@ const TABS = [
       </svg>
     ),
   },
-  {
-    id: "tests",
-    label: "Tests",
-    icon: (
-      <svg
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-3.5 shrink-0"
-      >
-        <path d="M3.5 8.5l3 3 6-7" />
-      </svg>
-    ),
-  },
-  {
-    id: "security",
-    label: "Security",
-    icon: (
-      <svg
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-3.5 shrink-0"
-      >
-        <path d="M8 1.5L2.5 4v4c0 3.5 2.5 5.5 5.5 6.5 3-1 5.5-3 5.5-6.5V4L8 1.5z" />
-      </svg>
-    ),
-  },
-  {
-    id: "docker",
-    label: "Docker",
-    icon: (
-      <svg
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="size-3.5 shrink-0"
-      >
-        <rect x="1.5" y="6" width="13" height="7" rx="1" />
-        <path d="M4 6V4.5a1 1 0 011-1h6a1 1 0 011 1V6" />
-        <path d="M5.5 9h0" />
-        <path d="M8 9h0" />
-        <path d="M10.5 9h0" />
-      </svg>
-    ),
-  },
 ] as const;
 
 export function ContentToolbar({

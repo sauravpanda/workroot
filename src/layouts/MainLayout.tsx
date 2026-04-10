@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Sidebar } from "../components/Sidebar";
-import { GitHubSidebar } from "../components/GitHubSidebar";
+
 import { UiContext } from "../stores/uiStore";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { ProjectTabBar, type ProjectTab } from "../components/ProjectTabBar";
@@ -11,10 +11,7 @@ const SIDEBAR_MAX = 480;
 const SIDEBAR_DEFAULT = 260;
 const STORAGE_KEY = "workroot:sidebar-width";
 
-const RIGHT_SIDEBAR_MIN = 200;
-const RIGHT_SIDEBAR_MAX = 500;
-const RIGHT_SIDEBAR_DEFAULT = 280;
-const RIGHT_STORAGE_KEY = "workroot:right-sidebar-width";
+
 
 const OPEN_TABS_KEY = "workroot:open-project-tabs";
 const TAB_BAR_HEIGHT = 32;
@@ -30,19 +27,6 @@ function getSavedWidth(): number {
     // ignore
   }
   return SIDEBAR_DEFAULT;
-}
-
-function getSavedRightWidth(): number {
-  try {
-    const saved = localStorage.getItem(RIGHT_STORAGE_KEY);
-    if (saved) {
-      const n = parseInt(saved, 10);
-      if (n >= RIGHT_SIDEBAR_MIN && n <= RIGHT_SIDEBAR_MAX) return n;
-    }
-  } catch {
-    // ignore
-  }
-  return RIGHT_SIDEBAR_DEFAULT;
 }
 
 function getSavedOpenTabIds(): number[] {
@@ -71,8 +55,6 @@ export function MainLayout({
   onOpenSettings,
 }: MainLayoutProps) {
   const [sidebarWidth, setSidebarWidth] = useState(getSavedWidth);
-  const [rightSidebarWidth, setRightSidebarWidth] =
-    useState(getSavedRightWidth);
   const [selectedProjectId, setSelectedProjectIdRaw] = useState<number | null>(
     null,
   );
@@ -86,7 +68,6 @@ export function MainLayout({
     string | null
   >(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [showRightSidebar, setShowRightSidebar] = useState(true);
   const [agentDoneWorktreeIds, setAgentDoneWorktreeIds] = useState<Set<number>>(
     () => new Set(),
   );
@@ -199,18 +180,9 @@ export function MainLayout({
   }, []);
 
   const dragging = useRef(false);
-  const draggingRight = useRef(false);
-
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     dragging.current = true;
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-  }, []);
-
-  const handleRightMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    draggingRight.current = true;
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none";
   }, []);
@@ -221,23 +193,11 @@ export function MainLayout({
         const width = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, e.clientX));
         setSidebarWidth(width);
       }
-      if (draggingRight.current) {
-        const width = Math.min(
-          RIGHT_SIDEBAR_MAX,
-          Math.max(RIGHT_SIDEBAR_MIN, window.innerWidth - e.clientX),
-        );
-        setRightSidebarWidth(width);
-      }
     };
 
     const handleMouseUp = () => {
       if (dragging.current) {
         dragging.current = false;
-        document.body.style.cursor = "";
-        document.body.style.userSelect = "";
-      }
-      if (draggingRight.current) {
-        draggingRight.current = false;
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
       }
@@ -259,14 +219,6 @@ export function MainLayout({
     }
   }, [sidebarWidth]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(RIGHT_STORAGE_KEY, String(rightSidebarWidth));
-    } catch {
-      // ignore
-    }
-  }, [rightSidebarWidth]);
-
   const showTabBar = visibleTabs.length > 0;
 
   return (
@@ -283,8 +235,6 @@ export function MainLayout({
           setSelectedWorktreeName,
           showSettings,
           setShowSettings,
-          showRightSidebar,
-          setShowRightSidebar,
           agentDoneWorktreeIds,
           markAgentDone,
           clearAgentDone,
@@ -299,7 +249,6 @@ export function MainLayout({
           selectedWorktreePath,
           selectedWorktreeName,
           showSettings,
-          showRightSidebar,
           agentDoneWorktreeIds,
           markAgentDone,
           clearAgentDone,
@@ -340,20 +289,6 @@ export function MainLayout({
         </div>
         <div className="resize-handle" onMouseDown={handleMouseDown} />
         <div className="content-area">{children}</div>
-        {showRightSidebar && (
-          <>
-            <div
-              className="resize-handle resize-handle--right"
-              onMouseDown={handleRightMouseDown}
-            />
-            <ErrorBoundary name="GitHub Sidebar">
-              <GitHubSidebar
-                projectId={selectedProjectId}
-                width={rightSidebarWidth}
-              />
-            </ErrorBoundary>
-          </>
-        )}
       </div>
     </UiContext.Provider>
   );
