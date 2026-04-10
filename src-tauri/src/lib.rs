@@ -176,6 +176,7 @@ pub fn run() {
             proxy::switch::get_active_project,
             proxy::switch::clear_active_project,
             claudemd::generate_worktree_claude_md,
+            claudemd::read_worktree_claude_md,
             shell::install_shell_hook,
             shell::uninstall_shell_hook,
             shell::get_shell_history,

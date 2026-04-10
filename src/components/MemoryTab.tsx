@@ -44,14 +44,52 @@ interface MemoryTabProps {
 }
 
 export function MemoryTab({ worktreeId }: MemoryTabProps) {
+  const [activeTab, setActiveTab] = useState<"notes" | "context">("notes");
   const [notes, setNotes] = useState<MemoryEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
   const [showEditor, setShowEditor] = useState(false);
   const [editingNote, setEditingNote] = useState<MemoryEntry | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [contextContent, setContextContent] = useState<string>("");
+  const [contextLoading, setContextLoading] = useState(false);
+  const [contextGenerating, setContextGenerating] = useState(false);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const loadNotesRef = useRef<() => void>(() => {});
+
+  const loadContextFile = useCallback(async () => {
+    setContextLoading(true);
+    try {
+      const content = await invoke<string>("read_worktree_claude_md", {
+        worktreeId,
+      });
+      setContextContent(content);
+    } catch (err) {
+      console.error("Failed to load CLAUDE.md:", err);
+    } finally {
+      setContextLoading(false);
+    }
+  }, [worktreeId]);
+
+  const handleGenerateContext = async () => {
+    setContextGenerating(true);
+    try {
+      const content = await invoke<string>("generate_worktree_claude_md", {
+        worktreeId,
+      });
+      setContextContent(content);
+    } catch (err) {
+      console.error("Failed to generate CLAUDE.md:", err);
+    } finally {
+      setContextGenerating(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "context") {
+      loadContextFile();
+    }
+  }, [activeTab, loadContextFile]);
 
   const loadNotes = useCallback(async () => {
     try {
@@ -136,6 +174,53 @@ export function MemoryTab({ worktreeId }: MemoryTabProps) {
 
   return (
     <div className="memory-tab">
+      <div className="memory-tab-switcher">
+        <button
+          className={`memory-tab-btn ${activeTab === "notes" ? "active" : ""}`}
+          onClick={() => setActiveTab("notes")}
+        >
+          Notes
+        </button>
+        <button
+          className={`memory-tab-btn ${activeTab === "context" ? "active" : ""}`}
+          onClick={() => setActiveTab("context")}
+        >
+          Context File
+        </button>
+      </div>
+
+      {activeTab === "context" && (
+        <div className="memory-context">
+          <div className="memory-context-header">
+            <span className="memory-context-label">CLAUDE.md</span>
+            <button
+              className="memory-add-btn"
+              onClick={handleGenerateContext}
+              disabled={contextGenerating}
+            >
+              {contextGenerating ? "Generating..." : "Regenerate"}
+            </button>
+          </div>
+          {contextLoading ? (
+            <div className="memory-empty">
+              <p>Loading...</p>
+            </div>
+          ) : contextContent ? (
+            <pre className="memory-context-content">{contextContent}</pre>
+          ) : (
+            <div className="memory-empty">
+              <p>No CLAUDE.md found for this worktree</p>
+              <p className="memory-empty-hint">
+                Click Regenerate to create a context file from project metadata
+                and memory notes
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "notes" && (
+      <>
       <div className="memory-toolbar">
         <input
           type="text"
@@ -255,6 +340,8 @@ export function MemoryTab({ worktreeId }: MemoryTabProps) {
           </div>
         ))}
       </div>
+      </>
+      )}
     </div>
   );
 }
