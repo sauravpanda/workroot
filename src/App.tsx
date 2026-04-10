@@ -1228,6 +1228,8 @@ function AppContent({
     setSelectedWorktreePath,
     setSelectedWorktreeName,
     setShowRightSidebar,
+    openPanel,
+    togglePanel,
   ]);
 
   // Register commands whenever they change
@@ -1302,7 +1304,6 @@ function AppContent({
         action: () => togglePanel("errorDiagnosis"),
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       showRightSidebar,
       setShowSettings,
@@ -1310,12 +1311,13 @@ function AppContent({
       setSelectedWorktreePath,
       setSelectedWorktreeName,
       setShowRightSidebar,
+      togglePanel,
     ],
   );
   useGlobalShortcuts(shortcuts);
 
-  const handleClosePalette = useCallback(() => closePanel("palette"), []);
-  const handleCloseBookmarks = useCallback(() => closePanel("bookmarks"), []);
+  const handleClosePalette = useCallback(() => closePanel("palette"), [closePanel]);
+  const handleCloseBookmarks = useCallback(() => closePanel("bookmarks"), [closePanel]);
 
   /* Expose sidebar-toolbar actions to parent via ref */
   sidebarActionsRef.current = {
@@ -1347,7 +1349,7 @@ function AppContent({
         openPanel("docker");
         break;
     }
-  }, []);
+  }, [openPanel]);
 
   const handleContentTabChange = useCallback((tab: string) => {
     setContentTab(tab);
@@ -1368,7 +1370,7 @@ function AppContent({
         openPanel("docker");
         break;
     }
-  }, []);
+  }, [openPanel]);
 
   return (
     <Suspense fallback={null}>
