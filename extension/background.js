@@ -9,30 +9,15 @@ async function checkConnection() {
     connected = resp.ok;
     if (connected && !wasConnected) {
       console.log("[Workroot] Connected to daemon");
-      updateIcon(true);
     } else if (!connected && wasConnected) {
       console.log("[Workroot] Disconnected from daemon");
-      updateIcon(false);
     }
   } catch {
     if (connected) {
       console.log("[Workroot] Disconnected from daemon");
     }
     connected = false;
-    updateIcon(false);
   }
-}
-
-function updateIcon(isConnected) {
-  const path = isConnected ? "icons/icon-connected" : "icons/icon-disconnected";
-  chrome.action.setIcon({
-    path: {
-      16: `${path}16.png`,
-      48: `${path}48.png`,
-    },
-  }).catch(() => {
-    // Icons may not exist yet
-  });
 }
 
 // Send data to daemon
