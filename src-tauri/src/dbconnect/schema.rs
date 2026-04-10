@@ -95,16 +95,12 @@ pub struct ForeignKeyInfo {
 pub fn introspect_schema(config: &DbConfig) -> Result<SchemaInfo, String> {
     match config.db_type {
         DbType::Sqlite => introspect_sqlite(config),
-        DbType::Postgres => Err(
-            "PostgreSQL schema introspection is not yet implemented. \
+        DbType::Postgres => Err("PostgreSQL schema introspection is not yet implemented. \
              Connect to a SQLite database to use this feature."
-                .into(),
-        ),
-        DbType::Mysql => Err(
-            "MySQL schema introspection is not yet implemented. \
+            .into()),
+        DbType::Mysql => Err("MySQL schema introspection is not yet implemented. \
              Connect to a SQLite database to use this feature."
-                .into(),
-        ),
+            .into()),
     }
 }
 
