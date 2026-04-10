@@ -8,14 +8,12 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  width: 280px;
-  max-width: calc(100vw - 40px);
+  width: 100%;
   background-color: var(--bg-surface);
-  border-left: 1px solid var(--border-subtle);
+  border-left: 1px solid var(--border-strong);
   flex-shrink: 0;
   overflow: hidden;
   animation: ghSidebarFadeIn 0.15s ease-out;
-  transition: width 0.15s ease-out;
 }
 
 .gh-sidebar--collapsed {
