@@ -76,80 +76,9 @@ export type PanelKey =
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
-type PanelState = Record<PanelKey, boolean>;
+type PanelState = ReadonlySet<PanelKey>;
 
-const INITIAL_STATE: PanelState = {
-  palette: false,
-  bookmarks: false,
-  themeSelector: false,
-  taskRunner: false,
-  appThemePicker: false,
-  shortcuts: false,
-  themeEditor: false,
-  densityPicker: false,
-  cssEditor: false,
-  stashManager: false,
-  blameView: false,
-  branchCompare: false,
-  gitHooks: false,
-  conflictResolver: false,
-  securityAudit: false,
-  secretScanner: false,
-  licenseReport: false,
-  securityHeaders: false,
-  testRunnerPanel: false,
-  coverageReport: false,
-  benchmark: false,
-  docker: false,
-  dockerImages: false,
-  containerMonitor: false,
-  flakyTests: false,
-  notifications: false,
-  activityTimeline: false,
-  pluginManager: false,
-  backupRestore: false,
-  analyticsDashboard: false,
-  aiChat: false,
-  unifiedSearch: false,
-  settingsPage: false,
-  terminalRecording: false,
-  doraMetrics: false,
-  webhookEvents: false,
-  sshManager: false,
-  gitAnalytics: false,
-  snippetManager: false,
-  envDiff: false,
-  appPerformance: false,
-  fileExplorer: false,
-  projectOverview: false,
-  webVitals: false,
-  pluginRuntime: false,
-  depAnalyzer: false,
-  portScanner: false,
-  dirStats: false,
-  tagManager: false,
-  gitLog: false,
-  workspaceManager: false,
-  taskScheduler: false,
-  clipboardHistory: false,
-  todoPanel: false,
-  quickSwitcher: false,
-  errorDiagnosis: false,
-  morningBriefing: false,
-  onboarding: false,
-  networkTab: false,
-  prStatus: false,
-  gitDiff: false,
-  createPr: false,
-  memoryTab: false,
-  shellHistory: false,
-  deadEnds: false,
-  dbSchema: false,
-  browserEvents: false,
-  dbExplorer: false,
-  checkpointManager: false,
-  multiAgentPipeline: false,
-};
+const INITIAL_STATE: PanelState = new Set<PanelKey>();
 
 // ─── Reducer ─────────────────────────────────────────────────────────────────
 
@@ -161,16 +90,39 @@ type PanelAction =
 
 function reducer(state: PanelState, action: PanelAction): PanelState {
   switch (action.type) {
-    case "open":
-      return state[action.panel] ? state : { ...state, [action.panel]: true };
-    case "close":
-      return state[action.panel] ? { ...state, [action.panel]: false } : state;
-    case "toggle":
-      return { ...state, [action.panel]: !state[action.panel] };
+    case "open": {
+      if (state.has(action.panel)) return state;
+      const next = new Set(state);
+      next.add(action.panel);
+      return next;
+    }
+    case "close": {
+      if (!state.has(action.panel)) return state;
+      const next = new Set(state);
+      next.delete(action.panel);
+      return next;
+    }
+    case "toggle": {
+      const next = new Set(state);
+      if (next.has(action.panel)) {
+        next.delete(action.panel);
+      } else {
+        next.add(action.panel);
+      }
+      return next;
+    }
     case "closeMany": {
-      const patch: Partial<PanelState> = {};
-      for (const p of action.panels) patch[p] = false;
-      return { ...state, ...patch };
+      let changed = false;
+      for (const p of action.panels) {
+        if (state.has(p)) {
+          changed = true;
+          break;
+        }
+      }
+      if (!changed) return state;
+      const next = new Set(state);
+      for (const p of action.panels) next.delete(p);
+      return next;
     }
   }
 }

@@ -1444,13 +1444,13 @@ function AppContent({
       </PanelBoundary>
       <PanelBoundary name="CommandPalette">
         <CommandPalette
-          open={panels.palette}
+          open={panels.has("palette")}
           onClose={handleClosePalette}
           onExecute={execute}
           search={search}
         />
       </PanelBoundary>
-      {panels.bookmarks && (
+      {panels.has("bookmarks") && (
         <PanelBoundary name="CommandBookmarks">
           <CommandBookmarks
             projectId={selectedProjectId}
@@ -1458,7 +1458,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.themeSelector && (
+      {panels.has("themeSelector") && (
         <PanelBoundary name="TerminalThemeSelector">
           <TerminalThemeSelector
             currentThemeId={terminalThemeId}
@@ -1467,7 +1467,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.taskRunner && selectedWorktreePath && (
+      {panels.has("taskRunner") && selectedWorktreePath && (
         <PanelBoundary name="TaskRunner">
           <TaskRunner
             cwd={selectedWorktreePath}
@@ -1475,7 +1475,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.appThemePicker && (
+      {panels.has("appThemePicker") && (
         <PanelBoundary name="AppThemePicker">
           <AppThemePicker
             currentThemeId={appThemeId}
@@ -1484,7 +1484,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.themeEditor && (
+      {panels.has("themeEditor") && (
         <PanelBoundary name="ThemeEditor">
           <ThemeEditor
             currentThemeId={appThemeId}
@@ -1496,7 +1496,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.densityPicker && (
+      {panels.has("densityPicker") && (
         <PanelBoundary name="DensityPicker">
           <DensityPicker
             currentMode={densityMode}
@@ -1505,17 +1505,17 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.shortcuts && (
+      {panels.has("shortcuts") && (
         <PanelBoundary name="KeyboardShortcuts">
           <KeyboardShortcuts onClose={() => closePanel("shortcuts")} />
         </PanelBoundary>
       )}
-      {panels.cssEditor && (
+      {panels.has("cssEditor") && (
         <PanelBoundary name="CustomCSSEditor">
           <CustomCSSEditor onClose={() => closePanel("cssEditor")} />
         </PanelBoundary>
       )}
-      {panels.stashManager && selectedWorktreeId !== null && (
+      {panels.has("stashManager") && selectedWorktreeId !== null && (
         <PanelBoundary name="StashManager">
           <StashManager
             worktreeId={selectedWorktreeId}
@@ -1523,7 +1523,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.checkpointManager && selectedWorktreeId !== null && (
+      {panels.has("checkpointManager") && selectedWorktreeId !== null && (
         <PanelBoundary name="CheckpointPanel">
           <CheckpointPanel
             worktreeId={selectedWorktreeId}
@@ -1531,7 +1531,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.multiAgentPipeline && selectedWorktreeId !== null && (
+      {panels.has("multiAgentPipeline") && selectedWorktreeId !== null && (
         <PanelBoundary name="MultiAgentPipeline">
           <MultiAgentPipelinePanel
             worktreeId={selectedWorktreeId}
@@ -1539,7 +1539,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.blameView && selectedWorktreeId !== null && (
+      {panels.has("blameView") && selectedWorktreeId !== null && (
         <PanelBoundary name="BlameView">
           <BlameView
             worktreeId={selectedWorktreeId}
@@ -1548,7 +1548,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.branchCompare && selectedWorktreeId !== null && (
+      {panels.has("branchCompare") && selectedWorktreeId !== null && (
         <PanelBoundary name="BranchCompare">
           <BranchCompare
             worktreeId={selectedWorktreeId}
@@ -1556,7 +1556,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.gitHooks && selectedWorktreeId !== null && (
+      {panels.has("gitHooks") && selectedWorktreeId !== null && (
         <PanelBoundary name="GitHooksManager">
           <GitHooksManager
             worktreeId={selectedWorktreeId}
@@ -1564,7 +1564,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.conflictResolver && selectedWorktreeId !== null && (
+      {panels.has("conflictResolver") && selectedWorktreeId !== null && (
         <PanelBoundary name="ConflictResolver">
           <ConflictResolver
             worktreeId={selectedWorktreeId}
@@ -1572,7 +1572,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.securityAudit && selectedWorktreePath && (
+      {panels.has("securityAudit") && selectedWorktreePath && (
         <PanelBoundary name="SecurityAudit">
           <SecurityAudit
             cwd={selectedWorktreePath}
@@ -1583,7 +1583,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.secretScanner && selectedWorktreePath && (
+      {panels.has("secretScanner") && selectedWorktreePath && (
         <PanelBoundary name="SecretScanner">
           <SecretScanner
             cwd={selectedWorktreePath}
@@ -1591,7 +1591,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.licenseReport && selectedWorktreePath && (
+      {panels.has("licenseReport") && selectedWorktreePath && (
         <PanelBoundary name="LicenseReport">
           <LicenseReport
             cwd={selectedWorktreePath}
@@ -1599,12 +1599,12 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.securityHeaders && (
+      {panels.has("securityHeaders") && (
         <PanelBoundary name="SecurityHeaders">
           <SecurityHeaders onClose={() => closePanel("securityHeaders")} />
         </PanelBoundary>
       )}
-      {panels.testRunnerPanel && selectedWorktreePath && (
+      {panels.has("testRunnerPanel") && selectedWorktreePath && (
         <PanelBoundary name="TestRunner">
           <TestRunnerPanel
             cwd={selectedWorktreePath}
@@ -1615,7 +1615,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.coverageReport && selectedWorktreePath && (
+      {panels.has("coverageReport") && selectedWorktreePath && (
         <PanelBoundary name="CoverageReport">
           <CoverageReport
             cwd={selectedWorktreePath}
@@ -1623,7 +1623,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.benchmark && selectedWorktreePath && (
+      {panels.has("benchmark") && selectedWorktreePath && (
         <PanelBoundary name="Benchmark">
           <BenchmarkDashboard
             cwd={selectedWorktreePath}
@@ -1631,7 +1631,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.docker && selectedWorktreePath && (
+      {panels.has("docker") && selectedWorktreePath && (
         <PanelBoundary name="Docker">
           <DockerPanel
             cwd={selectedWorktreePath}
@@ -1642,17 +1642,17 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.dockerImages && (
+      {panels.has("dockerImages") && (
         <PanelBoundary name="DockerImages">
           <DockerImages onClose={() => closePanel("dockerImages")} />
         </PanelBoundary>
       )}
-      {panels.containerMonitor && (
+      {panels.has("containerMonitor") && (
         <PanelBoundary name="ContainerMonitor">
           <ContainerMonitor onClose={() => closePanel("containerMonitor")} />
         </PanelBoundary>
       )}
-      {panels.flakyTests && selectedWorktreePath && (
+      {panels.has("flakyTests") && selectedWorktreePath && (
         <PanelBoundary name="FlakyTests">
           <FlakyTests
             cwd={selectedWorktreePath}
@@ -1662,26 +1662,26 @@ function AppContent({
       )}
       <PanelBoundary name="NotificationCenter">
         <NotificationCenter
-          open={panels.notifications}
+          open={panels.has("notifications")}
           onClose={() => closePanel("notifications")}
         />
       </PanelBoundary>
-      {panels.activityTimeline && (
+      {panels.has("activityTimeline") && (
         <PanelBoundary name="ActivityTimeline">
           <ActivityTimeline onClose={() => closePanel("activityTimeline")} />
         </PanelBoundary>
       )}
-      {panels.pluginManager && (
+      {panels.has("pluginManager") && (
         <PanelBoundary name="PluginManager">
           <PluginManager onClose={() => closePanel("pluginManager")} />
         </PanelBoundary>
       )}
-      {panels.backupRestore && (
+      {panels.has("backupRestore") && (
         <PanelBoundary name="BackupRestore">
           <BackupRestore onClose={() => closePanel("backupRestore")} />
         </PanelBoundary>
       )}
-      {panels.analyticsDashboard && selectedWorktreePath && (
+      {panels.has("analyticsDashboard") && selectedWorktreePath && (
         <PanelBoundary name="AnalyticsDashboard">
           <AnalyticsDashboard
             cwd={selectedWorktreePath}
@@ -1691,13 +1691,13 @@ function AppContent({
       )}
       <PanelBoundary name="AiChat">
         <AiChatSidebar
-          open={panels.aiChat}
+          open={panels.has("aiChat")}
           onClose={() => closePanel("aiChat")}
         />
       </PanelBoundary>
       <PanelBoundary name="UnifiedSearch">
         <UnifiedSearch
-          open={panels.unifiedSearch}
+          open={panels.has("unifiedSearch")}
           onClose={() => closePanel("unifiedSearch")}
           onNavigate={(type: string, _data: string) => {
             closePanel("unifiedSearch");
@@ -1706,12 +1706,12 @@ function AppContent({
           }}
         />
       </PanelBoundary>
-      {panels.settingsPage && (
+      {panels.has("settingsPage") && (
         <PanelBoundary name="SettingsPage">
           <SettingsPage onClose={() => closePanel("settingsPage")} />
         </PanelBoundary>
       )}
-      {panels.terminalRecording && selectedWorktreeId !== null && (
+      {panels.has("terminalRecording") && selectedWorktreeId !== null && (
         <PanelBoundary name="TerminalRecording">
           <TerminalRecording
             worktreeId={selectedWorktreeId}
@@ -1719,7 +1719,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.doraMetrics && selectedProjectId !== null && (
+      {panels.has("doraMetrics") && selectedProjectId !== null && (
         <PanelBoundary name="DoraMetrics">
           <DoraMetrics
             projectId={selectedProjectId}
@@ -1727,12 +1727,12 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.webhookEvents && (
+      {panels.has("webhookEvents") && (
         <PanelBoundary name="WebhookEvents">
           <WebhookEvents onClose={() => closePanel("webhookEvents")} />
         </PanelBoundary>
       )}
-      {panels.sshManager && (
+      {panels.has("sshManager") && (
         <PanelBoundary name="SshManager">
           <SshManager
             onClose={() => closePanel("sshManager")}
@@ -1740,7 +1740,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.gitAnalytics && selectedWorktreeId !== null && (
+      {panels.has("gitAnalytics") && selectedWorktreeId !== null && (
         <PanelBoundary name="GitAnalytics">
           <GitAnalytics
             worktreeId={selectedWorktreeId}
@@ -1748,7 +1748,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.snippetManager && (
+      {panels.has("snippetManager") && (
         <PanelBoundary name="SnippetManager">
           <SnippetManager
             projectId={selectedProjectId}
@@ -1756,7 +1756,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.envDiff && selectedProjectId !== null && (
+      {panels.has("envDiff") && selectedProjectId !== null && (
         <PanelBoundary name="EnvProfileDiff">
           <EnvProfileDiff
             projectId={selectedProjectId}
@@ -1764,12 +1764,12 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.appPerformance && (
+      {panels.has("appPerformance") && (
         <PanelBoundary name="AppPerformance">
           <AppPerformance onClose={() => closePanel("appPerformance")} />
         </PanelBoundary>
       )}
-      {panels.fileExplorer && selectedWorktreePath && (
+      {panels.has("fileExplorer") && selectedWorktreePath && (
         <PanelBoundary name="FileExplorer">
           <FileExplorer
             cwd={selectedWorktreePath}
@@ -1782,7 +1782,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.projectOverview && selectedProjectId !== null && (
+      {panels.has("projectOverview") && selectedProjectId !== null && (
         <PanelBoundary name="ProjectOverview">
           <ProjectOverview
             projectId={selectedProjectId}
@@ -1790,12 +1790,12 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.webVitals && (
+      {panels.has("webVitals") && (
         <PanelBoundary name="WebVitals">
           <WebVitals onClose={() => closePanel("webVitals")} />
         </PanelBoundary>
       )}
-      {panels.pluginRuntime && selectedWorktreePath && (
+      {panels.has("pluginRuntime") && selectedWorktreePath && (
         <PanelBoundary name="PluginRuntime">
           <PluginRuntime
             cwd={selectedWorktreePath}
@@ -1803,7 +1803,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.depAnalyzer && selectedWorktreePath && (
+      {panels.has("depAnalyzer") && selectedWorktreePath && (
         <PanelBoundary name="DependencyAnalyzer">
           <DependencyAnalyzer
             cwd={selectedWorktreePath}
@@ -1811,12 +1811,12 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.portScanner && (
+      {panels.has("portScanner") && (
         <PanelBoundary name="PortScanner">
           <PortScanner onClose={() => closePanel("portScanner")} />
         </PanelBoundary>
       )}
-      {panels.dirStats && selectedWorktreePath && (
+      {panels.has("dirStats") && selectedWorktreePath && (
         <PanelBoundary name="DirectoryStats">
           <DirectoryStats
             cwd={selectedWorktreePath}
@@ -1824,7 +1824,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.tagManager && selectedWorktreeId !== null && (
+      {panels.has("tagManager") && selectedWorktreeId !== null && (
         <PanelBoundary name="TagManager">
           <TagManager
             worktreeId={selectedWorktreeId}
@@ -1832,7 +1832,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.gitLog && selectedWorktreeId !== null && (
+      {panels.has("gitLog") && selectedWorktreeId !== null && (
         <PanelBoundary name="GitLogViewer">
           <GitLogViewer
             worktreeId={selectedWorktreeId}
@@ -1840,7 +1840,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.workspaceManager && (
+      {panels.has("workspaceManager") && (
         <PanelBoundary name="WorkspaceManager">
           <WorkspaceManager
             onClose={() => closePanel("workspaceManager")}
@@ -1848,17 +1848,17 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.taskScheduler && (
+      {panels.has("taskScheduler") && (
         <PanelBoundary name="TaskScheduler">
           <TaskScheduler onClose={() => closePanel("taskScheduler")} />
         </PanelBoundary>
       )}
-      {panels.clipboardHistory && (
+      {panels.has("clipboardHistory") && (
         <PanelBoundary name="ClipboardHistory">
           <ClipboardHistory onClose={() => closePanel("clipboardHistory")} />
         </PanelBoundary>
       )}
-      {panels.todoPanel && (
+      {panels.has("todoPanel") && (
         <PanelBoundary name="TodoPanel">
           <TodoPanel
             projectId={selectedProjectId}
@@ -1866,7 +1866,7 @@ function AppContent({
           />
         </PanelBoundary>
       )}
-      {panels.morningBriefing && selectedProjectId && (
+      {panels.has("morningBriefing") && selectedProjectId && (
         <PanelBoundary name="MorningBriefing">
           <FocusTrapOverlay onClick={() => closePanel("morningBriefing")}>
             <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
@@ -1884,7 +1884,7 @@ function AppContent({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.onboarding && (
+      {panels.has("onboarding") && (
         <PanelBoundary name="Onboarding">
           <FocusTrapOverlay onClick={() => closePanel("onboarding")}>
             <div
@@ -1899,7 +1899,7 @@ function AppContent({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.networkTab && (
+      {panels.has("networkTab") && (
         <PanelBoundary name="NetworkTab">
           <FocusTrapOverlay onClick={() => closePanel("networkTab")}>
             <div
@@ -1920,7 +1920,7 @@ function AppContent({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.prStatus && selectedWorktreeId && (
+      {panels.has("prStatus") && selectedWorktreeId && (
         <PanelBoundary name="PRStatus">
           <FocusTrapOverlay onClick={() => closePanel("prStatus")}>
             <div
@@ -1941,7 +1941,7 @@ function AppContent({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.gitDiff && selectedWorktreeId && (
+      {panels.has("gitDiff") && selectedWorktreeId && (
         <PanelBoundary name="GitDiff">
           <FocusTrapOverlay
             onClick={() => {
@@ -1977,7 +1977,7 @@ function AppContent({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.createPr && selectedWorktreeId && selectedWorktreeName && (
+      {panels.has("createPr") && selectedWorktreeId && selectedWorktreeName && (
         <PanelBoundary name="CreatePR">
           <FocusTrapOverlay
             onClick={() => {
@@ -1998,7 +1998,7 @@ function AppContent({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.memoryTab && selectedWorktreeId && (
+      {panels.has("memoryTab") && selectedWorktreeId && (
         <PanelBoundary name="MemoryTab">
           <FocusTrapOverlay onClick={() => closePanel("memoryTab")}>
             <div
@@ -2019,7 +2019,7 @@ function AppContent({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.shellHistory && selectedProjectId && (
+      {panels.has("shellHistory") && selectedProjectId && (
         <PanelBoundary name="ShellHistory">
           <FocusTrapOverlay onClick={() => closePanel("shellHistory")}>
             <div
@@ -2043,7 +2043,7 @@ function AppContent({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.deadEnds && selectedWorktreeId && (
+      {panels.has("deadEnds") && selectedWorktreeId && (
         <PanelBoundary name="DeadEnds">
           <FocusTrapOverlay onClick={() => closePanel("deadEnds")}>
             <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
@@ -2061,7 +2061,7 @@ function AppContent({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.dbSchema && selectedWorktreeId && (
+      {panels.has("dbSchema") && selectedWorktreeId && (
         <PanelBoundary name="DbSchema">
           <FocusTrapOverlay onClick={() => closePanel("dbSchema")}>
             <div
@@ -2082,7 +2082,7 @@ function AppContent({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.browserEvents && selectedWorktreeId && (
+      {panels.has("browserEvents") && selectedWorktreeId && (
         <PanelBoundary name="BrowserEvents">
           <FocusTrapOverlay onClick={() => closePanel("browserEvents")}>
             <div
@@ -2097,7 +2097,7 @@ function AppContent({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.dbExplorer && selectedWorktreeId && (
+      {panels.has("dbExplorer") && selectedWorktreeId && (
         <PanelBoundary name="DatabaseExplorer">
           <FocusTrapOverlay onClick={() => closePanel("dbExplorer")}>
             <div
@@ -2114,7 +2114,7 @@ function AppContent({
       )}
       <PanelBoundary name="QuickSwitcher">
         <QuickSwitcher
-          open={panels.quickSwitcher}
+          open={panels.has("quickSwitcher")}
           onClose={() => closePanel("quickSwitcher")}
           selectedProjectId={selectedProjectId}
           onSwitchProject={(id: number) => {
@@ -2128,7 +2128,7 @@ function AppContent({
       </PanelBoundary>
       <PanelBoundary name="ErrorDiagnosis">
         <ErrorDiagnosis
-          open={panels.errorDiagnosis}
+          open={panels.has("errorDiagnosis")}
           onClose={() => closePanel("errorDiagnosis")}
         />
       </PanelBoundary>
