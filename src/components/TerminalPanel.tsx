@@ -691,25 +691,36 @@ function TerminalInstance({
 
         ptyRef.current = pty;
 
-        pty.onData((data: Uint8Array) => {
+        pty.onData((data: string | Uint8Array) => {
           if (!termRef.current) return;
           term.write(data);
 
+          // Activity tracking for agent-complete detection.
+          const byteLen =
+            typeof data === "string" ? data.length : (data?.length ?? 0);
+          activityBytesRef.current += byteLen;
+
           // Check for patterns that suggest the agent needs user input.
-          const text = new TextDecoder().decode(data);
-          const now = Date.now();
-          if (now - lastAttentionTimeRef.current >= ATTENTION_COOLDOWN_MS) {
-            for (const pattern of ATTENTION_PATTERNS) {
-              if (pattern.test(text)) {
-                lastAttentionTimeRef.current = now;
-                onAgentNeedsAttentionRef.current?.();
-                break;
+          try {
+            const text =
+              typeof data === "string"
+                ? data
+                : data instanceof Uint8Array
+                  ? new TextDecoder().decode(data)
+                  : String(data);
+            const now = Date.now();
+            if (now - lastAttentionTimeRef.current >= ATTENTION_COOLDOWN_MS) {
+              for (const pattern of ATTENTION_PATTERNS) {
+                if (pattern.test(text)) {
+                  lastAttentionTimeRef.current = now;
+                  onAgentNeedsAttentionRef.current?.();
+                  break;
+                }
               }
             }
+          } catch {
+            // Ignore decode errors — terminal still works via term.write()
           }
-
-          // Activity tracking for agent-complete detection.
-          activityBytesRef.current += data.length;
           if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
           if (activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES) {
             idleTimerRef.current = setTimeout(() => {
