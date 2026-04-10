@@ -1228,6 +1228,8 @@ function AppContent({
     setSelectedWorktreePath,
     setSelectedWorktreeName,
     setShowRightSidebar,
+    openPanel,
+    togglePanel,
   ]);
 
   // Register commands whenever they change
@@ -1302,7 +1304,6 @@ function AppContent({
         action: () => togglePanel("errorDiagnosis"),
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       showRightSidebar,
       setShowSettings,
@@ -1310,12 +1311,19 @@ function AppContent({
       setSelectedWorktreePath,
       setSelectedWorktreeName,
       setShowRightSidebar,
+      togglePanel,
     ],
   );
   useGlobalShortcuts(shortcuts);
 
-  const handleClosePalette = useCallback(() => closePanel("palette"), []);
-  const handleCloseBookmarks = useCallback(() => closePanel("bookmarks"), []);
+  const handleClosePalette = useCallback(
+    () => closePanel("palette"),
+    [closePanel],
+  );
+  const handleCloseBookmarks = useCallback(
+    () => closePanel("bookmarks"),
+    [closePanel],
+  );
 
   /* Expose sidebar-toolbar actions to parent via ref */
   sidebarActionsRef.current = {
@@ -1327,48 +1335,54 @@ function AppContent({
     },
   };
 
-  const handleDashboardAction = useCallback((action: string) => {
-    switch (action) {
-      case "terminal":
-        break;
-      case "git":
-        openPanel("gitDiff");
-        break;
-      case "ai":
-        openPanel("aiChat");
-        break;
-      case "search":
-        openPanel("unifiedSearch");
-        break;
-      case "security":
-        openPanel("securityAudit");
-        break;
-      case "docker":
-        openPanel("docker");
-        break;
-    }
-  }, []);
+  const handleDashboardAction = useCallback(
+    (action: string) => {
+      switch (action) {
+        case "terminal":
+          break;
+        case "git":
+          openPanel("gitDiff");
+          break;
+        case "ai":
+          openPanel("aiChat");
+          break;
+        case "search":
+          openPanel("unifiedSearch");
+          break;
+        case "security":
+          openPanel("securityAudit");
+          break;
+        case "docker":
+          openPanel("docker");
+          break;
+      }
+    },
+    [openPanel],
+  );
 
-  const handleContentTabChange = useCallback((tab: string) => {
-    setContentTab(tab);
-    switch (tab) {
-      case "changes":
-        openPanel("gitDiff");
-        break;
-      case "pr":
-        openPanel("createPr");
-        break;
-      case "tests":
-        openPanel("testRunnerPanel");
-        break;
-      case "security":
-        openPanel("securityAudit");
-        break;
-      case "docker":
-        openPanel("docker");
-        break;
-    }
-  }, []);
+  const handleContentTabChange = useCallback(
+    (tab: string) => {
+      setContentTab(tab);
+      switch (tab) {
+        case "changes":
+          openPanel("gitDiff");
+          break;
+        case "pr":
+          openPanel("createPr");
+          break;
+        case "tests":
+          openPanel("testRunnerPanel");
+          break;
+        case "security":
+          openPanel("securityAudit");
+          break;
+        case "docker":
+          openPanel("docker");
+          break;
+      }
+    },
+    [openPanel],
+  );
 
   return (
     <Suspense fallback={null}>
