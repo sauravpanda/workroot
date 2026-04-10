@@ -71,7 +71,7 @@ export function PluginRuntime({ cwd, onClose }: PluginRuntimeProps) {
         const result = await invoke<ExecutionResult>("execute_plugin", {
           cwd,
           pluginName,
-          args: args.trim() || null,
+          args: args.trim() ? args.trim().split(/\s+/) : [],
         });
         setExecResult(result);
       } catch (e) {
@@ -145,10 +145,10 @@ export function PluginRuntime({ cwd, onClose }: PluginRuntimeProps) {
                 <p>Create a plugin directory with a manifest:</p>
                 <pre className="plrt-code-block">
                   {`.workroot/plugins/my-plugin/
-  manifest.json
+  plugin.json
   index.js (or main.py, run.sh)`}
                 </pre>
-                <p>manifest.json format:</p>
+                <p>plugin.json format:</p>
                 <pre className="plrt-code-block">
                   {`{
   "name": "my-plugin",
@@ -238,7 +238,7 @@ export function PluginRuntime({ cwd, onClose }: PluginRuntimeProps) {
               <input
                 className="plrt-install-input"
                 type="text"
-                placeholder="https://github.com/user/plugin.git"
+                placeholder="https://example.com/my-plugin/plugin.json"
                 value={installUrl}
                 onChange={(e) => setInstallUrl(e.target.value)}
               />
