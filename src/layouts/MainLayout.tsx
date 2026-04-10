@@ -275,17 +275,21 @@ export function MainLayout({
             : undefined
         }
       >
-        <div className="sidebar-panel" style={{ width: sidebarWidth }}>
-          <ErrorBoundary name="Sidebar">
-            <Sidebar
-              onOpenSearch={onOpenSearch}
-              onOpenAiChat={onOpenAiChat}
-              onOpenNotifications={onOpenNotifications}
-              onOpenSettings={onOpenSettings}
-            />
-          </ErrorBoundary>
-        </div>
-        <div className="resize-handle" onMouseDown={handleMouseDown} />
+        {selectedWorktreePath && (
+          <>
+            <div className="sidebar-panel" style={{ width: sidebarWidth }}>
+              <ErrorBoundary name="Sidebar">
+                <Sidebar
+                  onOpenSearch={onOpenSearch}
+                  onOpenAiChat={onOpenAiChat}
+                  onOpenNotifications={onOpenNotifications}
+                  onOpenSettings={onOpenSettings}
+                />
+              </ErrorBoundary>
+            </div>
+            <div className="resize-handle" onMouseDown={handleMouseDown} />
+          </>
+        )}
         <div className="content-area">{children}</div>
       </div>
     </UiContext.Provider>

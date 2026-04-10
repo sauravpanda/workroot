@@ -27,15 +27,6 @@ const namedLazy = <K extends string>(
   lazy(() => factory().then((m) => ({ default: m[name] })));
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-const AuthButton = namedLazy(
-  () => import("./components/AuthButton"),
-  "AuthButton",
-);
-const RepoList = namedLazy(() => import("./components/RepoList"), "RepoList");
-const ActiveProjectBadge = namedLazy(
-  () => import("./components/ActiveProjectBadge"),
-  "ActiveProjectBadge",
-);
 const loadTerminalPanel = () => import("./components/TerminalPanel");
 const TerminalPanel = namedLazy(loadTerminalPanel, "TerminalPanel");
 const CommandPalette = namedLazy(
@@ -46,14 +37,13 @@ const ContentToolbar = namedLazy(
   () => import("./components/ContentToolbar"),
   "ContentToolbar",
 );
-const EnvPanel = namedLazy(() => import("./components/EnvPanel"), "EnvPanel");
 const SettingsTab = namedLazy(
   () => import("./components/SettingsTab"),
   "SettingsTab",
 );
-const Dashboard = namedLazy(
-  () => import("./components/Dashboard"),
-  "Dashboard",
+const WorkspaceGrid = namedLazy(
+  () => import("./components/WorkspaceGrid"),
+  "WorkspaceGrid",
 );
 const CommandBookmarks = namedLazy(
   () => import("./components/CommandBookmarks"),
@@ -1316,24 +1306,37 @@ function AppContent({
     },
   };
 
-  const handleDashboardAction = useCallback(
-    (action: string) => {
-      switch (action) {
-        case "terminal":
-          break;
-        case "git":
-          openPanel("gitDiff");
-          break;
-        case "ai":
-          openPanel("aiChat");
-          break;
-        case "search":
-          openPanel("unifiedSearch");
-          break;
-      }
-    },
-    [openPanel],
-  );
+  // Escape returns to the workspace grid when viewing a terminal.
+  // Only triggers when no modals/panels are open, settings is closed, and
+  // the focused element is within the terminal surface.
+  useEffect(() => {
+    if (!selectedWorktreePath) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (e.defaultPrevented) return;
+      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      if (showSettings) return;
+      if (panels.size > 0) return;
+      const active = document.activeElement as HTMLElement | null;
+      if (!active) return;
+      // Require the focus to be inside the terminal surface.
+      if (!active.closest(".terminal-fullscreen")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setSelectedWorktreeId(null);
+      setSelectedWorktreePath(null);
+      setSelectedWorktreeName(null);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [
+    selectedWorktreePath,
+    showSettings,
+    panels,
+    setSelectedWorktreeId,
+    setSelectedWorktreePath,
+    setSelectedWorktreeName,
+  ]);
 
   const handleContentTabChange = useCallback(
     (tab: string) => {
@@ -1357,26 +1360,22 @@ function AppContent({
           <SettingsTab />
         </PanelBoundary>
       ) : !selectedWorktreePath ? (
-        <div className="content-scroll">
-          <div className="content-inner">
-            <PanelBoundary name="Dashboard">
-              <Dashboard
-                projectId={selectedProjectId}
-                onAction={handleDashboardAction}
-              />
-            </PanelBoundary>
-            <ActiveProjectBadge />
-            <AuthButton />
-            <PanelBoundary name="RepoList">
-              <RepoList />
-            </PanelBoundary>
-            {selectedProjectId !== null && (
-              <PanelBoundary name="EnvPanel">
-                <EnvPanel projectId={selectedProjectId} />
-              </PanelBoundary>
-            )}
-          </div>
-        </div>
+        <PanelBoundary name="WorkspaceGrid">
+          <WorkspaceGrid
+            projects={allProjects}
+            worktrees={allWorktrees}
+            onSelectWorktree={(wt: WorktreeInfo) => {
+              setSelectedProjectId(wt.project_id);
+              setSelectedWorktreeId(wt.id);
+              setSelectedWorktreePath(wt.path);
+              setSelectedWorktreeName(wt.branch_name);
+              setShowSettings(false);
+            }}
+            onNewWorktree={(projectId: number) => {
+              setSelectedProjectId(projectId);
+            }}
+          />
+        </PanelBoundary>
       ) : null}
       {/* TerminalPanel is rendered outside the ternary so it stays mounted
           (and PTY sessions stay alive) when the user navigates to Home or
