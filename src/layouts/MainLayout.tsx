@@ -9,9 +9,9 @@ const SIDEBAR_MAX = 480;
 const SIDEBAR_DEFAULT = 260;
 const STORAGE_KEY = "workroot:sidebar-width";
 
-const RIGHT_SIDEBAR_MIN = 200;
+const RIGHT_SIDEBAR_MIN = 260;
 const RIGHT_SIDEBAR_MAX = 500;
-const RIGHT_SIDEBAR_DEFAULT = 280;
+const RIGHT_SIDEBAR_DEFAULT = 300;
 const RIGHT_STORAGE_KEY = "workroot:right-sidebar-width";
 
 function getSavedWidth(): number {

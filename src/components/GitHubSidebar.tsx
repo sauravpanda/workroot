@@ -600,7 +600,11 @@ function ActivityList({ events }: { events: RepoEvent[] }) {
   return (
     <div className="gh-sidebar__list">
       {events.map((event) => (
-        <div key={event.id} className="gh-sidebar__event">
+        <div
+          key={event.id}
+          className="gh-sidebar__event"
+          title={`${event.actor_login} ${eventDescription(event)}`}
+        >
           <span className="gh-sidebar__event-icon">
             {eventIcon(event.event_type, event.payload_action)}
           </span>
