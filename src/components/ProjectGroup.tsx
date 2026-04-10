@@ -110,7 +110,13 @@ export function ProjectGroup({
         setSelectedWorktreeName(null);
       }
     },
-    [deleteWorktree, selectedWorktreeId, setSelectedWorktreeId, setSelectedWorktreePath, setSelectedWorktreeName],
+    [
+      deleteWorktree,
+      selectedWorktreeId,
+      setSelectedWorktreeId,
+      setSelectedWorktreePath,
+      setSelectedWorktreeName,
+    ],
   );
 
   const handleHide = useCallback(
