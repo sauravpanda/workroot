@@ -11,8 +11,6 @@ const SIDEBAR_MAX = 480;
 const SIDEBAR_DEFAULT = 260;
 const STORAGE_KEY = "workroot:sidebar-width";
 
-
-
 const OPEN_TABS_KEY = "workroot:open-project-tabs";
 const TAB_BAR_HEIGHT = 32;
 
