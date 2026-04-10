@@ -46,7 +46,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     setProjectError("");
     try {
       await invoke("register_local_project", {
-        path: projectPath.trim(),
+        localPath: projectPath.trim(),
       });
       setStep("done");
     } catch (err) {
