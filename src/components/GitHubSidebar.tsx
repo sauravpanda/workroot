@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import "../styles/github-sidebar.css";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

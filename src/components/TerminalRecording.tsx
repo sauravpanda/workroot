@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import AnsiToHtml from "ansi-to-html";
+import "../styles/terminal-recording.css";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

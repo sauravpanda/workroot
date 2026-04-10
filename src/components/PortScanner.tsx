@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import "../styles/port-scanner.css";
 
 interface PortResult {
   port: number;

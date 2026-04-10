@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Dialog, DialogContent } from "./ui/dialog";
+import "../styles/clipboard-history.css";
 
 interface ClipboardEntry {
   id: number;

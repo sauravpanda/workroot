@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+import "../styles/workspace-manager.css";
 
 interface WorkspaceEntry {
   id: number;

@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import "../styles/web-vitals.css";
 
 interface LighthouseResult {
   performance_score: number;

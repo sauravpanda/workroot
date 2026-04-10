@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { applyDensity, saveDensity, type DensityMode } from "../themes/density";
+import "../styles/density-picker.css";
 
 interface DensityPickerProps {
   currentMode: DensityMode;

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import "../styles/task-graph.css";
 
 interface TaskDep {
   source: string;

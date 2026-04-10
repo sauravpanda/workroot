@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import "../styles/todo-panel.css";
 
 type Priority = "high" | "medium" | "low";
 type Status = "todo" | "in_progress" | "done";
