@@ -23,8 +23,13 @@ export function RepoList() {
   );
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const registeredPaths = useMemo(
-    () => new Set(projects.map((p) => p.local_path)),
+  const registeredUrls = useMemo(
+    () =>
+      new Set(
+        projects
+          .map((p) => p.github_url)
+          .filter((u): u is string => u !== null),
+      ),
     [projects],
   );
 
@@ -206,7 +211,7 @@ export function RepoList() {
                     )}
                   </span>
                 </div>
-                {registeredPaths.has(repo.name) ? (
+                {registeredUrls.has(repo.html_url) ? (
                   <span className="repo-registered">Registered</span>
                 ) : (
                   <button
