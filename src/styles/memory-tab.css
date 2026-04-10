@@ -245,7 +245,9 @@
   border-bottom: 2px solid transparent;
   color: var(--text-muted, #888);
   cursor: pointer;
-  transition: color 0.12s, border-color 0.12s;
+  transition:
+    color 0.12s,
+    border-color 0.12s;
 }
 
 .memory-tab-btn:hover {
