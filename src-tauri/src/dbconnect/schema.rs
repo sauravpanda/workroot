@@ -89,18 +89,21 @@ pub struct ForeignKeyInfo {
 }
 
 /// Introspect schema from a database config.
-/// Currently supports SQLite. Postgres and MySQL return stub schemas.
+/// Currently only SQLite is implemented; Postgres and MySQL return an error
+/// so callers can surface a clear "unsupported" message instead of an empty schema.
 pub fn introspect_schema(config: &DbConfig) -> Result<SchemaInfo, String> {
     match config.db_type {
         DbType::Sqlite => introspect_sqlite(config),
-        DbType::Postgres => Ok(SchemaInfo {
-            db_type: "postgres".into(),
-            tables: vec![],
-        }),
-        DbType::Mysql => Ok(SchemaInfo {
-            db_type: "mysql".into(),
-            tables: vec![],
-        }),
+        DbType::Postgres => Err(
+            "PostgreSQL schema introspection is not yet implemented. \
+             Please use a PostgreSQL client to inspect your database schema."
+                .into(),
+        ),
+        DbType::Mysql => Err(
+            "MySQL schema introspection is not yet implemented. \
+             Please use a MySQL client to inspect your database schema."
+                .into(),
+        ),
     }
 }
 

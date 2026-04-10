@@ -1573,6 +1573,11 @@ function AppContent({
         onSwitchBranch={() => {
           closePanel("quickSwitcher");
         }}
+        onOpenFile={(path) => {
+          closePanel("quickSwitcher");
+          setBlameFilePath(path);
+          openPanel("blameView");
+        }}
       />
       <ErrorDiagnosis
         open={panels.errorDiagnosis}
