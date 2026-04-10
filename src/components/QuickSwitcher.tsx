@@ -12,6 +12,7 @@ interface QuickSwitcherProps {
   selectedProjectId: number | null;
   onSwitchProject: (id: number) => void;
   onSwitchBranch: (name: string) => void;
+  onOpenFile?: (path: string) => void;
 }
 
 interface ProjectItem {
@@ -80,6 +81,7 @@ export function QuickSwitcher({
   selectedProjectId,
   onSwitchProject,
   onSwitchBranch,
+  onOpenFile,
 }: QuickSwitcherProps) {
   const [query, setQuery] = useState("");
   const [projects, setProjects] = useState<ProjectItem[]>([]);
@@ -216,12 +218,12 @@ export function QuickSwitcher({
           onSwitchBranch((item.data as BranchItem).name);
           break;
         case "files":
-          // placeholder — no action for recent files yet
+          onOpenFile?.((item.data as RecentFileItem).path);
           break;
       }
       onClose();
     },
-    [onSwitchProject, onSwitchBranch, onClose],
+    [onSwitchProject, onSwitchBranch, onOpenFile, onClose],
   );
 
   const handleKeyDown = useCallback(
