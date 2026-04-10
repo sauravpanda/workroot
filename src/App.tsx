@@ -1306,21 +1306,17 @@ function AppContent({
     },
   };
 
-  // Escape returns to the workspace grid when viewing a terminal.
-  // Only triggers when no modals/panels are open, settings is closed, and
-  // the focused element is within the terminal surface.
+  // Cmd+Escape returns to the workspace grid when viewing a terminal.
+  // We use Cmd+Escape (not plain Escape) so terminal apps like vim/less can
+  // still receive the Escape key normally.
   useEffect(() => {
     if (!selectedWorktreePath) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
+      if (!e.metaKey) return;
       if (e.defaultPrevented) return;
-      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
       if (showSettings) return;
       if (panels.size > 0) return;
-      const active = document.activeElement as HTMLElement | null;
-      if (!active) return;
-      // Require the focus to be inside the terminal surface.
-      if (!active.closest(".terminal-fullscreen")) return;
       e.preventDefault();
       e.stopPropagation();
       setSelectedWorktreeId(null);
