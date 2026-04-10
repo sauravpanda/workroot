@@ -72,6 +72,7 @@ export function MainLayout({
   >(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showRightSidebar, setShowRightSidebar] = useState(true);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
   const dragging = useRef(false);
   const draggingRight = useRef(false);
 
@@ -173,13 +174,23 @@ export function MainLayout({
         <div className="content-area">{children}</div>
         {showRightSidebar && (
           <>
+            {!rightSidebarCollapsed && (
+              <div
+                className="resize-handle resize-handle--right"
+                onMouseDown={handleRightMouseDown}
+              />
+            )}
             <div
-              className="resize-handle resize-handle--right"
-              onMouseDown={handleRightMouseDown}
-            />
-            <div style={{ width: rightSidebarWidth, flexShrink: 0 }}>
+              style={{
+                width: rightSidebarCollapsed ? 28 : rightSidebarWidth,
+                flexShrink: 0,
+              }}
+            >
               <ErrorBoundary name="GitHub Sidebar">
-                <GitHubSidebar projectId={selectedProjectId} />
+                <GitHubSidebar
+                  projectId={selectedProjectId}
+                  onCollapsedChange={setRightSidebarCollapsed}
+                />
               </ErrorBoundary>
             </div>
           </>

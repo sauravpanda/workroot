@@ -41,6 +41,7 @@ type Tab = "prs" | "issues" | "activity";
 
 interface GitHubSidebarProps {
   projectId: number | null;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -163,9 +164,20 @@ interface DeviceCodeInfo {
   interval: number;
 }
 
-export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
+export function GitHubSidebar({
+  projectId,
+  onCollapsedChange,
+}: GitHubSidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>("prs");
   const [collapsed, setCollapsed] = useState(false);
+
+  const handleSetCollapsed = useCallback(
+    (value: boolean) => {
+      setCollapsed(value);
+      onCollapsedChange?.(value);
+    },
+    [onCollapsedChange],
+  );
 
   // Local sign-in state — managed here so we can call fetchData directly on success
   const [patInput, setPatInput] = useState("");
@@ -308,7 +320,7 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
       <div className="gh-sidebar gh-sidebar--collapsed">
         <button
           className="gh-sidebar__expand-btn"
-          onClick={() => setCollapsed(false)}
+          onClick={() => handleSetCollapsed(false)}
           title="Expand GitHub sidebar"
         >
           {"\u276E"}
@@ -326,7 +338,7 @@ export function GitHubSidebar({ projectId }: GitHubSidebarProps) {
           <div className="gh-sidebar__header-actions">
             <button
               className="gh-sidebar__icon-btn"
-              onClick={() => setCollapsed(true)}
+              onClick={() => handleSetCollapsed(true)}
               title="Collapse"
             >
               {"\u276F"}
