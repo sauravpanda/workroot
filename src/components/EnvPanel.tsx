@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useEnvVault } from "../hooks/useEnvVault";
 import { EnvVarRow } from "./EnvVarRow";
 import { ProfileSelector } from "./ProfileSelector";
+import "../styles/env-panel.css";
 
 interface EnvPanelProps {
   projectId: number;

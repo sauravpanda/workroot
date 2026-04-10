@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import "../styles/tag-manager.css";
 
 interface TagInfo {
   name: string;

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import "../styles/unified-search.css";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

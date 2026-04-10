@@ -8,6 +8,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
+import "../styles/settings-page.css";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */

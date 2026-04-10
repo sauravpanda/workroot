@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Dialog, DialogContent } from "./ui/dialog";
+import "../styles/directory-stats.css";
 
 interface ExtensionStat {
   extension: string;
