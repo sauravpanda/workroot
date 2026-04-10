@@ -27,6 +27,7 @@ export function ProjectGroup({
   const {
     selectedProjectId,
     setSelectedProjectId,
+    selectedWorktreeId,
     setSelectedWorktreeId,
     setSelectedWorktreePath,
     setSelectedWorktreeName,
@@ -102,8 +103,14 @@ export function ProjectGroup({
   const handleDelete = useCallback(
     async (id: number) => {
       await deleteWorktree(id);
+      // If the deleted worktree was selected, navigate away to home
+      if (selectedWorktreeId === id) {
+        setSelectedWorktreeId(null);
+        setSelectedWorktreePath(null);
+        setSelectedWorktreeName(null);
+      }
     },
-    [deleteWorktree],
+    [deleteWorktree, selectedWorktreeId, setSelectedWorktreeId, setSelectedWorktreePath, setSelectedWorktreeName],
   );
 
   const handleHide = useCallback(
