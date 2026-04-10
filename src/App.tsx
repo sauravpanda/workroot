@@ -865,7 +865,7 @@ function AppContent({
   ]);
 
   // Register commands whenever they change
-  useMemo(() => register(commands), [commands, register]);
+  useEffect(() => register(commands), [commands, register]);
 
   // Global keyboard shortcuts
   const shortcuts = useMemo(
