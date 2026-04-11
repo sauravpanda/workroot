@@ -782,6 +782,14 @@ function AppContent({
         enabled: () => selectedWorktreeId !== null,
         action: () => openPanel("multiAgentPipeline"),
       },
+      {
+        id: "ai:model-comparison",
+        label: "Model Comparison",
+        category: "AI",
+        icon: "\u21C6",
+        enabled: () => selectedWorktreeId !== null,
+        action: () => openPanel("modelComparison"),
+      },
     ];
 
     // Add project switch commands

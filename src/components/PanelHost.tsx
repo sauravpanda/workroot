@@ -56,6 +56,10 @@ const MultiAgentPipelinePanel = namedLazy(
   () => import("./MultiAgentPipelinePanel"),
   "MultiAgentPipelinePanel",
 );
+const ModelComparisonPanel = namedLazy(
+  () => import("./ModelComparisonPanel"),
+  "ModelComparisonPanel",
+);
 const BlameView = namedLazy(() => import("./BlameView"), "BlameView");
 const BranchCompare = namedLazy(
   () => import("./BranchCompare"),
@@ -381,6 +385,21 @@ export function PanelHost({
             worktreeId={selectedWorktreeId}
             onClose={() => closePanel("multiAgentPipeline")}
           />
+        </PanelBoundary>
+      )}
+      {panels.has("modelComparison") && selectedWorktreeId !== null && (
+        <PanelBoundary name="ModelComparison">
+          <FocusTrapOverlay onClick={() => closePanel("modelComparison")}>
+            <div
+              className="panel-dialog panel-dialog--wide"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ModelComparisonPanel
+                worktreeId={selectedWorktreeId}
+                onClose={() => closePanel("modelComparison")}
+              />
+            </div>
+          </FocusTrapOverlay>
         </PanelBoundary>
       )}
       {panels.has("blameView") && selectedWorktreeId !== null && (
