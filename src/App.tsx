@@ -9,16 +9,23 @@ import {
 } from "react";
 import { ErrorProvider } from "./contexts/ErrorContext";
 import { ErrorBoundary, PanelBoundary } from "./components/ErrorBoundary";
-import { FocusTrapOverlay } from "./components/FocusTrapOverlay";
 import { GlobalErrorToast } from "./components/GlobalErrorToast";
 import { invoke } from "@tauri-apps/api/core";
 import { MainLayout } from "./layouts/MainLayout";
 import { QuickActions } from "./components/QuickActions";
 import { StatusBar } from "./components/StatusBar";
+import { PanelHost } from "./components/PanelHost";
+import { useUiStore } from "./stores/uiStore";
+import {
+  useCommandRegistry,
+  useGlobalShortcuts,
+} from "./hooks/useCommandRegistry";
+import type { Command } from "./hooks/useCommandRegistry";
+import { usePanels } from "./hooks/usePanels";
+import { useTerminalSettings } from "./hooks/useTerminalSettings";
+import { useAppTheme } from "./hooks/useAppTheme";
+import { useShellData } from "./hooks/useShellData";
 
-// ---------------------------------------------------------------------------
-// Lazy-loaded components (behind boolean toggles / conditional panels)
-// ---------------------------------------------------------------------------
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const namedLazy = <K extends string>(
   factory: () => Promise<Record<K, React.ComponentType<any>>>,
@@ -29,10 +36,6 @@ const namedLazy = <K extends string>(
 
 const loadTerminalPanel = () => import("./components/TerminalPanel");
 const TerminalPanel = namedLazy(loadTerminalPanel, "TerminalPanel");
-const CommandPalette = namedLazy(
-  () => import("./components/CommandPalette"),
-  "CommandPalette",
-);
 const ContentToolbar = namedLazy(
   () => import("./components/ContentToolbar"),
   "ContentToolbar",
@@ -45,311 +48,6 @@ const WorkspaceGrid = namedLazy(
   () => import("./components/WorkspaceGrid"),
   "WorkspaceGrid",
 );
-const CommandBookmarks = namedLazy(
-  () => import("./components/CommandBookmarks"),
-  "CommandBookmarks",
-);
-const TerminalThemeSelector = namedLazy(
-  () => import("./components/TerminalThemeSelector"),
-  "TerminalThemeSelector",
-);
-const TaskRunner = namedLazy(
-  () => import("./components/TaskRunner"),
-  "TaskRunner",
-);
-const AppThemePicker = namedLazy(
-  () => import("./components/AppThemePicker"),
-  "AppThemePicker",
-);
-const KeyboardShortcuts = namedLazy(
-  () => import("./components/KeyboardShortcuts"),
-  "KeyboardShortcuts",
-);
-const ThemeEditor = namedLazy(
-  () => import("./components/ThemeEditor"),
-  "ThemeEditor",
-);
-const DensityPicker = namedLazy(
-  () => import("./components/DensityPicker"),
-  "DensityPicker",
-);
-const CustomCSSEditor = namedLazy(
-  () => import("./components/CustomCSSEditor"),
-  "CustomCSSEditor",
-);
-const StashManager = namedLazy(
-  () => import("./components/StashManager"),
-  "StashManager",
-);
-const CheckpointPanel = namedLazy(
-  () => import("./components/CheckpointPanel"),
-  "CheckpointPanel",
-);
-const MultiAgentPipelinePanel = namedLazy(
-  () => import("./components/MultiAgentPipelinePanel"),
-  "MultiAgentPipelinePanel",
-);
-const BlameView = namedLazy(
-  () => import("./components/BlameView"),
-  "BlameView",
-);
-const BranchCompare = namedLazy(
-  () => import("./components/BranchCompare"),
-  "BranchCompare",
-);
-const GitHooksManager = namedLazy(
-  () => import("./components/GitHooksManager"),
-  "GitHooksManager",
-);
-const ConflictResolver = namedLazy(
-  () => import("./components/ConflictResolver"),
-  "ConflictResolver",
-);
-const SecurityAudit = namedLazy(
-  () => import("./components/SecurityAudit"),
-  "SecurityAudit",
-);
-const SecretScanner = namedLazy(
-  () => import("./components/SecretScanner"),
-  "SecretScanner",
-);
-const LicenseReport = namedLazy(
-  () => import("./components/LicenseReport"),
-  "LicenseReport",
-);
-const SecurityHeaders = namedLazy(
-  () => import("./components/SecurityHeaders"),
-  "SecurityHeaders",
-);
-const TestRunnerPanel = namedLazy(
-  () => import("./components/TestRunnerPanel"),
-  "TestRunnerPanel",
-);
-const CoverageReport = namedLazy(
-  () => import("./components/CoverageReport"),
-  "CoverageReport",
-);
-const BenchmarkDashboard = namedLazy(
-  () => import("./components/BenchmarkDashboard"),
-  "BenchmarkDashboard",
-);
-const DockerPanel = namedLazy(
-  () => import("./components/DockerPanel"),
-  "DockerPanel",
-);
-const DockerImages = namedLazy(
-  () => import("./components/DockerImages"),
-  "DockerImages",
-);
-const ContainerMonitor = namedLazy(
-  () => import("./components/ContainerMonitor"),
-  "ContainerMonitor",
-);
-const FlakyTests = namedLazy(
-  () => import("./components/FlakyTests"),
-  "FlakyTests",
-);
-const NotificationCenter = namedLazy(
-  () => import("./components/NotificationCenter"),
-  "NotificationCenter",
-);
-const ActivityTimeline = namedLazy(
-  () => import("./components/ActivityTimeline"),
-  "ActivityTimeline",
-);
-const PluginManager = namedLazy(
-  () => import("./components/PluginManager"),
-  "PluginManager",
-);
-const BackupRestore = namedLazy(
-  () => import("./components/BackupRestore"),
-  "BackupRestore",
-);
-const AnalyticsDashboard = namedLazy(
-  () => import("./components/AnalyticsDashboard"),
-  "AnalyticsDashboard",
-);
-const AiChatSidebar = namedLazy(
-  () => import("./components/AiChatSidebar"),
-  "AiChatSidebar",
-);
-const UnifiedSearch = namedLazy(
-  () => import("./components/UnifiedSearch"),
-  "UnifiedSearch",
-);
-const SettingsPage = namedLazy(
-  () => import("./components/SettingsPage"),
-  "SettingsPage",
-);
-const TerminalRecording = namedLazy(
-  () => import("./components/TerminalRecording"),
-  "TerminalRecording",
-);
-const DoraMetrics = namedLazy(
-  () => import("./components/DoraMetrics"),
-  "DoraMetrics",
-);
-const WebhookEvents = namedLazy(
-  () => import("./components/WebhookEvents"),
-  "WebhookEvents",
-);
-const SshManager = namedLazy(
-  () => import("./components/SshManager"),
-  "SshManager",
-);
-const GitAnalytics = namedLazy(
-  () => import("./components/GitAnalytics"),
-  "GitAnalytics",
-);
-const SnippetManager = namedLazy(
-  () => import("./components/SnippetManager"),
-  "SnippetManager",
-);
-const EnvProfileDiff = namedLazy(
-  () => import("./components/EnvProfileDiff"),
-  "EnvProfileDiff",
-);
-const AppPerformance = namedLazy(
-  () => import("./components/AppPerformance"),
-  "AppPerformance",
-);
-const FileExplorer = namedLazy(
-  () => import("./components/FileExplorer"),
-  "FileExplorer",
-);
-const ProjectOverview = namedLazy(
-  () => import("./components/ProjectOverview"),
-  "ProjectOverview",
-);
-const WebVitals = namedLazy(
-  () => import("./components/WebVitals"),
-  "WebVitals",
-);
-const PluginRuntime = namedLazy(
-  () => import("./components/PluginRuntime"),
-  "PluginRuntime",
-);
-const DependencyAnalyzer = namedLazy(
-  () => import("./components/DependencyAnalyzer"),
-  "DependencyAnalyzer",
-);
-const PortScanner = namedLazy(
-  () => import("./components/PortScanner"),
-  "PortScanner",
-);
-const DirectoryStats = namedLazy(
-  () => import("./components/DirectoryStats"),
-  "DirectoryStats",
-);
-const TagManager = namedLazy(
-  () => import("./components/TagManager"),
-  "TagManager",
-);
-const GitLogViewer = namedLazy(
-  () => import("./components/GitLogViewer"),
-  "GitLogViewer",
-);
-const WorkspaceManager = namedLazy(
-  () => import("./components/WorkspaceManager"),
-  "WorkspaceManager",
-);
-const TaskScheduler = namedLazy(
-  () => import("./components/TaskScheduler"),
-  "TaskScheduler",
-);
-const ClipboardHistory = namedLazy(
-  () => import("./components/ClipboardHistory"),
-  "ClipboardHistory",
-);
-const TodoPanel = namedLazy(
-  () => import("./components/TodoPanel"),
-  "TodoPanel",
-);
-const QuickSwitcher = namedLazy(
-  () => import("./components/QuickSwitcher"),
-  "QuickSwitcher",
-);
-const ErrorDiagnosis = namedLazy(
-  () => import("./components/ErrorDiagnosis"),
-  "ErrorDiagnosis",
-);
-const MorningBriefing = namedLazy(
-  () => import("./components/MorningBriefing"),
-  "MorningBriefing",
-);
-const OnboardingWizard = namedLazy(
-  () => import("./components/OnboardingWizard"),
-  "OnboardingWizard",
-);
-const NetworkTab = namedLazy(
-  () => import("./components/NetworkTab"),
-  "NetworkTab",
-);
-const PRStatusPanel = namedLazy(
-  () => import("./components/PRStatusPanel"),
-  "PRStatusPanel",
-);
-const GitDiffView = namedLazy(
-  () => import("./components/GitDiffView"),
-  "GitDiffView",
-);
-const CreatePRPanel = namedLazy(
-  () => import("./components/CreatePRPanel"),
-  "CreatePRPanel",
-);
-const MemoryTab = namedLazy(
-  () => import("./components/MemoryTab"),
-  "MemoryTab",
-);
-const ShellHistoryTab = namedLazy(
-  () => import("./components/ShellHistoryTab"),
-  "ShellHistoryTab",
-);
-const DeadEndsLog = namedLazy(
-  () => import("./components/DeadEndsLog"),
-  "DeadEndsLog",
-);
-const DbSchemaTab = namedLazy(
-  () => import("./components/DbSchemaTab"),
-  "DbSchemaTab",
-);
-const BrowserEvents = namedLazy(
-  () => import("./components/BrowserEvents"),
-  "BrowserEvents",
-);
-const DatabaseExplorer = namedLazy(
-  () => import("./components/DatabaseExplorer"),
-  "DatabaseExplorer",
-);
-
-interface TerminalSettingsSnapshot {
-  shell: string | null;
-  initCommand: string | null;
-  themeId: string | null;
-}
-import { DEFAULT_THEME_ID } from "./lib/terminalThemes";
-import { getAppThemeById } from "./themes/builtin";
-import { applyTheme, loadSavedThemeId, type AppTheme } from "./themes/engine";
-import {
-  applyDensity,
-  loadSavedDensity,
-  type DensityMode,
-} from "./themes/density";
-import { loadCustomCSS } from "./themes/customCSS";
-import { useUiStore } from "./stores/uiStore";
-import {
-  useCommandRegistry,
-  useGlobalShortcuts,
-} from "./hooks/useCommandRegistry";
-import type { Command } from "./hooks/useCommandRegistry";
-import { usePanels } from "./hooks/usePanels";
-
-interface ProjectInfo {
-  id: number;
-  name: string;
-  local_path: string;
-  framework: string | null;
-}
 
 interface WorktreeInfo {
   id: number;
@@ -392,14 +90,12 @@ function AppContent({
       invoke<boolean>("github_check_auth")
         .then(setIsGitHubConnected)
         .catch((err: unknown) => {
-          // Only mark as disconnected for auth failures, not network errors
           const msg = String(err).toLowerCase();
           if (
             msg.includes("network") ||
             msg.includes("fetch") ||
             msg.includes("timeout")
           ) {
-            // Network error — keep the previous auth state
             return;
           }
           setIsGitHubConnected(false);
@@ -422,7 +118,15 @@ function AppContent({
     }
   }, []);
 
-  // Stable refs so the callback doesn't need to be in dependency arrays.
+  // Preload terminal panel eagerly
+  useEffect(() => {
+    const preloadTimer = window.setTimeout(() => {
+      void loadTerminalPanel();
+    }, 0);
+    return () => clearTimeout(preloadTimer);
+  }, []);
+
+  // Stable refs so callbacks don't need to be in dependency arrays.
   const selectedWorktreeIdRef = useRef(selectedWorktreeId);
   const selectedWorktreeNameRef = useRef(selectedWorktreeName);
   selectedWorktreeIdRef.current = selectedWorktreeId;
@@ -455,8 +159,6 @@ function AppContent({
         });
       }
     } else if (contentTabRef.current !== "terminal") {
-      // Only show toast if the user isn't already viewing the terminal —
-      // if they're watching the agent's output, the notification is redundant.
       setAgentDoneToast(name);
     }
   }, [markAgentDone]);
@@ -486,115 +188,22 @@ function AppContent({
     ]);
   }, [selectedWorktreeId, closePanels]);
 
-  const [densityMode, setDensityMode] = useState<DensityMode>("comfortable");
-  const [appThemeId, setAppThemeId] = useState("midnight");
-  const [terminalThemeId, setTerminalThemeId] = useState(DEFAULT_THEME_ID);
-  const [terminalShell, setTerminalShell] = useState(() =>
-    navigator.platform.toLowerCase().includes("win")
-      ? "powershell.exe"
-      : "/bin/zsh",
-  );
-  const [terminalInitCommand, setTerminalInitCommand] = useState<string | null>(
-    null,
-  );
   const { register, execute, search } = useCommandRegistry();
-
-  // Load saved app theme, terminal theme, density mode, and custom CSS
-  useEffect(() => {
-    const preloadTimer = window.setTimeout(() => {
-      void loadTerminalPanel();
-    }, 0);
-
-    loadSavedThemeId().then((id) => {
-      setAppThemeId(id);
-      applyTheme(getAppThemeById(id));
-    });
-
-    invoke<TerminalSettingsSnapshot>("get_terminal_settings").then(
-      (settings) => {
-        if (settings.themeId?.trim()) {
-          setTerminalThemeId(settings.themeId.trim());
-        }
-        if (settings.shell?.trim()) {
-          setTerminalShell(settings.shell.trim());
-        }
-        setTerminalInitCommand(settings.initCommand?.trim() || null);
-      },
-      () => {},
-    );
-    loadSavedDensity().then((m) => {
-      setDensityMode(m);
-      applyDensity(m);
-    });
-    loadCustomCSS();
-
-    return () => clearTimeout(preloadTimer);
-  }, []);
-
-  // Fetch projects and worktrees for quick switcher commands
-  const [allProjects, setAllProjects] = useState<ProjectInfo[]>([]);
-  const [allWorktrees, setAllWorktrees] = useState<
-    Array<WorktreeInfo & { projectName: string }>
-  >([]);
-
-  const selectedProjectName = useMemo(
-    () => allProjects.find((p) => p.id === selectedProjectId)?.name ?? null,
-    [allProjects, selectedProjectId],
-  );
-
-  useEffect(() => {
-    async function loadSwitcherData() {
-      try {
-        const projects = await invoke<ProjectInfo[]>("list_projects");
-        setAllProjects(projects);
-
-        // Auto-show onboarding for first-time users with no projects
-        if (
-          projects.length === 0 &&
-          !localStorage.getItem("workroot:onboarded")
-        ) {
-          openPanel("onboarding");
-        }
-
-        // Fetch worktrees for each project
-        const wtResults = await Promise.all(
-          projects.map(async (p) => {
-            try {
-              const wts = await invoke<WorktreeInfo[]>(
-                "list_project_worktrees",
-                { projectId: p.id },
-              );
-              return wts.map((wt) => ({ ...wt, projectName: p.name }));
-            } catch {
-              return [];
-            }
-          }),
-        );
-        setAllWorktrees(wtResults.flat());
-      } catch {
-        // ignore — commands just won't have project/worktree entries
-      }
-    }
-    loadSwitcherData();
-  }, [selectedProjectId, selectedWorktreeId, openPanel]);
-
-  // Stable refs for worktree selection actions
-  const selectWorktree = useCallback(
-    (wt: WorktreeInfo & { projectName: string }) => {
-      setSelectedProjectId(wt.project_id);
-      setSelectedWorktreeId(wt.id);
-      setSelectedWorktreePath(wt.path);
-      setSelectedWorktreeName(wt.branch_name);
-      setShowSettings(false);
-    },
-    [
-      setSelectedProjectId,
-      setSelectedWorktreeId,
-      setSelectedWorktreePath,
-      setSelectedWorktreeName,
-      setShowSettings,
-    ],
-  );
+  const {
+    terminalShell,
+    terminalThemeId,
+    terminalInitCommand,
+    setTerminalThemeId,
+  } = useTerminalSettings();
+  const {
+    appThemeId,
+    densityMode,
+    setAppThemeId,
+    applyAppTheme,
+    applyDensityMode,
+  } = useAppTheme();
+  const { allProjects, allWorktrees, selectedProjectName, selectWorktree } =
+    useShellData(openPanel);
 
   // Build commands from current app state
   const commands: Command[] = useMemo(() => {
@@ -1315,8 +924,6 @@ function AppContent({
   };
 
   // Cmd+Escape returns to the workspace grid when viewing a terminal.
-  // We use Cmd+Escape (not plain Escape) so terminal apps like vim/less can
-  // still receive the Escape key normally.
   useEffect(() => {
     if (!selectedWorktreePath) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -1425,704 +1032,31 @@ function AppContent({
           isGitHubConnected={isGitHubConnected}
         />
       </PanelBoundary>
-      <PanelBoundary name="CommandPalette">
-        <CommandPalette
-          open={panels.has("palette")}
-          onClose={handleClosePalette}
-          onExecute={execute}
-          search={search}
-        />
-      </PanelBoundary>
-      {panels.has("bookmarks") && (
-        <PanelBoundary name="CommandBookmarks">
-          <CommandBookmarks
-            projectId={selectedProjectId}
-            onClose={handleCloseBookmarks}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("themeSelector") && (
-        <PanelBoundary name="TerminalThemeSelector">
-          <TerminalThemeSelector
-            currentThemeId={terminalThemeId}
-            onThemeChange={setTerminalThemeId}
-            onClose={() => closePanel("themeSelector")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("taskRunner") && selectedWorktreePath && (
-        <PanelBoundary name="TaskRunner">
-          <TaskRunner
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("taskRunner")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("appThemePicker") && (
-        <PanelBoundary name="AppThemePicker">
-          <AppThemePicker
-            currentThemeId={appThemeId}
-            onThemeChange={setAppThemeId}
-            onClose={() => closePanel("appThemePicker")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("themeEditor") && (
-        <PanelBoundary name="ThemeEditor">
-          <ThemeEditor
-            currentThemeId={appThemeId}
-            onClose={() => closePanel("themeEditor")}
-            onThemeSave={(theme: AppTheme) => {
-              applyTheme(theme);
-              setAppThemeId(theme.id);
-            }}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("densityPicker") && (
-        <PanelBoundary name="DensityPicker">
-          <DensityPicker
-            currentMode={densityMode}
-            onModeChange={setDensityMode}
-            onClose={() => closePanel("densityPicker")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("shortcuts") && (
-        <PanelBoundary name="KeyboardShortcuts">
-          <KeyboardShortcuts onClose={() => closePanel("shortcuts")} />
-        </PanelBoundary>
-      )}
-      {panels.has("cssEditor") && (
-        <PanelBoundary name="CustomCSSEditor">
-          <CustomCSSEditor onClose={() => closePanel("cssEditor")} />
-        </PanelBoundary>
-      )}
-      {panels.has("stashManager") && selectedWorktreeId !== null && (
-        <PanelBoundary name="StashManager">
-          <StashManager
-            worktreeId={selectedWorktreeId}
-            onClose={() => closePanel("stashManager")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("checkpointManager") && selectedWorktreeId !== null && (
-        <PanelBoundary name="CheckpointPanel">
-          <CheckpointPanel
-            worktreeId={selectedWorktreeId}
-            onClose={() => closePanel("checkpointManager")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("multiAgentPipeline") && selectedWorktreeId !== null && (
-        <PanelBoundary name="MultiAgentPipeline">
-          <MultiAgentPipelinePanel
-            worktreeId={selectedWorktreeId}
-            onClose={() => closePanel("multiAgentPipeline")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("blameView") && selectedWorktreeId !== null && (
-        <PanelBoundary name="BlameView">
-          <BlameView
-            worktreeId={selectedWorktreeId}
-            filePath={blameFilePath}
-            onClose={() => closePanel("blameView")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("branchCompare") && selectedWorktreeId !== null && (
-        <PanelBoundary name="BranchCompare">
-          <BranchCompare
-            worktreeId={selectedWorktreeId}
-            onClose={() => closePanel("branchCompare")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("gitHooks") && selectedWorktreeId !== null && (
-        <PanelBoundary name="GitHooksManager">
-          <GitHooksManager
-            worktreeId={selectedWorktreeId}
-            onClose={() => closePanel("gitHooks")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("conflictResolver") && selectedWorktreeId !== null && (
-        <PanelBoundary name="ConflictResolver">
-          <ConflictResolver
-            worktreeId={selectedWorktreeId}
-            onClose={() => closePanel("conflictResolver")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("securityAudit") && selectedWorktreePath && (
-        <PanelBoundary name="SecurityAudit">
-          <SecurityAudit
-            cwd={selectedWorktreePath}
-            onClose={() => {
-              closePanel("securityAudit");
-              setContentTab("terminal");
-            }}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("secretScanner") && selectedWorktreePath && (
-        <PanelBoundary name="SecretScanner">
-          <SecretScanner
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("secretScanner")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("licenseReport") && selectedWorktreePath && (
-        <PanelBoundary name="LicenseReport">
-          <LicenseReport
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("licenseReport")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("securityHeaders") && (
-        <PanelBoundary name="SecurityHeaders">
-          <SecurityHeaders onClose={() => closePanel("securityHeaders")} />
-        </PanelBoundary>
-      )}
-      {panels.has("testRunnerPanel") && selectedWorktreePath && (
-        <PanelBoundary name="TestRunner">
-          <TestRunnerPanel
-            cwd={selectedWorktreePath}
-            onClose={() => {
-              closePanel("testRunnerPanel");
-              setContentTab("terminal");
-            }}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("coverageReport") && selectedWorktreePath && (
-        <PanelBoundary name="CoverageReport">
-          <CoverageReport
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("coverageReport")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("benchmark") && selectedWorktreePath && (
-        <PanelBoundary name="Benchmark">
-          <BenchmarkDashboard
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("benchmark")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("docker") && selectedWorktreePath && (
-        <PanelBoundary name="Docker">
-          <DockerPanel
-            cwd={selectedWorktreePath}
-            onClose={() => {
-              closePanel("docker");
-              setContentTab("terminal");
-            }}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("dockerImages") && (
-        <PanelBoundary name="DockerImages">
-          <DockerImages onClose={() => closePanel("dockerImages")} />
-        </PanelBoundary>
-      )}
-      {panels.has("containerMonitor") && (
-        <PanelBoundary name="ContainerMonitor">
-          <ContainerMonitor onClose={() => closePanel("containerMonitor")} />
-        </PanelBoundary>
-      )}
-      {panels.has("flakyTests") && selectedWorktreePath && (
-        <PanelBoundary name="FlakyTests">
-          <FlakyTests
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("flakyTests")}
-          />
-        </PanelBoundary>
-      )}
-      <PanelBoundary name="NotificationCenter">
-        <NotificationCenter
-          open={panels.has("notifications")}
-          onClose={() => closePanel("notifications")}
-        />
-      </PanelBoundary>
-      {panels.has("activityTimeline") && (
-        <PanelBoundary name="ActivityTimeline">
-          <ActivityTimeline onClose={() => closePanel("activityTimeline")} />
-        </PanelBoundary>
-      )}
-      {panels.has("pluginManager") && (
-        <PanelBoundary name="PluginManager">
-          <PluginManager onClose={() => closePanel("pluginManager")} />
-        </PanelBoundary>
-      )}
-      {panels.has("backupRestore") && (
-        <PanelBoundary name="BackupRestore">
-          <BackupRestore onClose={() => closePanel("backupRestore")} />
-        </PanelBoundary>
-      )}
-      {panels.has("analyticsDashboard") && selectedWorktreePath && (
-        <PanelBoundary name="AnalyticsDashboard">
-          <AnalyticsDashboard
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("analyticsDashboard")}
-          />
-        </PanelBoundary>
-      )}
-      <PanelBoundary name="AiChat">
-        <AiChatSidebar
-          open={panels.has("aiChat")}
-          onClose={() => closePanel("aiChat")}
-        />
-      </PanelBoundary>
-      <PanelBoundary name="UnifiedSearch">
-        <UnifiedSearch
-          open={panels.has("unifiedSearch")}
-          onClose={() => closePanel("unifiedSearch")}
-          onNavigate={(type: string, _data: string) => {
-            closePanel("unifiedSearch");
-            if (type === "bookmark") openPanel("bookmarks");
-            else if (type === "setting") openPanel("settingsPage");
-          }}
-        />
-      </PanelBoundary>
-      {panels.has("settingsPage") && (
-        <PanelBoundary name="SettingsPage">
-          <SettingsPage onClose={() => closePanel("settingsPage")} />
-        </PanelBoundary>
-      )}
-      {panels.has("terminalRecording") && selectedWorktreeId !== null && (
-        <PanelBoundary name="TerminalRecording">
-          <TerminalRecording
-            worktreeId={selectedWorktreeId}
-            onClose={() => closePanel("terminalRecording")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("doraMetrics") && selectedProjectId !== null && (
-        <PanelBoundary name="DoraMetrics">
-          <DoraMetrics
-            projectId={selectedProjectId}
-            onClose={() => closePanel("doraMetrics")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("webhookEvents") && (
-        <PanelBoundary name="WebhookEvents">
-          <WebhookEvents onClose={() => closePanel("webhookEvents")} />
-        </PanelBoundary>
-      )}
-      {panels.has("sshManager") && (
-        <PanelBoundary name="SshManager">
-          <SshManager
-            onClose={() => closePanel("sshManager")}
-            onConnect={() => closePanel("sshManager")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("gitAnalytics") && selectedWorktreeId !== null && (
-        <PanelBoundary name="GitAnalytics">
-          <GitAnalytics
-            worktreeId={selectedWorktreeId}
-            onClose={() => closePanel("gitAnalytics")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("snippetManager") && (
-        <PanelBoundary name="SnippetManager">
-          <SnippetManager
-            projectId={selectedProjectId}
-            onClose={() => closePanel("snippetManager")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("envDiff") && selectedProjectId !== null && (
-        <PanelBoundary name="EnvProfileDiff">
-          <EnvProfileDiff
-            projectId={selectedProjectId}
-            onClose={() => closePanel("envDiff")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("appPerformance") && (
-        <PanelBoundary name="AppPerformance">
-          <AppPerformance onClose={() => closePanel("appPerformance")} />
-        </PanelBoundary>
-      )}
-      {panels.has("fileExplorer") && selectedWorktreePath && (
-        <PanelBoundary name="FileExplorer">
-          <FileExplorer
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("fileExplorer")}
-            onFileSelect={(path: string) => {
-              closePanel("fileExplorer");
-              setBlameFilePath(path);
-              openPanel("blameView");
-            }}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("projectOverview") && selectedProjectId !== null && (
-        <PanelBoundary name="ProjectOverview">
-          <ProjectOverview
-            projectId={selectedProjectId}
-            onClose={() => closePanel("projectOverview")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("webVitals") && (
-        <PanelBoundary name="WebVitals">
-          <WebVitals onClose={() => closePanel("webVitals")} />
-        </PanelBoundary>
-      )}
-      {panels.has("pluginRuntime") && selectedWorktreePath && (
-        <PanelBoundary name="PluginRuntime">
-          <PluginRuntime
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("pluginRuntime")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("depAnalyzer") && selectedWorktreePath && (
-        <PanelBoundary name="DependencyAnalyzer">
-          <DependencyAnalyzer
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("depAnalyzer")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("portScanner") && (
-        <PanelBoundary name="PortScanner">
-          <PortScanner onClose={() => closePanel("portScanner")} />
-        </PanelBoundary>
-      )}
-      {panels.has("dirStats") && selectedWorktreePath && (
-        <PanelBoundary name="DirectoryStats">
-          <DirectoryStats
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("dirStats")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("tagManager") && selectedWorktreeId !== null && (
-        <PanelBoundary name="TagManager">
-          <TagManager
-            worktreeId={selectedWorktreeId}
-            onClose={() => closePanel("tagManager")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("gitLog") && selectedWorktreeId !== null && (
-        <PanelBoundary name="GitLogViewer">
-          <GitLogViewer
-            worktreeId={selectedWorktreeId}
-            onClose={() => closePanel("gitLog")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("workspaceManager") && (
-        <PanelBoundary name="WorkspaceManager">
-          <WorkspaceManager
-            onClose={() => closePanel("workspaceManager")}
-            onLoad={() => closePanel("workspaceManager")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("taskScheduler") && (
-        <PanelBoundary name="TaskScheduler">
-          <TaskScheduler onClose={() => closePanel("taskScheduler")} />
-        </PanelBoundary>
-      )}
-      {panels.has("clipboardHistory") && (
-        <PanelBoundary name="ClipboardHistory">
-          <ClipboardHistory onClose={() => closePanel("clipboardHistory")} />
-        </PanelBoundary>
-      )}
-      {panels.has("todoPanel") && (
-        <PanelBoundary name="TodoPanel">
-          <TodoPanel
-            projectId={selectedProjectId}
-            onClose={() => closePanel("todoPanel")}
-          />
-        </PanelBoundary>
-      )}
-      {panels.has("morningBriefing") && selectedProjectId && (
-        <PanelBoundary name="MorningBriefing">
-          <FocusTrapOverlay onClick={() => closePanel("morningBriefing")}>
-            <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
-              <div className="panel-dialog-header">
-                <span>Morning Briefing</span>
-                <button
-                  className="panel-dialog-close"
-                  onClick={() => closePanel("morningBriefing")}
-                >
-                  &times;
-                </button>
-              </div>
-              <MorningBriefing projectId={selectedProjectId} />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("onboarding") && (
-        <PanelBoundary name="Onboarding">
-          <FocusTrapOverlay onClick={() => closePanel("onboarding")}>
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <OnboardingWizard
-                onComplete={() => {
-                  localStorage.setItem("workroot:onboarded", "true");
-                  closePanel("onboarding");
-                }}
-                onClose={() => closePanel("onboarding")}
-              />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("networkTab") && (
-        <PanelBoundary name="NetworkTab">
-          <FocusTrapOverlay onClick={() => closePanel("networkTab")}>
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="panel-dialog-header">
-                <span>Network Traffic</span>
-                <button
-                  className="panel-dialog-close"
-                  onClick={() => closePanel("networkTab")}
-                >
-                  &times;
-                </button>
-              </div>
-              <NetworkTab />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("prStatus") && selectedWorktreeId && (
-        <PanelBoundary name="PRStatus">
-          <FocusTrapOverlay onClick={() => closePanel("prStatus")}>
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="panel-dialog-header">
-                <span>PR Status</span>
-                <button
-                  className="panel-dialog-close"
-                  onClick={() => closePanel("prStatus")}
-                >
-                  &times;
-                </button>
-              </div>
-              <PRStatusPanel worktreeId={selectedWorktreeId} />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("gitDiff") && selectedWorktreeId && (
-        <PanelBoundary name="GitDiff">
-          <FocusTrapOverlay
-            onClick={() => {
-              closePanel("gitDiff");
-              setContentTab("terminal");
-            }}
-          >
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="panel-dialog-header">
-                <span>Git Changes</span>
-                <button
-                  className="panel-dialog-close"
-                  onClick={() => {
-                    closePanel("gitDiff");
-                    setContentTab("terminal");
-                  }}
-                >
-                  &times;
-                </button>
-              </div>
-              <GitDiffView
-                worktreeId={selectedWorktreeId}
-                onCreatePR={() => {
-                  closePanel("gitDiff");
-                  openPanel("createPr");
-                  setContentTab("pr");
-                }}
-              />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("createPr") && selectedWorktreeId && selectedWorktreeName && (
-        <PanelBoundary name="CreatePR">
-          <FocusTrapOverlay
-            onClick={() => {
-              closePanel("createPr");
-              setContentTab("terminal");
-            }}
-          >
-            <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
-              <CreatePRPanel
-                worktreeId={selectedWorktreeId}
-                branch={selectedWorktreeName}
-                onClose={() => {
-                  closePanel("createPr");
-                  setContentTab("terminal");
-                }}
-              />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("memoryTab") && selectedWorktreeId && (
-        <PanelBoundary name="MemoryTab">
-          <FocusTrapOverlay onClick={() => closePanel("memoryTab")}>
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="panel-dialog-header">
-                <span>Memory Notes</span>
-                <button
-                  className="panel-dialog-close"
-                  onClick={() => closePanel("memoryTab")}
-                >
-                  &times;
-                </button>
-              </div>
-              <MemoryTab worktreeId={selectedWorktreeId} />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("shellHistory") && selectedProjectId && (
-        <PanelBoundary name="ShellHistory">
-          <FocusTrapOverlay onClick={() => closePanel("shellHistory")}>
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="panel-dialog-header">
-                <span>Shell History</span>
-                <button
-                  className="panel-dialog-close"
-                  onClick={() => closePanel("shellHistory")}
-                >
-                  &times;
-                </button>
-              </div>
-              <ShellHistoryTab
-                projectId={selectedProjectId}
-                branch={selectedWorktreeName ?? ""}
-              />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("deadEnds") && selectedWorktreeId && (
-        <PanelBoundary name="DeadEnds">
-          <FocusTrapOverlay onClick={() => closePanel("deadEnds")}>
-            <div className="panel-dialog" onClick={(e) => e.stopPropagation()}>
-              <div className="panel-dialog-header">
-                <span>Dead Ends Log</span>
-                <button
-                  className="panel-dialog-close"
-                  onClick={() => closePanel("deadEnds")}
-                >
-                  &times;
-                </button>
-              </div>
-              <DeadEndsLog worktreeId={selectedWorktreeId} />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("dbSchema") && selectedWorktreeId && (
-        <PanelBoundary name="DbSchema">
-          <FocusTrapOverlay onClick={() => closePanel("dbSchema")}>
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="panel-dialog-header">
-                <span>Database Schema</span>
-                <button
-                  className="panel-dialog-close"
-                  onClick={() => closePanel("dbSchema")}
-                >
-                  &times;
-                </button>
-              </div>
-              <DbSchemaTab worktreeId={selectedWorktreeId} />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("browserEvents") && selectedWorktreeId && (
-        <PanelBoundary name="BrowserEvents">
-          <FocusTrapOverlay onClick={() => closePanel("browserEvents")}>
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <BrowserEvents
-                worktreeId={selectedWorktreeId}
-                onClose={() => closePanel("browserEvents")}
-              />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("dbExplorer") && selectedWorktreeId && (
-        <PanelBoundary name="DatabaseExplorer">
-          <FocusTrapOverlay onClick={() => closePanel("dbExplorer")}>
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DatabaseExplorer
-                worktreeId={selectedWorktreeId}
-                onClose={() => closePanel("dbExplorer")}
-              />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      <PanelBoundary name="QuickSwitcher">
-        <QuickSwitcher
-          open={panels.has("quickSwitcher")}
-          onClose={() => closePanel("quickSwitcher")}
-          selectedProjectId={selectedProjectId}
-          onSwitchProject={(id: number) => {
-            setSelectedProjectId(id);
-            closePanel("quickSwitcher");
-          }}
-          onSwitchBranch={() => {
-            closePanel("quickSwitcher");
-          }}
-          onOpenFile={(path: string) => {
-            setBlameFilePath(path);
-            openPanel("blameView");
-            closePanel("quickSwitcher");
-          }}
-        />
-      </PanelBoundary>
-      <PanelBoundary name="ErrorDiagnosis">
-        <ErrorDiagnosis
-          open={panels.has("errorDiagnosis")}
-          onClose={() => closePanel("errorDiagnosis")}
-        />
-      </PanelBoundary>
+      <PanelHost
+        panels={panels}
+        openPanel={openPanel}
+        closePanel={closePanel}
+        selectedProjectId={selectedProjectId}
+        selectedWorktreeId={selectedWorktreeId}
+        selectedWorktreePath={selectedWorktreePath}
+        selectedWorktreeName={selectedWorktreeName}
+        blameFilePath={blameFilePath}
+        setBlameFilePath={setBlameFilePath}
+        appThemeId={appThemeId}
+        setAppThemeId={setAppThemeId}
+        onApplyAppTheme={applyAppTheme}
+        terminalThemeId={terminalThemeId}
+        setTerminalThemeId={setTerminalThemeId}
+        densityMode={densityMode}
+        onApplyDensityMode={applyDensityMode}
+        execute={execute}
+        search={search}
+        contentTab={contentTab}
+        setContentTab={setContentTab}
+        onClosePalette={handleClosePalette}
+        onCloseBookmarks={handleCloseBookmarks}
+        onSwitchProject={setSelectedProjectId}
+      />
       <PanelBoundary name="QuickActions">
         <QuickActions
           worktreeId={selectedWorktreeId}
