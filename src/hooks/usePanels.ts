@@ -72,7 +72,8 @@ export type PanelKey =
   | "browserEvents"
   | "dbExplorer"
   | "checkpointManager"
-  | "multiAgentPipeline";
+  | "multiAgentPipeline"
+  | "modelComparison";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 

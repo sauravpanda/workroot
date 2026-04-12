@@ -358,6 +358,7 @@ pub fn run() {
             agents::pipeline::list_pipeline_runs,
             agents::pipeline::get_pipeline_run,
             agents::pipeline::run_pipeline,
+            agents::pipeline::run_agent_task,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

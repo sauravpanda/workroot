@@ -484,3 +484,58 @@ pub async fn run_pipeline(
 
     get_pipeline_run(db, run_id)
 }
+
+// ─── Single-agent task run (used by model comparison) ────────────────────────
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AgentTaskResult {
+    pub command: String,
+    pub label: String,
+    pub stdout: String,
+    pub stderr: String,
+    pub exit_code: i32,
+}
+
+/// Run a single CLI command with a task description and return its output.
+/// The command receives the task via the TASK environment variable.
+#[tauri::command]
+pub async fn run_agent_task(
+    db: State<'_, AppDb>,
+    worktree_id: i64,
+    command: String,
+    label: String,
+    task_desc: String,
+) -> Result<AgentTaskResult, String> {
+    let worktree_path: String = {
+        let conn = db.0.lock().map_err(|e| format!("DB lock: {e}"))?;
+        conn.query_row(
+            "SELECT path FROM worktrees WHERE id = ?1",
+            params![worktree_id],
+            |row| row.get(0),
+        )
+        .map_err(|e| format!("Worktree not found: {e}"))?
+    };
+
+    let parts = split_command(&command);
+    if parts.is_empty() {
+        return Err("Command must not be empty".into());
+    }
+
+    let output = tokio::process::Command::new(&parts[0])
+        .args(&parts[1..])
+        .current_dir(&worktree_path)
+        .env("TASK", &task_desc)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .await
+        .map_err(|e| format!("Failed to run command: {e}"))?;
+
+    Ok(AgentTaskResult {
+        command,
+        label,
+        stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
+        stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
+        exit_code: output.status.code().unwrap_or(-1),
+    })
+}
