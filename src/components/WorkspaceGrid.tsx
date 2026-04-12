@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useUiStore } from "../stores/uiStore";
 import "../styles/workspace-grid.css";
@@ -39,6 +39,19 @@ function formatPath(path: string): string {
   return path.replace(/^\/Users\/[^/]+/, "~");
 }
 
+/** Convert a free-text task description into a valid git branch name. */
+function slugifyTask(task: string): string {
+  const slug = task
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 50)
+    .replace(/-$/, "");
+  return slug ? `task/${slug}` : "task/new";
+}
+
 export function WorkspaceGrid({
   projects,
   worktrees,
@@ -49,6 +62,13 @@ export function WorkspaceGrid({
     useUiStore();
 
   const [filterTab, setFilterTab] = useState<FilterTab>("all");
+
+  // Command bar state
+  const [cmdTask, setCmdTask] = useState("");
+  const [cmdProjectId, setCmdProjectId] = useState<number | null>(null);
+  const [spawning, setSpawning] = useState(false);
+  const [spawnError, setSpawnError] = useState<string | null>(null);
+  const cmdInputRef = useRef<HTMLInputElement>(null);
 
   // Fallback in case props are empty — load projects + worktrees ourselves.
   const [fallbackProjects, setFallbackProjects] = useState<ProjectInfo[]>([]);
@@ -92,6 +112,10 @@ export function WorkspaceGrid({
   const activeProjects = projects.length > 0 ? projects : fallbackProjects;
   const activeWorktrees =
     worktrees.length > 0 || projects.length > 0 ? worktrees : fallbackWorktrees;
+
+  // Resolve command bar project: explicit selection, or first available project
+  const cmdProject =
+    activeProjects.find((p) => p.id === cmdProjectId) ?? activeProjects[0];
 
   const statusFor = useCallback(
     (wt: WorktreeInfo): CardStatus => {
@@ -160,6 +184,28 @@ export function WorkspaceGrid({
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [sortedWorktrees, onSelectWorktree]);
+
+  // Create a new worktree from the command bar task description
+  const handleSpawn = useCallback(async () => {
+    const task = cmdTask.trim();
+    if (!task || !cmdProject || spawning) return;
+    setSpawning(true);
+    setSpawnError(null);
+    try {
+      const branchName = slugifyTask(task);
+      const wt = await invoke<WorktreeInfo>("create_worktree", {
+        projectId: cmdProject.id,
+        branchName,
+        createNewBranch: true,
+      });
+      setCmdTask("");
+      onSelectWorktree(wt);
+    } catch (err) {
+      setSpawnError(String(err));
+    } finally {
+      setSpawning(false);
+    }
+  }, [cmdTask, cmdProject, spawning, onSelectWorktree]);
 
   const totalWorktrees = activeWorktrees.length;
   const attentionCount = activeWorktrees.filter(
@@ -346,6 +392,55 @@ export function WorkspaceGrid({
             </div>
           </div>
         ))}
+
+        {/* ── Phase 4: Command Bar ───────────────────────────────────── */}
+        {activeProjects.length > 0 && (
+          <div className="workspace-cmd-bar">
+            <span className="workspace-cmd-icon" aria-hidden>
+              &#9889;
+            </span>
+            <input
+              ref={cmdInputRef}
+              className="workspace-cmd-input"
+              type="text"
+              placeholder="Describe a task to start a new worktree&#8230;"
+              value={cmdTask}
+              onChange={(e) => {
+                setCmdTask(e.target.value);
+                setSpawnError(null);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && handleSpawn()}
+              disabled={spawning}
+              aria-label="Task description"
+            />
+            {activeProjects.length > 1 && (
+              <select
+                className="workspace-cmd-project"
+                value={cmdProject?.id ?? ""}
+                onChange={(e) => setCmdProjectId(Number(e.target.value))}
+                disabled={spawning}
+                aria-label="Project"
+              >
+                {activeProjects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              type="button"
+              className="workspace-cmd-run"
+              onClick={handleSpawn}
+              disabled={!cmdTask.trim() || spawning || !cmdProject}
+            >
+              {spawning ? "Creating\u2026" : "Run"}
+            </button>
+            {spawnError && (
+              <div className="workspace-cmd-error">{spawnError}</div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
