@@ -265,6 +265,87 @@
 /* ---- Empty button (now uses shadcn Button) ---- */
 
 /* ==========================================================
+   Agent Status Strip
+   ========================================================== */
+
+@keyframes pulse-attention {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}
+
+.sidebar-agent-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em;
+  padding: 0.5em 0.75em;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.sidebar-agent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.22em 0.6em;
+  border-radius: var(--radius);
+  font-size: 0.72em;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.sidebar-agent-badge--attention {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning, #f59e0b);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.sidebar-agent-badge--attention:hover {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.sidebar-agent-badge--done {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success, #10b981);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.sidebar-agent-badge--done:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.sidebar-agent-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sidebar-agent-dot--attention {
+  background: var(--warning, #f59e0b);
+  animation: pulse-attention 1.4s ease-in-out infinite;
+}
+
+.sidebar-agent-dot--done {
+  background: var(--success, #10b981);
+}
+
+/* ==========================================================
    Sidebar Toolbar (bottom)
    ========================================================== */
 
