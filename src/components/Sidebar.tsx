@@ -44,6 +44,8 @@ export function Sidebar({
     setSelectedWorktreeId,
     setSelectedWorktreePath,
     setSelectedWorktreeName,
+    agentNeedsAttentionIds,
+    agentDoneWorktreeIds,
   } = useUiStore();
 
   const handleAddProject = useCallback(async () => {
@@ -219,6 +221,36 @@ export function Sidebar({
           )}
         </div>
       </ScrollArea>
+
+      {/* Agent status strip — always visible when any agent has state */}
+      {(agentNeedsAttentionIds.size > 0 || agentDoneWorktreeIds.size > 0) && (
+        <div className="sidebar-agent-status">
+          {agentNeedsAttentionIds.size > 0 && (
+            <button
+              className="sidebar-agent-badge sidebar-agent-badge--attention"
+              onClick={handleGoHome}
+              title="Go to Mission Control — agents need your input"
+            >
+              <span className="sidebar-agent-dot sidebar-agent-dot--attention" />
+              {agentNeedsAttentionIds.size === 1
+                ? "1 needs you"
+                : `${agentNeedsAttentionIds.size} need you`}
+            </button>
+          )}
+          {agentDoneWorktreeIds.size > 0 && (
+            <button
+              className="sidebar-agent-badge sidebar-agent-badge--done"
+              onClick={handleGoHome}
+              title="Go to Mission Control — agents finished"
+            >
+              <span className="sidebar-agent-dot sidebar-agent-dot--done" />
+              {agentDoneWorktreeIds.size === 1
+                ? "1 done"
+                : `${agentDoneWorktreeIds.size} done`}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Bottom toolbar */}
       <div className="sidebar-toolbar">
