@@ -249,3 +249,51 @@
   height: 200px;
   color: var(--text-muted, #888);
 }
+
+/* ── Merge action ─────────────────────────────────────────── */
+
+.pr-status-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  flex-wrap: wrap;
+}
+
+.pr-status-merge-btn {
+  padding: 0.38em 1em;
+  background: var(--accent, #10b981);
+  color: var(--bg-base, #0a0f0a);
+  border: none;
+  border-radius: var(--radius, 4px);
+  font: inherit;
+  font-size: 0.82em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.pr-status-merge-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.pr-status-merge-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.pr-status-merge-error {
+  font-size: 0.78em;
+  color: var(--error, #ef4444);
+  padding: 0.4em 0.6em;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius, 4px);
+  margin-top: 0.5em;
+}
+
+.pr-status-merged-msg {
+  color: var(--success, #10b981);
+  font-weight: 600;
+  font-size: 0.9em;
+}

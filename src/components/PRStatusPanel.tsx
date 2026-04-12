@@ -82,6 +82,9 @@ export function PRStatusPanel({ worktreeId }: PRStatusPanelProps) {
   const [status, setStatus] = useState<PrStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [merging, setMerging] = useState(false);
+  const [mergeError, setMergeError] = useState<string | null>(null);
+  const [merged, setMerged] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   const loadStatus = useCallback(async () => {
@@ -97,6 +100,25 @@ export function PRStatusPanel({ worktreeId }: PRStatusPanelProps) {
       setLoading(false);
     }
   }, [worktreeId]);
+
+  const handleMerge = useCallback(async () => {
+    if (!status) return;
+    setMerging(true);
+    setMergeError(null);
+    try {
+      await invoke("merge_pull_request", {
+        worktreeId,
+        prNumber: status.number,
+        mergeMethod: "squash",
+      });
+      setMerged(true);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    } catch (err) {
+      setMergeError(String(err));
+    } finally {
+      setMerging(false);
+    }
+  }, [worktreeId, status]);
 
   useEffect(() => {
     loadStatus();
@@ -125,6 +147,16 @@ export function PRStatusPanel({ worktreeId }: PRStatusPanelProps) {
         <p>No open PR for this branch</p>
         <p className="pr-status-empty-hint">
           Create a pull request to see status here
+        </p>
+      </div>
+    );
+  }
+
+  if (merged) {
+    return (
+      <div className="pr-status-empty">
+        <p className="pr-status-merged-msg">
+          &#x2713; PR #{status.number} merged
         </p>
       </div>
     );
@@ -232,14 +264,35 @@ export function PRStatusPanel({ worktreeId }: PRStatusPanelProps) {
           </div>
         )}
 
-        <a
-          className="pr-status-link"
-          href={status.html_url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          View on GitHub
-        </a>
+        <div className="pr-status-actions">
+          <button
+            className="pr-status-merge-btn"
+            onClick={handleMerge}
+            disabled={
+              merging || status.draft || status.mergeable_state !== "clean"
+            }
+            title={
+              status.draft
+                ? "Cannot merge a draft PR"
+                : status.mergeable_state !== "clean"
+                  ? `Not mergeable (${status.mergeable_state ?? "unknown"})`
+                  : "Squash and merge"
+            }
+          >
+            {merging ? "Merging\u2026" : "Squash \u0026 Merge"}
+          </button>
+          <a
+            className="pr-status-link"
+            href={status.html_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View on GitHub
+          </a>
+        </div>
+        {mergeError && (
+          <div className="pr-status-merge-error">{mergeError}</div>
+        )}
       </div>
     </div>
   );

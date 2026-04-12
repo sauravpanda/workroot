@@ -214,6 +214,67 @@ pub fn get_pr_template(db: State<'_, AppDb>, worktree_id: i64) -> Result<Option<
     Ok(None)
 }
 
+/// Merge an open pull request via the GitHub API.
+///
+/// `merge_method` must be one of: "merge", "squash", or "rebase".
+#[tauri::command]
+pub async fn merge_pull_request(
+    db: State<'_, AppDb>,
+    worktree_id: i64,
+    pr_number: i64,
+    merge_method: String,
+) -> Result<(), String> {
+    let (owner, repo_name) = {
+        let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
+        let worktree = queries::get_worktree(&conn, worktree_id)
+            .map_err(|e| format!("DB: {}", e))?
+            .ok_or("Worktree not found")?;
+        let repo = Repository::open(&worktree.path).map_err(|e| format!("Git: {}", e))?;
+        get_remote_info(&repo)?
+    };
+
+    let token = auth::get_token()?.ok_or("Not authenticated. Please sign in with GitHub first.")?;
+
+    let client = super::api_client()?;
+
+    let url = format!(
+        "https://api.github.com/repos/{}/{}/pulls/{}/merge",
+        owner, repo_name, pr_number
+    );
+
+    let resp = client
+        .put(&url)
+        .header("Authorization", format!("Bearer {}", token))
+        .header("User-Agent", "Workroot")
+        .header("Accept", "application/vnd.github+json")
+        .json(&serde_json::json!({ "merge_method": merge_method }))
+        .send()
+        .await
+        .map_err(|e| format!("Request failed: {}", e))?;
+
+    if resp.status().is_success() {
+        return Ok(());
+    }
+
+    let status = resp.status();
+    let body = resp.text().await.unwrap_or_default();
+
+    // 405 = not mergeable; 409 = head SHA mismatch
+    if status.as_u16() == 405 {
+        return Err(
+            "PR is not mergeable. Check that all required checks pass and there are no conflicts."
+                .to_string(),
+        );
+    }
+    if status.as_u16() == 409 {
+        return Err(
+            "Merge conflict: the head branch is out of date. Rebase and try again.".to_string(),
+        );
+    }
+
+    Err(format!("GitHub API error ({}): {}", status, body))
+}
+
 /// Get the default branch (main or master) for the repo.
 #[tauri::command]
 pub fn get_default_branch(db: State<'_, AppDb>, worktree_id: i64) -> Result<String, String> {
