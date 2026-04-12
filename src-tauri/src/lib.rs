@@ -203,6 +203,7 @@ pub fn run() {
             github::pr::get_pr_for_branch,
             github::pr::get_pr_template,
             github::pr::get_default_branch,
+            github::pr::merge_pull_request,
             github::ci::get_pr_status,
             github::activity::list_repo_pulls,
             github::activity::list_repo_issues,
