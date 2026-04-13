@@ -97,9 +97,7 @@ export function TerminalPreview({ cwd, shell, themeId }: TerminalPreviewProps) {
         });
       } catch (err) {
         if (!cancelled && termRef.current) {
-          term.write(
-            `\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`,
-          );
+          term.write(`\r\n\x1b[31mFailed to spawn shell: ${err}\x1b[0m\r\n`);
         }
       }
     }, 100);
