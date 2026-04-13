@@ -141,6 +141,8 @@ function AppContent({
     lastWorktreeNameRef.current = selectedWorktreeName;
   }
 
+  const terminalSnapshotMapRef = useRef(new Map<string, string>());
+
   const openPanelRef = useRef(openPanel);
   openPanelRef.current = openPanel;
 
@@ -995,6 +997,7 @@ function AppContent({
             }}
             shell={terminalShell}
             themeId={terminalThemeId}
+            snapshotMap={terminalSnapshotMapRef}
           />
         </PanelBoundary>
       ) : null}
@@ -1031,6 +1034,7 @@ function AppContent({
               themeId={terminalThemeId}
               onAgentComplete={handleAgentComplete}
               onAgentNeedsAttention={handleAgentNeedsAttention}
+              snapshotRef={terminalSnapshotMapRef}
             />
           </PanelBoundary>
         </div>

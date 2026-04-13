@@ -27,6 +27,8 @@ interface TerminalTab {
   paneTree: PaneNode;
 }
 
+export type TerminalSnapshotMap = Map<string, string>;
+
 interface TerminalPanelProps {
   cwd: string;
   worktreeName: string;
@@ -35,6 +37,7 @@ interface TerminalPanelProps {
   themeId?: string;
   onAgentComplete?: () => void;
   onAgentNeedsAttention?: () => void;
+  snapshotRef?: React.MutableRefObject<TerminalSnapshotMap>;
 }
 
 let paneCounter = 0;
@@ -80,6 +83,7 @@ export function TerminalPanel({
   themeId,
   onAgentComplete,
   onAgentNeedsAttention,
+  snapshotRef,
 }: TerminalPanelProps) {
   // All per-worktree tab states, keyed by cwd path.
   const [pathStates, setPathStates] = useState<Record<string, PathTabState>>(
@@ -422,6 +426,7 @@ export function TerminalPanel({
                       onAgentNeedsAttention={
                         isActivePathAndTab ? onAgentNeedsAttention : undefined
                       }
+                      snapshotRef={snapshotRef}
                     />,
                     container,
                     paneId,
@@ -445,6 +450,7 @@ interface TerminalInstanceProps {
   themeId?: string;
   onAgentComplete?: () => void;
   onAgentNeedsAttention?: () => void;
+  snapshotRef?: React.MutableRefObject<TerminalSnapshotMap>;
 }
 
 // Image MIME types accepted for drag-and-drop into the terminal.
@@ -497,6 +503,9 @@ const ACTIVITY_THRESHOLD_BYTES = 500;
 // How long the terminal must be idle (ms) after activity before we fire onAgentComplete.
 const IDLE_TIMEOUT_MS = 4000;
 
+const SNAPSHOT_LINES = 24;
+const SNAPSHOT_DEBOUNCE_MS = 2000;
+
 function TerminalInstance({
   cwd,
   active,
@@ -506,6 +515,7 @@ function TerminalInstance({
   themeId,
   onAgentComplete,
   onAgentNeedsAttention,
+  snapshotRef,
 }: TerminalInstanceProps) {
   const initialThemeIdRef = useRef(themeId || DEFAULT_THEME_ID);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -518,6 +528,25 @@ function TerminalInstance({
   onAgentCompleteRef.current = onAgentComplete;
   const onAgentNeedsAttentionRef = useRef(onAgentNeedsAttention);
   onAgentNeedsAttentionRef.current = onAgentNeedsAttention;
+  const snapshotTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const snapshotMapRef = useRef(snapshotRef);
+  snapshotMapRef.current = snapshotRef;
+
+  // Capture last N lines from xterm buffer into the shared snapshot map.
+  const updateSnapshot = useCallback(() => {
+    const term = termRef.current;
+    const map = snapshotMapRef.current?.current;
+    if (!term || !map) return;
+    const buf = term.buffer.active;
+    const lines: string[] = [];
+    const start = Math.max(0, buf.length - SNAPSHOT_LINES);
+    for (let i = start; i < buf.length; i++) {
+      const line = buf.getLine(i);
+      if (line) lines.push(line.translateToString(true));
+    }
+    map.set(cwd, lines.join("\n"));
+  }, [cwd]);
+
   // Keep shell/initCommand in refs so the main useEffect only depends on
   // `cwd`.  Otherwise the terminal is destroyed and recreated when the async
   // settings load resolves (shell goes from default "/bin/zsh" → saved value),
@@ -731,6 +760,13 @@ function TerminalInstance({
               activityBytesRef.current = 0;
             }, IDLE_TIMEOUT_MS);
           }
+
+          // Debounced snapshot update for grid preview tiles
+          if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
+          snapshotTimerRef.current = setTimeout(
+            updateSnapshot,
+            SNAPSHOT_DEBOUNCE_MS,
+          );
         });
 
         pty.onExit(() => {
@@ -782,6 +818,10 @@ function TerminalInstance({
         clearTimeout(idleTimerRef.current);
         idleTimerRef.current = null;
       }
+      if (snapshotTimerRef.current) {
+        clearTimeout(snapshotTimerRef.current);
+        snapshotTimerRef.current = null;
+      }
       activityBytesRef.current = 0;
       window.removeEventListener("keydown", preventBrowserNav, true);
       try {
@@ -794,7 +834,7 @@ function TerminalInstance({
       ptyRef.current = null;
       fitAddonRef.current = null;
     };
-  }, [cwd]);
+  }, [cwd, updateSnapshot]);
 
   // Only the currently visible terminal should react to native file drops.
   useEffect(() => {

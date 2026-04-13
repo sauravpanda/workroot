@@ -474,3 +474,21 @@
 .map-btn--export:hover:not(:disabled) {
   background: var(--color-border, #313244);
 }
+
+/* Progress indicator */
+.map-progress {
+  font-size: 12px;
+  color: var(--color-accent, #89b4fa);
+  padding: 8px 0;
+  animation: map-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes map-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

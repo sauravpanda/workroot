@@ -2,7 +2,7 @@ use crate::db::AppDb;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::process::Stdio;
-use tauri::State;
+use tauri::{AppHandle, Emitter, State};
 use tokio::io::AsyncWriteExt;
 
 #[tauri::command]
@@ -53,6 +53,15 @@ pub struct StepOutput {
     pub stdout: String,
     pub stderr: String,
     pub exit_code: i32,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct PipelineProgressEvent {
+    pub run_id: i64,
+    pub iteration: u32,
+    pub max_iterations: u32,
+    pub phase: String,
+    pub status: String,
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -316,6 +325,7 @@ pub fn get_pipeline_run(db: State<'_, AppDb>, run_id: i64) -> Result<PipelineRun
 
 #[tauri::command]
 pub async fn run_pipeline(
+    app: AppHandle,
     db: State<'_, AppDb>,
     pipeline_id: i64,
     worktree_id: i64,
@@ -395,6 +405,17 @@ pub async fn run_pipeline(
 
     for i in 0..max {
         // ── Generator ──
+        let _ = app.emit(
+            "pipeline:progress",
+            PipelineProgressEvent {
+                run_id,
+                iteration: i,
+                max_iterations: max,
+                phase: "generator".into(),
+                status: "running".into(),
+            },
+        );
+
         let gen_result = tokio::process::Command::new(&gen_parts[0])
             .args(&gen_parts[1..])
             .current_dir(&worktree_path)
@@ -422,10 +443,31 @@ pub async fn run_pipeline(
             exit_code: gen_exit,
         });
 
+        let _ = app.emit(
+            "pipeline:progress",
+            PipelineProgressEvent {
+                run_id,
+                iteration: i,
+                max_iterations: max,
+                phase: "generator".into(),
+                status: "done".into(),
+            },
+        );
+
         // ── Get diff ──
         let diff = get_git_diff(&worktree_path);
 
         // ── Reviewer ──
+        let _ = app.emit(
+            "pipeline:progress",
+            PipelineProgressEvent {
+                run_id,
+                iteration: i,
+                max_iterations: max,
+                phase: "reviewer".into(),
+                status: "running".into(),
+            },
+        );
         let stdin_payload = format!(
             "=== TASK ===\n{}\n\n=== GENERATOR OUTPUT ===\n{}\n\n=== GIT DIFF ===\n{}",
             task_desc, gen_stdout, diff
@@ -467,6 +509,21 @@ pub async fn run_pipeline(
             stderr: rev_stderr,
             exit_code: rev_exit,
         });
+
+        let _ = app.emit(
+            "pipeline:progress",
+            PipelineProgressEvent {
+                run_id,
+                iteration: i,
+                max_iterations: max,
+                phase: "reviewer".into(),
+                status: if approved {
+                    "approved".into()
+                } else {
+                    "rejected".into()
+                },
+            },
+        );
 
         if approved {
             final_status = "approved".to_string();
