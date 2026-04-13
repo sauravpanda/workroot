@@ -73,7 +73,8 @@ export type PanelKey =
   | "dbExplorer"
   | "checkpointManager"
   | "multiAgentPipeline"
-  | "modelComparison";
+  | "modelComparison"
+  | "terminalGrid";
 
 // ─── State ───────────────────────────────────────────────────────────────────
 

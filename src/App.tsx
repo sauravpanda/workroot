@@ -993,6 +993,8 @@ function AppContent({
             onNewWorktree={(projectId: number) => {
               setSelectedProjectId(projectId);
             }}
+            shell={terminalShell}
+            themeId={terminalThemeId}
           />
         </PanelBoundary>
       ) : null}
