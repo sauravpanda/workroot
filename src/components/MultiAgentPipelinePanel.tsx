@@ -1,6 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { save } from "@tauri-apps/plugin-dialog";
 import "../styles/multi-agent-pipeline.css";
+
+// ─── CLI Tool Presets ───────────────────────────────────────────────────────
+
+interface CliPreset {
+  label: string;
+  command: string;
+}
+
+const CLI_PRESETS: CliPreset[] = [
+  { label: "Claude Code", command: "claude --print" },
+  { label: "Aider", command: "aider --message" },
+  { label: "Codex", command: "codex --quiet" },
+  { label: "Custom", command: "" },
+];
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -218,6 +233,42 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
     }
   }
 
+  // ─── Export handler ───────────────────────────────────────────────────────
+
+  async function handleExportRun(run: PipelineRun) {
+    const lines: string[] = [
+      `# Pipeline Run #${run.id}`,
+      `Status: ${run.status}`,
+      `Task: ${run.task_desc}`,
+      `Iterations: ${run.iterations}`,
+      `Started: ${run.started_at}`,
+      `Finished: ${run.finished_at ?? "—"}`,
+      "",
+    ];
+    for (const step of run.output) {
+      lines.push(
+        `## Iteration ${step.iteration + 1} — ${step.role} (exit ${step.exit_code})`,
+      );
+      if (step.stdout) {
+        lines.push("### stdout", "```", step.stdout, "```", "");
+      }
+      if (step.stderr) {
+        lines.push("### stderr", "```", step.stderr, "```", "");
+      }
+    }
+    try {
+      const path = await save({
+        defaultPath: `pipeline-run-${run.id}.md`,
+        filters: [{ name: "Markdown", extensions: ["md"] }],
+      });
+      if (path) {
+        await invoke("save_text_file", { path, contents: lines.join("\n") });
+      }
+    } catch {
+      // user cancelled or error — ignore
+    }
+  }
+
   // ─── Helpers ─────────────────────────────────────────────────────────────
 
   function statusBadge(status: PipelineRun["status"]) {
@@ -265,6 +316,37 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
           {/* ── Agents tab ────────────────────────────────────────────────── */}
           {tab === "agents" && (
             <div className="map-section">
+              <div className="map-info">
+                An agent is any CLI tool that can receive a task and produce
+                output. Pick a preset below or enter a custom command. Create at
+                least one <strong>generator</strong> (writes code) and one{" "}
+                <strong>reviewer</strong> (approves or requests changes), then
+                wire them together on the Pipelines tab.
+              </div>
+
+              <h3 className="map-section-title">CLI Tool</h3>
+              <div className="map-presets">
+                {CLI_PRESETS.map((p) => (
+                  <button
+                    key={p.label}
+                    type="button"
+                    className={
+                      "map-preset" +
+                      (agentCommand === p.command && p.command
+                        ? " map-preset--active"
+                        : "")
+                    }
+                    onClick={() => {
+                      setAgentCommand(p.command);
+                      if (!agentName && p.command)
+                        setAgentName(p.label + " " + agentRole);
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
               <h3 className="map-section-title">Create Agent</h3>
               <div className="map-form">
                 <input
@@ -340,6 +422,12 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
           {/* ── Pipelines tab ─────────────────────────────────────────────── */}
           {tab === "pipelines" && (
             <div className="map-section">
+              <div className="map-info">
+                A pipeline pairs a generator with a reviewer and loops until the
+                reviewer approves or max iterations is reached. The generator
+                runs in the worktree and can edit files. The reviewer receives
+                the task, generator output, and git diff via stdin.
+              </div>
               <h3 className="map-section-title">Create Pipeline</h3>
               <div className="map-form">
                 <input
@@ -446,6 +534,11 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
           {/* ── Run tab ───────────────────────────────────────────────────── */}
           {tab === "run" && (
             <div className="map-section">
+              <div className="map-info">
+                Select a pipeline, describe the task, and hit Run. The generator
+                will execute in the current worktree. You can export any
+                run&apos;s full log to a file using the save button.
+              </div>
               <h3 className="map-section-title">Run Pipeline</h3>
               <div className="map-form">
                 <select
@@ -491,6 +584,25 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
                       {activeRun.iterations} iteration
                       {activeRun.iterations !== 1 ? "s" : ""}
                     </span>
+                    <button
+                      className="map-btn map-btn--export"
+                      onClick={() => void handleExportRun(activeRun)}
+                      title="Export run log to file"
+                    >
+                      <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M8 2v8M4 7l4 4 4-4M2 13h12" />
+                      </svg>
+                      Save
+                    </button>
                   </div>
                   <div className="map-steps">
                     {activeRun.output.map((step, idx) => (
