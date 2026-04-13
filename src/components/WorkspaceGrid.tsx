@@ -15,6 +15,11 @@ import "../styles/terminal-grid.css";
 const TerminalPreviewLazy = lazy(() =>
   import("./TerminalGrid").then((m) => ({ default: m.TerminalPreview })),
 );
+const TerminalSnapshotLazy = lazy(() =>
+  import("./TerminalGrid").then((m) => ({ default: m.TerminalSnapshot })),
+);
+
+type TerminalSnapshotMap = Map<string, string>;
 
 interface ProjectInfo {
   id: number;
@@ -38,6 +43,7 @@ interface WorkspaceGridProps {
   onNewWorktree?: (projectId: number) => void;
   shell?: string;
   themeId?: string;
+  snapshotMap?: React.MutableRefObject<TerminalSnapshotMap>;
 }
 
 type CardStatus = "current" | "attention" | "done" | "idle";
@@ -76,6 +82,7 @@ export function WorkspaceGrid({
   onNewWorktree,
   shell,
   themeId,
+  snapshotMap,
 }: WorkspaceGridProps) {
   const { selectedWorktreeId, agentNeedsAttentionIds, agentDoneWorktreeIds } =
     useUiStore();
@@ -457,11 +464,17 @@ export function WorkspaceGrid({
                     {viewMode === "terminals" && shell && (
                       <div className="workspace-card-terminal">
                         <Suspense fallback={null}>
-                          <TerminalPreviewLazy
-                            cwd={wt.path}
-                            shell={shell}
-                            themeId={themeId}
-                          />
+                          {snapshotMap?.current?.has(wt.path) ? (
+                            <TerminalSnapshotLazy
+                              text={snapshotMap.current.get(wt.path) ?? ""}
+                            />
+                          ) : (
+                            <TerminalPreviewLazy
+                              cwd={wt.path}
+                              shell={shell}
+                              themeId={themeId}
+                            />
+                          )}
                         </Suspense>
                       </div>
                     )}

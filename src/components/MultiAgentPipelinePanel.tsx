@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import type { UnlistenFn } from "@tauri-apps/api/event";
 import { save } from "@tauri-apps/plugin-dialog";
 import "../styles/multi-agent-pipeline.css";
 
@@ -7,14 +9,30 @@ import "../styles/multi-agent-pipeline.css";
 
 interface CliPreset {
   label: string;
+  role: "generator" | "reviewer";
   command: string;
 }
 
-const CLI_PRESETS: CliPreset[] = [
-  { label: "Claude Code", command: "claude --print" },
-  { label: "Aider", command: "aider --message" },
-  { label: "Codex", command: "codex --quiet" },
-  { label: "Custom", command: "" },
+const GENERATOR_PRESETS: CliPreset[] = [
+  { label: "Claude Code", role: "generator", command: "claude --print" },
+  { label: "Aider", role: "generator", command: "aider --message" },
+  { label: "Codex", role: "generator", command: "codex --quiet" },
+  { label: "Custom", role: "generator", command: "" },
+];
+
+const REVIEWER_PRESETS: CliPreset[] = [
+  {
+    label: "Claude Code",
+    role: "reviewer",
+    command:
+      'claude --print "Review the changes and respond with APPROVED or request fixes"',
+  },
+  {
+    label: "Aider",
+    role: "reviewer",
+    command: 'aider --message "Review the following changes"',
+  },
+  { label: "Custom", role: "reviewer", command: "" },
 ];
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -95,6 +113,8 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
   const [runError, setRunError] = useState("");
+  const [progress, setProgress] = useState("");
+  const unlistenRef = useRef<UnlistenFn | null>(null);
 
   // Load agents
   const loadAgents = useCallback(async () => {
@@ -140,6 +160,13 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
       setRuns([]);
     }
   }, [selectedPipelineId, loadRuns]);
+
+  // Cleanup progress listener on unmount
+  useEffect(() => {
+    return () => {
+      unlistenRef.current?.();
+    };
+  }, []);
 
   // ─── Agent handlers ──────────────────────────────────────────────────────
 
@@ -218,6 +245,30 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
     setRunning(true);
     setActiveRun(null);
     setExpandedStep(null);
+    setProgress("Starting pipeline...");
+
+    // Subscribe to progress events
+    unlistenRef.current?.();
+    unlistenRef.current = await listen<{
+      run_id: number;
+      iteration: number;
+      max_iterations: number;
+      phase: string;
+      status: string;
+    }>("pipeline:progress", (event) => {
+      const { iteration, max_iterations, phase, status } = event.payload;
+      const iter = `Iteration ${iteration + 1}/${max_iterations}`;
+      if (status === "running") {
+        setProgress(`${iter} — ${phase} running...`);
+      } else if (status === "approved") {
+        setProgress(`${iter} — reviewer approved`);
+      } else if (status === "rejected") {
+        setProgress(`${iter} — reviewer requested changes`);
+      } else {
+        setProgress(`${iter} — ${phase} ${status}`);
+      }
+    });
+
     try {
       const result = await invoke<PipelineRun>("run_pipeline", {
         pipelineId: Number(selectedPipelineId),
@@ -230,6 +281,9 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
       setRunError(String(e));
     } finally {
       setRunning(false);
+      setProgress("");
+      unlistenRef.current?.();
+      unlistenRef.current = null;
     }
   }
 
@@ -324,22 +378,51 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
                 wire them together on the Pipelines tab.
               </div>
 
-              <h3 className="map-section-title">CLI Tool</h3>
+              <h3 className="map-section-title">Generator Presets</h3>
               <div className="map-presets">
-                {CLI_PRESETS.map((p) => (
+                {GENERATOR_PRESETS.map((p) => (
                   <button
-                    key={p.label}
+                    key={p.label + p.role}
                     type="button"
                     className={
                       "map-preset" +
-                      (agentCommand === p.command && p.command
+                      (agentCommand === p.command &&
+                      agentRole === "generator" &&
+                      p.command
                         ? " map-preset--active"
                         : "")
                     }
                     onClick={() => {
                       setAgentCommand(p.command);
+                      setAgentRole("generator");
                       if (!agentName && p.command)
-                        setAgentName(p.label + " " + agentRole);
+                        setAgentName(p.label + " generator");
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+
+              <h3 className="map-section-title">Reviewer Presets</h3>
+              <div className="map-presets">
+                {REVIEWER_PRESETS.map((p) => (
+                  <button
+                    key={p.label + p.role}
+                    type="button"
+                    className={
+                      "map-preset" +
+                      (agentCommand === p.command &&
+                      agentRole === "reviewer" &&
+                      p.command
+                        ? " map-preset--active"
+                        : "")
+                    }
+                    onClick={() => {
+                      setAgentCommand(p.command);
+                      setAgentRole("reviewer");
+                      if (!agentName && p.command)
+                        setAgentName(p.label + " reviewer");
                     }}
                   >
                     {p.label}
@@ -573,6 +656,10 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
                   {running ? "Running…" : "Run"}
                 </button>
               </div>
+
+              {running && progress && (
+                <div className="map-progress">{progress}</div>
+              )}
 
               {/* Current run result */}
               {activeRun && (

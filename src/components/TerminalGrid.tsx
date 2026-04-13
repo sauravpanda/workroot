@@ -132,3 +132,15 @@ export function TerminalPreview({ cwd, shell, themeId }: TerminalPreviewProps) {
 
   return <div className="terminal-preview" ref={containerRef} />;
 }
+
+/* ------------------------------------------------------------------ */
+/*  TerminalSnapshot — static text preview from existing PTY buffer    */
+/* ------------------------------------------------------------------ */
+
+interface TerminalSnapshotProps {
+  text: string;
+}
+
+export function TerminalSnapshot({ text }: TerminalSnapshotProps) {
+  return <pre className="terminal-snapshot">{text || "\n  No output yet"}</pre>;
+}
