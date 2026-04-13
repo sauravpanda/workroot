@@ -413,3 +413,64 @@
 .map-pre--err {
   color: var(--color-red, #f38ba8);
 }
+
+/* Info banner */
+.map-info {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--color-text-muted, #6c7086);
+  background: var(--color-bg-primary, #181825);
+  border: 1px solid var(--color-border, #313244);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.map-info strong {
+  color: var(--color-text-primary, #cdd6f4);
+}
+
+/* CLI presets */
+.map-presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.map-preset {
+  background: var(--color-bg-primary, #181825);
+  border: 1px solid var(--color-border, #313244);
+  border-radius: 4px;
+  color: var(--color-text-primary, #cdd6f4);
+  font-size: 12px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.map-preset:hover {
+  border-color: var(--color-accent, #89b4fa);
+}
+
+.map-preset--active {
+  border-color: var(--color-accent, #89b4fa);
+  background: rgba(137, 180, 250, 0.1);
+  color: var(--color-accent, #89b4fa);
+}
+
+/* Export button */
+.map-btn--export {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--color-bg-hover, #313244);
+  color: var(--color-text-primary, #cdd6f4);
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+.map-btn--export:hover:not(:disabled) {
+  background: var(--color-border, #313244);
+}

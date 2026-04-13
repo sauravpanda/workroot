@@ -360,6 +360,7 @@ pub fn run() {
             agents::pipeline::get_pipeline_run,
             agents::pipeline::run_pipeline,
             agents::pipeline::run_agent_task,
+            agents::pipeline::save_text_file,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();

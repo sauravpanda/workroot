@@ -5,6 +5,13 @@ use std::process::Stdio;
 use tauri::State;
 use tokio::io::AsyncWriteExt;
 
+#[tauri::command]
+pub async fn save_text_file(path: String, contents: String) -> Result<(), String> {
+    tokio::fs::write(&path, contents)
+        .await
+        .map_err(|e| e.to_string())
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
