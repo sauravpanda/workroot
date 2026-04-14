@@ -727,6 +727,8 @@
   font-size: 0.65em;
   background: none;
   border: none;
+  outline: none;
+  -webkit-appearance: none;
   color: var(--text-muted);
   cursor: pointer;
   text-align: left;
@@ -739,6 +741,13 @@
 .show-hidden-btn:hover {
   opacity: 1;
   color: var(--text-secondary);
+}
+
+.show-hidden-btn:focus-visible {
+  opacity: 1;
+  color: var(--text-secondary);
+  outline: 1px solid var(--border);
+  border-radius: var(--radius-sm);
 }
 
 .worktree-list-hidden {
