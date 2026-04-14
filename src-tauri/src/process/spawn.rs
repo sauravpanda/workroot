@@ -1,5 +1,6 @@
 use crate::db::queries;
 use crate::db::AppDb;
+use rusqlite::params;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::Path;
@@ -49,21 +50,20 @@ pub async fn spawn_process(
             Vec::new()
         };
 
-        // Get ports in use by running processes
-        let all_worktrees = queries::list_worktrees(&conn, worktree.project_id)
+        // Get ports in use by running processes (single query instead of N+1)
+        let used: Vec<u16> = conn
+            .prepare(
+                "SELECT DISTINCT p.port FROM processes p \
+                 JOIN worktrees w ON p.worktree_id = w.id \
+                 WHERE w.project_id = ?1 AND p.status = 'running' AND p.port IS NOT NULL",
+            )
+            .and_then(|mut stmt| {
+                stmt.query_map(params![worktree.project_id], |row| {
+                    row.get::<_, i64>(0).map(|p| p as u16)
+                })
+                .and_then(|rows| rows.collect())
+            })
             .map_err(|e| format!("DB error: {}", e))?;
-        let mut used = Vec::new();
-        for wt in &all_worktrees {
-            let procs =
-                queries::list_processes(&conn, wt.id).map_err(|e| format!("DB error: {}", e))?;
-            for p in procs {
-                if p.status == "running" {
-                    if let Some(port) = p.port {
-                        used.push(port as u16);
-                    }
-                }
-            }
-        }
 
         (worktree, project, env_vars, used)
     };
