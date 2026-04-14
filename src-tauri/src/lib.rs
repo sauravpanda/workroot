@@ -71,7 +71,7 @@ impl Default for HttpClient {
     }
 }
 use tasks::watch::WatchState;
-use tauri::{Manager, State};
+use tauri::{Emitter, Manager, State};
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -391,8 +391,15 @@ pub fn run() {
             let fwd_proxy_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 eprintln!("[startup] Starting forward proxy on port 8888...");
-                network::proxy::start_forward_proxy(fwd_proxy_handle).await;
+                network::proxy::start_forward_proxy(fwd_proxy_handle.clone()).await;
                 eprintln!("[startup] Forward proxy exited unexpectedly");
+                let _ = fwd_proxy_handle.emit(
+                    "service-error",
+                    serde_json::json!({
+                        "service": "forward-proxy",
+                        "message": "Forward proxy on port 8888 exited unexpectedly"
+                    }),
+                );
             });
 
             // Start the MCP server on port 4444
@@ -404,16 +411,30 @@ pub fn run() {
                 .unwrap_or_else(|_| std::path::PathBuf::from("."));
             tauri::async_runtime::spawn(async move {
                 eprintln!("[startup] Starting MCP server on port 4444...");
-                mcp::server::start_mcp_server(mcp_handle, mcp_data_dir).await;
+                mcp::server::start_mcp_server(mcp_handle.clone(), mcp_data_dir).await;
                 eprintln!("[startup] MCP server exited unexpectedly");
+                let _ = mcp_handle.emit(
+                    "service-error",
+                    serde_json::json!({
+                        "service": "mcp-server",
+                        "message": "MCP server on port 4444 exited unexpectedly"
+                    }),
+                );
             });
 
             // Start the webhook receiver on port 9999
             let webhook_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 eprintln!("[startup] Starting webhook server on port 9999...");
-                webhooks::start_webhook_server(webhook_handle).await;
+                webhooks::start_webhook_server(webhook_handle.clone()).await;
                 eprintln!("[startup] Webhook server exited unexpectedly");
+                let _ = webhook_handle.emit(
+                    "service-error",
+                    serde_json::json!({
+                        "service": "webhook-server",
+                        "message": "Webhook server on port 9999 exited unexpectedly"
+                    }),
+                );
             });
 
             tray::setup_tray(app)?;
