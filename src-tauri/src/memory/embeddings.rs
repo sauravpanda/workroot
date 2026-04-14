@@ -84,7 +84,11 @@ pub fn to_blob(embedding: &[f32]) -> Vec<u8> {
 }
 
 /// Deserialize embedding from SQLite BLOB.
+/// Returns an empty vector if the blob length is not a multiple of 4.
 pub fn from_blob(blob: &[u8]) -> Vec<f32> {
+    if !blob.len().is_multiple_of(4) {
+        return Vec::new();
+    }
     blob.chunks_exact(4)
         .map(|chunk| f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
         .collect()
