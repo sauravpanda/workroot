@@ -106,10 +106,36 @@ pub fn create_worktree(
     }
 
     if worktree_path.exists() {
-        return Err(format!(
-            "Worktree path already exists: {}",
-            worktree_path.display()
-        ));
+        // Check if this is a stale worktree directory (exists on disk but not
+        // registered in git). If so, clean it up and continue.
+        let is_registered = repo
+            .worktrees()
+            .map(|wts| {
+                (0..wts.len()).any(|i| wts.get(i).map(|name| name == branch_name).unwrap_or(false))
+            })
+            .unwrap_or(false);
+        if is_registered {
+            return Err(format!(
+                "Worktree path already exists: {}",
+                worktree_path.display()
+            ));
+        }
+        // Stale directory — remove it so we can recreate the worktree
+        std::fs::remove_dir_all(&worktree_path).map_err(|e| {
+            format!(
+                "Failed to clean up stale worktree path '{}': {}",
+                worktree_path.display(),
+                e
+            )
+        })?;
+        // Also clean up stale git worktree metadata if it exists
+        let git_wt_meta = Path::new(&project.local_path)
+            .join(".git")
+            .join("worktrees")
+            .join(&branch_name);
+        if git_wt_meta.exists() {
+            let _ = std::fs::remove_dir_all(&git_wt_meta);
+        }
     }
 
     if create_new_branch {
