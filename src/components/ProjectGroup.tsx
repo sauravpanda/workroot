@@ -65,6 +65,13 @@ export function ProjectGroup({
     }
   }, [filter, expanded]);
 
+  // Auto-expand when this project is selected (e.g. from Mission Control).
+  useEffect(() => {
+    if (isSelected && !expanded) {
+      setExpanded(true);
+    }
+  }, [isSelected, expanded]);
+
   const q = filter.trim().toLowerCase();
   const filteredWorktrees = q
     ? worktrees.filter((wt) => wt.branch_name.toLowerCase().includes(q))
