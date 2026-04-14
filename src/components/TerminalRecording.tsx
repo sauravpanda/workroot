@@ -3,6 +3,14 @@ import { invoke } from "@tauri-apps/api/core";
 import AnsiToHtml from "ansi-to-html";
 import "../styles/terminal-recording.css";
 
+/** Strip script tags and event handlers from HTML to prevent XSS. */
+function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<\/?script\b[^>]*>/gi, "")
+    .replace(/\bon\w+\s*=\s*["'][^"']*["']/gi, "");
+}
+
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
 /* ------------------------------------------------------------------ */
@@ -70,7 +78,13 @@ export function TerminalRecording({
 
   // ANSI-to-HTML converter (memoised so we create it once)
   const ansiConverter = useMemo(
-    () => new AnsiToHtml({ fg: "#ccc", bg: "transparent", newline: true }),
+    () =>
+      new AnsiToHtml({
+        fg: "#ccc",
+        bg: "transparent",
+        newline: true,
+        escapeXML: true,
+      }),
     [],
   );
 
@@ -419,7 +433,7 @@ export function TerminalRecording({
                     <span
                       className="trec-terminal__text"
                       dangerouslySetInnerHTML={{
-                        __html: ansiConverter.toHtml(ev.data),
+                        __html: sanitizeHtml(ansiConverter.toHtml(ev.data)),
                       }}
                     />
                   </div>
