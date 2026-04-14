@@ -548,7 +548,11 @@ export function WorkspaceGrid({
                 <button
                   type="button"
                   className="workspace-card workspace-card--new"
-                  onClick={() => onNewWorktree?.(project.id)}
+                  onClick={() => {
+                    setCmdProjectId(project.id);
+                    cmdInputRef.current?.focus();
+                    onNewWorktree?.(project.id);
+                  }}
                   aria-label={`New worktree in ${project.name}`}
                 >
                   <span className="workspace-card-plus">+</span>
