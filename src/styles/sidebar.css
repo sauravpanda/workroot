@@ -510,17 +510,6 @@
   flex-shrink: 0;
 }
 
-.project-framework {
-  font-family: var(--font-mono);
-  font-size: 0.7em;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
-  padding: 1px 5px;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  letter-spacing: 0.03em;
-}
-
 .project-wt-count {
   font-size: 0.7em;
   font-weight: 700;
