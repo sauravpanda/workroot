@@ -81,12 +81,46 @@ interface Props {
   onClose: () => void;
 }
 
-type Tab = "agents" | "pipelines" | "run";
+type Tab = "agents" | "pipelines" | "run" | "quick";
+
+// ─── Pipeline Templates ────────────────────────────────────────────────────
+
+interface PipelineTemplate {
+  label: string;
+  description: string;
+  generator: { name: string; command: string };
+  reviewer: { name: string; command: string };
+  maxIterations: number;
+}
+
+const PIPELINE_TEMPLATES: PipelineTemplate[] = [
+  {
+    label: "Claude Code",
+    description: "Claude generates code, Claude reviews changes",
+    generator: { name: "Claude generator", command: "claude --print" },
+    reviewer: {
+      name: "Claude reviewer",
+      command:
+        'claude --print "Review the changes and respond with APPROVED or request fixes"',
+    },
+    maxIterations: 3,
+  },
+  {
+    label: "Aider",
+    description: "Aider generates code, Aider reviews changes",
+    generator: { name: "Aider generator", command: "aider --message" },
+    reviewer: {
+      name: "Aider reviewer",
+      command: 'aider --message "Review the following changes"',
+    },
+    maxIterations: 3,
+  },
+];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
-  const [tab, setTab] = useState<Tab>("agents");
+  const [tab, setTab] = useState<Tab>("quick");
 
   // Agents state
   const [agents, setAgents] = useState<AgentDef[]>([]);
@@ -234,6 +268,91 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
     }
   }
 
+  // ─── Template handler ─────────────────────────────────────────────────────
+
+  const [templateBusy, setTemplateBusy] = useState(false);
+  const [templateError, setTemplateError] = useState("");
+
+  async function handleApplyTemplate(tmpl: PipelineTemplate) {
+    setTemplateBusy(true);
+    setTemplateError("");
+    try {
+      await invoke("create_agent", {
+        name: tmpl.generator.name,
+        role: "generator",
+        command: tmpl.generator.command,
+      });
+      await invoke("create_agent", {
+        name: tmpl.reviewer.name,
+        role: "reviewer",
+        command: tmpl.reviewer.command,
+      });
+      await loadAgents();
+      const updatedAgents = await invoke<AgentDef[]>("list_agents");
+      const gen = updatedAgents.find(
+        (a) => a.name === tmpl.generator.name && a.role === "generator",
+      );
+      const rev = updatedAgents.find(
+        (a) => a.name === tmpl.reviewer.name && a.role === "reviewer",
+      );
+      if (gen && rev) {
+        await invoke("create_pipeline", {
+          name: `${tmpl.label} pipeline`,
+          generatorId: gen.id,
+          reviewerId: rev.id,
+          maxIterations: tmpl.maxIterations,
+        });
+        await loadPipelines();
+      }
+      setTab("run");
+    } catch (e) {
+      setTemplateError(String(e));
+    } finally {
+      setTemplateBusy(false);
+    }
+  }
+
+  // ─── Quick Run handler ──────────────────────────────────────────────────
+
+  const [quickCommand, setQuickCommand] = useState("");
+  const [quickTask, setQuickTask] = useState("");
+  const [quickRunning, setQuickRunning] = useState(false);
+  const [quickResult, setQuickResult] = useState<{
+    stdout: string;
+    stderr: string;
+    exit_code: number;
+  } | null>(null);
+  const [quickError, setQuickError] = useState("");
+
+  async function handleQuickRun() {
+    setQuickError("");
+    if (!quickCommand.trim() || !quickTask.trim()) {
+      setQuickError("Command and task are required.");
+      return;
+    }
+    setQuickRunning(true);
+    setQuickResult(null);
+    try {
+      const result = await invoke<{
+        command: string;
+        label: string;
+        stdout: string;
+        stderr: string;
+        exit_code: number;
+      }>("run_agent_task", {
+        worktreeId,
+        command: quickCommand.trim(),
+        label: "Quick run",
+        taskDesc: quickTask.trim(),
+      });
+      setQuickResult(result);
+    } catch (e) {
+      setQuickError(String(e));
+    } finally {
+      setQuickRunning(false);
+    }
+  }
+
   // ─── Run handlers ────────────────────────────────────────────────────────
 
   async function handleRun() {
@@ -277,6 +396,17 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
       });
       setActiveRun(result);
       void loadRuns(Number(selectedPipelineId));
+      // Notify when pipeline finishes
+      if (
+        !document.hasFocus() &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        new Notification("Pipeline completed", {
+          body: `Status: ${result.status} (${result.iterations} iteration${result.iterations !== 1 ? "s" : ""})`,
+          silent: false,
+        });
+      }
     } catch (e) {
       setRunError(String(e));
     } finally {
@@ -355,18 +485,123 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
 
         {/* Tabs */}
         <div className="map-tabs">
-          {(["agents", "pipelines", "run"] as Tab[]).map((t) => (
+          {(["quick", "agents", "pipelines", "run"] as Tab[]).map((t) => (
             <button
               key={t}
               className={`map-tab ${tab === t ? "map-tab--active" : ""}`}
               onClick={() => setTab(t)}
             >
-              {t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === "quick"
+                ? "Quick Run"
+                : t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
           ))}
         </div>
 
         <div className="map-body">
+          {/* ── Quick Run tab ────────────────────────────────────────────── */}
+          {tab === "quick" && (
+            <div className="map-section">
+              <div className="map-info">
+                Run a single agent command on the current worktree without
+                setting up a full pipeline. Great for one-off tasks.
+              </div>
+
+              <h3 className="map-section-title">Quick Run</h3>
+              <div className="map-form">
+                <select
+                  className="map-select"
+                  value={quickCommand}
+                  onChange={(e) => setQuickCommand(e.target.value)}
+                >
+                  <option value="">-- Select a tool --</option>
+                  {GENERATOR_PRESETS.filter((p) => p.command).map((p) => (
+                    <option key={p.label} value={p.command}>
+                      {p.label}
+                    </option>
+                  ))}
+                  <option value="__custom">Custom command...</option>
+                </select>
+                {quickCommand === "__custom" && (
+                  <input
+                    className="map-input map-input--wide"
+                    placeholder="Custom command"
+                    value=""
+                    onChange={(e) => setQuickCommand(e.target.value)}
+                  />
+                )}
+                <textarea
+                  className="map-textarea"
+                  placeholder="Describe the task..."
+                  rows={3}
+                  value={quickTask}
+                  onChange={(e) => setQuickTask(e.target.value)}
+                />
+                {quickError && <p className="map-error">{quickError}</p>}
+                <button
+                  className="map-btn map-btn--primary"
+                  onClick={() => void handleQuickRun()}
+                  disabled={quickRunning}
+                >
+                  {quickRunning ? "Running..." : "Run"}
+                </button>
+              </div>
+
+              {quickResult && (
+                <div className="map-run-result">
+                  <div className="map-run-result-header">
+                    <span>Quick Run</span>
+                    <span
+                      className={`map-badge map-badge--${quickResult.exit_code === 0 ? "approved" : "failed"}`}
+                    >
+                      exit {quickResult.exit_code}
+                    </span>
+                  </div>
+                  <div className="map-step-body">
+                    {quickResult.stdout && (
+                      <>
+                        <p className="map-step-label">stdout</p>
+                        <pre className="map-pre">{quickResult.stdout}</pre>
+                      </>
+                    )}
+                    {quickResult.stderr && (
+                      <>
+                        <p className="map-step-label map-step-label--err">
+                          stderr
+                        </p>
+                        <pre className="map-pre map-pre--err">
+                          {quickResult.stderr}
+                        </pre>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <h3 className="map-section-title">Pipeline Templates</h3>
+              <div className="map-info">
+                One-click setup: creates agents and a pipeline automatically.
+              </div>
+              <div className="map-templates">
+                {PIPELINE_TEMPLATES.map((tmpl) => (
+                  <button
+                    key={tmpl.label}
+                    type="button"
+                    className="map-template"
+                    onClick={() => void handleApplyTemplate(tmpl)}
+                    disabled={templateBusy}
+                  >
+                    <span className="map-template-label">{tmpl.label}</span>
+                    <span className="map-template-desc">
+                      {tmpl.description}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {templateError && <p className="map-error">{templateError}</p>}
+            </div>
+          )}
+
           {/* ── Agents tab ────────────────────────────────────────────────── */}
           {tab === "agents" && (
             <div className="map-section">

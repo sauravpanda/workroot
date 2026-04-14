@@ -34,6 +34,8 @@ interface WorktreeInfo {
   branch_name: string;
   path: string;
   status: string;
+  is_dirty?: boolean;
+  port?: number | null;
 }
 
 interface WorkspaceGridProps {
@@ -460,6 +462,12 @@ export function WorkspaceGrid({
                               ? "Done"
                               : "Idle"}
                       </span>
+                      {wt.is_dirty && (
+                        <span className="workspace-card-dirty">M</span>
+                      )}
+                      {wt.port ? (
+                        <span className="workspace-card-port">:{wt.port}</span>
+                      ) : null}
                     </div>
                     {viewMode === "terminals" && shell && (
                       <div className="workspace-card-terminal">
