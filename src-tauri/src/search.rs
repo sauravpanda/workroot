@@ -186,8 +186,9 @@ pub fn unified_search(
                 .to_string();
 
                 // Truncate content for the title
-                let title = if content.len() > 80 {
-                    format!("{}...", &content[..80])
+                let title = if content.chars().count() > 80 {
+                    let truncated: String = content.chars().take(80).collect();
+                    format!("{truncated}...")
                 } else {
                     content
                 };
