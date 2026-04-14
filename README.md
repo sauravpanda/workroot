@@ -23,14 +23,14 @@ Workroot continuously aggregates runtime context -- processes, logs, HTTP traffi
 
 ## Before and After
 
-| Scenario | Without Workroot | With Workroot |
-|---|---|---|
-| **Debugging a 500 error** | Copy-paste logs from terminal, describe the request manually, hope Claude has enough context | Claude queries `workroot_get_logs` and `workroot_get_http_traffic`, sees the exact request/response pair and the error traceback together |
-| **Starting a new session** | Re-explain your stack, running services, recent changes, and current branch | Claude reads `workroot_get_project_context` and immediately knows what is running, what changed, and what branch you are on |
-| **Environment variables** | Manually list which env vars exist, risk leaking secrets in chat | Claude calls `workroot_list_env_keys` to see variable names without ever seeing values |
-| **Database schema questions** | Open a DB client, run `\dt`, copy-paste schema definitions | Claude calls `workroot_get_db_schema` and gets the full table structure instantly |
-| **"What port is my server on?"** | Check terminal output, `lsof`, or docker ps | Claude calls `workroot_list_processes` and sees every managed process with its port |
-| **Recalling past decisions** | Scroll through old chat logs or grep commit messages | Claude queries `workroot_search_memory` to find indexed notes, dead ends, and decisions |
+| Scenario                         | Without Workroot                                                                             | With Workroot                                                                                                                             |
+| -------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Debugging a 500 error**        | Copy-paste logs from terminal, describe the request manually, hope Claude has enough context | Claude queries `workroot_get_logs` and `workroot_get_http_traffic`, sees the exact request/response pair and the error traceback together |
+| **Starting a new session**       | Re-explain your stack, running services, recent changes, and current branch                  | Claude reads `workroot_get_project_context` and immediately knows what is running, what changed, and what branch you are on               |
+| **Environment variables**        | Manually list which env vars exist, risk leaking secrets in chat                             | Claude calls `workroot_list_env_keys` to see variable names without ever seeing values                                                    |
+| **Database schema questions**    | Open a DB client, run `\dt`, copy-paste schema definitions                                   | Claude calls `workroot_get_db_schema` and gets the full table structure instantly                                                         |
+| **"What port is my server on?"** | Check terminal output, `lsof`, or docker ps                                                  | Claude calls `workroot_list_processes` and sees every managed process with its port                                                       |
+| **Recalling past decisions**     | Scroll through old chat logs or grep commit messages                                         | Claude queries `workroot_search_memory` to find indexed notes, dead ends, and decisions                                                   |
 
 ## Architecture
 
@@ -65,71 +65,92 @@ Workroot continuously aggregates runtime context -- processes, logs, HTTP traffi
 
 ### Tech Stack
 
-| Component | Technology | Purpose |
-|---|---|---|
-| Desktop Shell | Tauri v2 | Native app with Rust backend and web frontend |
-| Frontend | React 19 + Vite + TypeScript | UI for project management, logs, and configuration |
-| Backend | Rust (2021 edition) | Core daemon logic, process management, data aggregation |
-| Database | SQLite via rusqlite (bundled) | Persistent local storage for all context data |
-| MCP Server | axum on `localhost:4444` | Exposes tools and context to AI assistants |
-| Embeddings | sqlite-vec | Vector similarity search for memory and semantic queries |
-| Network Proxy | hyper | Reverse proxy on port 3000 to intercept HTTP traffic |
-| Git Operations | libgit2 (git2 crate) | Branch tracking, diff computation, commit history |
-| Package Manager | pnpm | Frontend dependency management |
+| Component       | Technology                    | Purpose                                                  |
+| --------------- | ----------------------------- | -------------------------------------------------------- |
+| Desktop Shell   | Tauri v2                      | Native app with Rust backend and web frontend            |
+| Frontend        | React 19 + Vite + TypeScript  | UI for project management, logs, and configuration       |
+| Backend         | Rust (2021 edition)           | Core daemon logic, process management, data aggregation  |
+| Database        | SQLite via rusqlite (bundled) | Persistent local storage for all context data            |
+| MCP Server      | axum on `localhost:4444`      | Exposes tools and context to AI assistants               |
+| Embeddings      | sqlite-vec                    | Vector similarity search for memory and semantic queries |
+| Network Proxy   | hyper                         | Reverse proxy on port 3000 to intercept HTTP traffic     |
+| Git Operations  | libgit2 (git2 crate)          | Branch tracking, diff computation, commit history        |
+| Package Manager | pnpm                          | Frontend dependency management                           |
 
 ## Features
 
-### MVP (v0.1)
+### Workspace & Navigation
 
-- **GitHub Project Model** -- Import repositories, manage worktrees per branch, track project metadata in SQLite.
-- **Environment Vault** -- Store environment variable keys per project and profile. Values are encrypted at rest and never exposed through MCP (only key names are queryable).
-- **Process Manager** -- Start, stop, and monitor dev server processes. Capture stdout/stderr into a searchable log store.
-- **Port 3000 Reverse Proxy** -- Transparent HTTP proxy that logs all request/response pairs passing through to the upstream dev server.
-- **MCP Server** -- Local HTTP server on `localhost:4444` exposing all context via MCP tools. Per-session auth tokens for security.
-- **CLAUDE.md Generation** -- Auto-generate a `CLAUDE.md` file summarizing project structure, conventions, and context for AI assistants.
+- **Mission Control** -- Cockpit view of every worktree across every project with live terminal previews, agent status, and keyboard quick-switch (⌘1-9).
+- **Worktree Management** -- Create, hide, and delete git worktrees per branch. Auto-handles stale worktree paths and empty repos gracefully.
+- **Sidebar & Command Palette** -- Filterable project/worktree tree, global command palette, quick switcher, and bookmarks.
+- **File Explorer** -- Read-only file browser with syntax highlighting (TS, Rust, Python, Go, JSON, etc.), git status indicators, and one-click blame.
+- **Multi-Tab Terminals** -- xterm.js-backed terminals with split panes, recording/playback, and persistent sessions across worktree switches.
 
-### Core (v0.2 - v0.4)
+### AI & Automation
 
-- **Shell History Capture** -- Record shell commands with exit codes, branch context, and timestamps. Surface recent commands to AI assistants.
-- **Persistent Memory** -- Store notes, dead ends, and architectural decisions with vector embeddings. Semantic search across session history.
-- **Database Awareness** -- Connect to local PostgreSQL, MySQL, or SQLite databases. Expose schema information (tables, columns, types) without exposing row data.
-- **Git Panel** -- Visual branch management, diff viewer, commit history. Expose git state (current branch, uncommitted changes, recent commits) to MCP.
-- **Network Interceptor** -- Full request/response logging with header and body capture. Filter by method, path, or status code.
-- **Browser Extension** -- Chrome/Firefox extension that forwards console logs, network requests, and errors from the browser to Workroot.
-- **File Intelligence** -- Watch project files for changes. Track which files were modified, created, or deleted and expose change history to AI.
+- **MCP Server** -- Local HTTP server on `localhost:4444` exposing project context, processes, logs, git state, and memory to any MCP client (Claude Code, etc.). Per-session auth tokens.
+- **Multi-Agent Pipelines** -- Run generator → reviewer agent loops on worktrees with configurable CLI presets (Claude Code, Aider, custom).
+- **Persistent Memory** -- Store notes, dead ends, and decisions with vector embeddings (sqlite-vec). Semantic search across sessions.
+- **CLAUDE.md Generation** -- Auto-generate a `CLAUDE.md` file summarizing project structure, conventions, and context.
+- **Agent Status Tracking** -- Mission Control shows running / done / needs-attention state for each worktree's agent in real time.
 
-### Future (v0.5+)
+### Process, Network & Data
 
-- **Multi-Agent Orchestration** -- Coordinate multiple AI agents working on the same project with shared context and conflict detection.
-- **Conversation Indexing** -- Index past AI conversations and make them searchable. Let new sessions reference decisions from old ones.
-- **Team Context Sharing** -- Optional sharing of project context (not secrets) across team members for collaborative AI-assisted development.
-- **Plugin System** -- Extensible architecture for custom context providers and MCP tool definitions.
+- **Process Manager** -- Start, stop, and monitor dev servers with live stdout/stderr capture, restart policies, and port tracking.
+- **HTTP Proxy & Traffic Capture** -- Reverse proxy on port 3000 and forward proxy on 8888 log all request/response pairs with header and body capture.
+- **Environment Vault** -- Encrypted env var storage per project/profile. Values never leave the local DB; MCP only exposes key names.
+- **Database Awareness** -- Connect to local PostgreSQL, MySQL, or SQLite. Expose schema (tables, columns, types) without row data.
+- **Log Viewer & Search** -- Full-text search across captured logs with level filtering, ring-buffered storage, and error diagnosis.
+- **File Watcher** -- Tracks file changes per worktree with git status integration.
+
+### Git & Collaboration
+
+- **Git Panel** -- Visual branch management, diff viewer, commit history, stash manager, and blame view.
+- **GitHub Integration** -- Device-flow auth, PR creation from the app, PR status tracking, and workflow visibility.
+- **DORA Metrics** -- Deployment frequency, lead time, change failure rate, and recovery time dashboards.
+- **Activity Timeline** -- Chronological view of commits, PRs, agent runs, and process events across projects.
+
+### Security & Tooling
+
+- **Secret Scanner** -- Detects committed secrets and credentials in the worktree.
+- **Security Audit** -- License reports, security header analysis, and dependency audit.
+- **Test Runner** -- Integrated test runner with flaky test detection, coverage reports, and benchmark dashboards.
+- **Docker Panel** -- Container and image monitoring with live port/status display.
+- **Terminal Recording** -- Record terminal sessions with playback for debugging or sharing.
+- **Theme Engine** -- Customizable app themes, terminal themes, and layout density controls.
 
 ## MCP Tools
 
 The Workroot MCP server exposes the following tools on `localhost:4444`:
 
-| Tool | Description |
-|---|---|
+| Tool                           | Description                                                                          |
+| ------------------------------ | ------------------------------------------------------------------------------------ |
 | `workroot_get_project_context` | Returns full project summary: name, path, branch, running processes, recent activity |
-| `workroot_list_projects` | Lists all registered projects with metadata |
-| `workroot_list_processes` | Lists managed processes with PID, port, and status |
-| `workroot_get_logs` | Retrieves recent log entries, filterable by process and log level |
-| `workroot_search_logs` | Full-text search across all captured log output |
-| `workroot_get_http_traffic` | Returns captured HTTP request/response pairs from the proxy |
-| `workroot_list_env_keys` | Lists environment variable key names (never values) for a project/profile |
-| `workroot_get_db_schema` | Returns table and column definitions from a connected database |
-| `workroot_get_git_state` | Returns current branch, uncommitted changes, and recent commit history |
-| `workroot_get_git_diff` | Returns the diff for staged/unstaged changes or between commits |
-| `workroot_get_shell_history` | Returns recent shell commands with exit codes and branch context |
-| `workroot_search_memory` | Semantic search across stored notes, decisions, and dead ends |
-| `workroot_add_memory` | Stores a new memory item (note, decision, or dead end) with embedding |
-| `workroot_get_file_changes` | Returns recent file change events for the project |
-| `workroot_generate_claude_md` | Generates or regenerates the CLAUDE.md context file |
+| `workroot_list_projects`       | Lists all registered projects with metadata                                          |
+| `workroot_list_processes`      | Lists managed processes with PID, port, and status                                   |
+| `workroot_get_logs`            | Retrieves recent log entries, filterable by process and log level                    |
+| `workroot_search_logs`         | Full-text search across all captured log output                                      |
+| `workroot_get_http_traffic`    | Returns captured HTTP request/response pairs from the proxy                          |
+| `workroot_list_env_keys`       | Lists environment variable key names (never values) for a project/profile            |
+| `workroot_get_db_schema`       | Returns table and column definitions from a connected database                       |
+| `workroot_get_git_state`       | Returns current branch, uncommitted changes, and recent commit history               |
+| `workroot_get_git_diff`        | Returns the diff for staged/unstaged changes or between commits                      |
+| `workroot_get_shell_history`   | Returns recent shell commands with exit codes and branch context                     |
+| `workroot_search_memory`       | Semantic search across stored notes, decisions, and dead ends                        |
+| `workroot_add_memory`          | Stores a new memory item (note, decision, or dead end) with embedding                |
+| `workroot_get_file_changes`    | Returns recent file change events for the project                                    |
+| `workroot_generate_claude_md`  | Generates or regenerates the CLAUDE.md context file                                  |
 
 ## Getting Started
 
-### Prerequisites
+### Download
+
+Pre-built binaries for macOS, Windows, and Linux are available from the [Releases page](https://github.com/sauravpanda/workroot/releases/latest).
+
+### Build from source
+
+**Prerequisites:**
 
 - **Rust** (stable toolchain, 1.75+) -- [Install via rustup](https://rustup.rs/)
 - **Node.js** 20+ -- [Download](https://nodejs.org/)
@@ -139,7 +160,7 @@ The Workroot MCP server exposes the following tools on `localhost:4444`:
   sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libgtk-3-dev
   ```
 
-### Installation
+**Build:**
 
 ```bash
 # Clone the repository
@@ -151,6 +172,9 @@ pnpm install
 
 # Run in development mode
 pnpm tauri dev
+
+# Or build a distributable binary
+pnpm tauri build
 ```
 
 ### Development Commands
@@ -190,36 +214,43 @@ pnpm tauri build      # Build distributable binary
 
 ```
 workroot/
-├── src/                          # React frontend
-│   ├── main.tsx                  # App entry point
-│   ├── App.tsx                   # Root component
-│   └── styles.css                # Global styles
-├── src-tauri/                    # Rust backend
+├── src/                          # React 19 + TypeScript frontend
+│   ├── components/               # UI panels: Sidebar, WorkspaceGrid, TerminalPanel,
+│   │                             #   FileExplorer, MultiAgentPipelinePanel, GitDiffView,
+│   │                             #   ContentToolbar, PanelHost, etc.
+│   ├── hooks/                    # useWorktrees, useProjects, usePanels, useCommandRegistry
+│   ├── layouts/                  # MainLayout (sidebar + content area)
+│   ├── stores/uiStore.ts         # Global UI state (React Context)
+│   ├── themes/                   # Theme engine and density system
+│   ├── styles/                   # Component CSS
+│   ├── App.tsx                   # Root app shell
+│   └── main.tsx                  # Entry point
+├── src-tauri/                    # Rust backend (Tauri v2)
 │   ├── src/
-│   │   ├── main.rs               # Tauri entry point
-│   │   ├── lib.rs                # Library root, Tauri builder setup
-│   │   └── db/
-│   │       └── mod.rs            # SQLite initialization and schema
-│   ├── capabilities/
-│   │   └── default.json          # Tauri v2 capability permissions
+│   │   ├── lib.rs                # Tauri builder, command registration
+│   │   ├── db/                   # SQLite schema, migrations, queries
+│   │   ├── git/                  # Worktree, branch, diff, blame
+│   │   ├── process/              # Process spawning, lifecycle, port tracking
+│   │   ├── network/              # Forward proxy, reverse proxy, traffic capture
+│   │   ├── mcp/                  # MCP server on localhost:4444
+│   │   ├── agents/               # Multi-agent pipeline runner
+│   │   ├── memory/               # Notes, embeddings, vector search
+│   │   ├── vault/                # Encrypted env var storage
+│   │   ├── filewatcher/          # notify-based file change tracking
+│   │   ├── github/               # GitHub auth + PR API
+│   │   ├── dbconnect/            # External DB schema introspection
+│   │   └── ...                   # terminal, security, docker, metrics, tasks
+│   ├── capabilities/             # Tauri v2 capability permissions
 │   ├── Cargo.toml                # Rust dependencies
-│   ├── Cargo.lock                # Rust lockfile
 │   ├── build.rs                  # Tauri build script
 │   └── tauri.conf.json           # Tauri app configuration
 ├── public/                       # Static assets
-├── docs/                         # Documentation and PR plans
-├── .github/
-│   ├── workflows/
-│   │   └── ci.yml                # CI pipeline (lint, test, build)
-│   └── PULL_REQUEST_TEMPLATE.md  # PR template
-├── package.json                  # Frontend dependencies and scripts
-├── vite.config.ts                # Vite configuration
-├── vitest.config.ts              # Vitest test configuration
-├── tsconfig.json                 # TypeScript configuration
-├── index.html                    # HTML entry point
+├── docs/                         # Product + architecture docs
+├── .github/workflows/            # CI (frontend checks, backend checks, cross-platform build)
+├── vite.config.ts                # Vite config with manual chunks
+├── tsconfig.json                 # TypeScript config
 ├── CLAUDE.md                     # AI assistant context file
-├── LICENSE                       # Apache 2.0
-└── README.md                     # This file
+└── LICENSE                       # Apache 2.0
 ```
 
 ## Contributing
@@ -236,14 +267,14 @@ See `docs/` for detailed PR plans and feature specifications.
 
 ### Coding Standards
 
-| Area | Standard |
-|---|---|
-| TypeScript | Strict mode, ESLint + Prettier |
-| Rust | Edition 2021, clippy with `-D warnings`, rustfmt |
-| Database | All schema changes via migration in `db/mod.rs` |
-| Tauri Commands | Organized by module in `src-tauri/src/` |
-| Components | React functional components in `src/components/` |
-| Commits | Focused, descriptive messages; one logical change per commit |
+| Area           | Standard                                                     |
+| -------------- | ------------------------------------------------------------ |
+| TypeScript     | Strict mode, ESLint + Prettier                               |
+| Rust           | Edition 2021, clippy with `-D warnings`, rustfmt             |
+| Database       | All schema changes via migration in `db/mod.rs`              |
+| Tauri Commands | Organized by module in `src-tauri/src/`                      |
+| Components     | React functional components in `src/components/`             |
+| Commits        | Focused, descriptive messages; one logical change per commit |
 
 ## Security
 
@@ -261,14 +292,15 @@ Workroot is licensed under the [Apache License 2.0](LICENSE).
 
 ## Roadmap
 
-Development is organized into incremental PRs. See `docs/PR_PLANS.md` for the detailed implementation roadmap, including:
+Workroot ships continuously. Track progress and upcoming work:
 
-- PR 1: Project model and SQLite schema
-- PR 2: Environment vault with encryption
-- PR 3: Process manager and log capture
-- PR 4: HTTP reverse proxy on port 3000
-- PR 5: MCP server on localhost:4444
-- PR 6: CLAUDE.md generation
-- PR 7-12: Shell history, persistent memory, DB awareness, git panel, file watcher, browser extension
+- **[Issues](https://github.com/sauravpanda/workroot/issues)** -- Bug reports, feature requests, and open discussions
+- **[Releases](https://github.com/sauravpanda/workroot/releases)** -- Release notes for each version
+- **`docs/`** -- Architecture notes and longer-form design docs
 
-For the full product vision and technical design, see the Workroot product plan.
+Directions under active exploration:
+
+- Team context sharing (opt-in, secrets never leave the local vault)
+- Plugin system for custom MCP tool definitions and context providers
+- Conversation indexing across past AI sessions
+- Deeper browser extension integration for client-side telemetry
