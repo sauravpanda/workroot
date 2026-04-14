@@ -3,7 +3,7 @@ use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use rusqlite::params;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 
 /// Manages file watchers for active worktrees.
@@ -63,14 +63,11 @@ pub fn start_watching(app: &AppHandle, project_id: i64, path: &str) -> Result<()
         return Err(format!("Path does not exist: {}", path));
     }
 
-    let _db = app.state::<AppDb>();
-    let db_clone = Arc::new(Mutex::new(()));
     let app_handle = app.clone();
     let pid = project_id;
 
     let mut watcher = notify::recommended_watcher(move |res: Result<Event, notify::Error>| {
         if let Ok(event) = res {
-            let _lock = db_clone.lock();
             handle_event(&app_handle, pid, &event);
         }
     })
