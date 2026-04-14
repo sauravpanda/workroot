@@ -238,17 +238,23 @@ CREATE INDEX IF NOT EXISTS idx_ai_chat_messages_session ON ai_chat_messages(sess
 -- Ring Buffer Trigger: keep at most 50,000 log rows per process
 -- ============================================================
 
+-- Only check every 1000 inserts to amortize the cleanup cost.
+-- Uses OFFSET-based cutoff instead of COUNT(*) for efficiency.
 CREATE TRIGGER IF NOT EXISTS logs_ring_buffer
 AFTER INSERT ON logs
-WHEN (SELECT COUNT(*) FROM logs WHERE process_id = NEW.process_id) > 50000
+WHEN NEW.id % 1000 = 0
 BEGIN
     DELETE FROM logs
-    WHERE id IN (
-        SELECT id FROM logs
-        WHERE process_id = NEW.process_id
-        ORDER BY id ASC
-        LIMIT (SELECT COUNT(*) - 50000 FROM logs WHERE process_id = NEW.process_id)
-    );
+    WHERE process_id = NEW.process_id
+      AND id < (
+          SELECT COALESCE(
+              (SELECT id FROM logs
+               WHERE process_id = NEW.process_id
+               ORDER BY id DESC
+               LIMIT 1 OFFSET 50000),
+              0
+          )
+      );
 END;
 
 -- ============================================================
