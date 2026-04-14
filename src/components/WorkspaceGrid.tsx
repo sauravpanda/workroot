@@ -5,6 +5,7 @@ import {
   useMemo,
   useState,
   useCallback,
+  useReducer,
   useRef,
 } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -43,6 +44,8 @@ interface WorkspaceGridProps {
   worktrees: Array<WorktreeInfo & { projectName: string }>;
   onSelectWorktree: (wt: WorktreeInfo) => void;
   onNewWorktree?: (projectId: number) => void;
+  onOpenAgent?: (wt: WorktreeInfo) => void;
+  onOpenDiff?: (wt: WorktreeInfo) => void;
   shell?: string;
   themeId?: string;
   snapshotMap?: React.MutableRefObject<TerminalSnapshotMap>;
@@ -82,6 +85,8 @@ export function WorkspaceGrid({
   worktrees,
   onSelectWorktree,
   onNewWorktree,
+  onOpenAgent,
+  onOpenDiff,
   shell,
   themeId,
   snapshotMap,
@@ -91,6 +96,38 @@ export function WorkspaceGrid({
 
   const [filterTab, setFilterTab] = useState<FilterTab>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
+
+  // Auto-refresh snapshot tiles every 5s when in terminal view
+  const [, bumpSnapshot] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => {
+    if (viewMode !== "terminals" || !snapshotMap) return;
+    const id = setInterval(bumpSnapshot, 5000);
+    return () => clearInterval(id);
+  }, [viewMode, snapshotMap]);
+
+  // Context menu state
+  const [ctxMenu, setCtxMenu] = useState<{
+    x: number;
+    y: number;
+    wt: WorktreeInfo & { projectName: string };
+  } | null>(null);
+
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent, wt: WorktreeInfo & { projectName: string }) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setCtxMenu({ x: e.clientX, y: e.clientY, wt });
+    },
+    [],
+  );
+
+  // Close context menu on click anywhere
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const close = () => setCtxMenu(null);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [ctxMenu]);
 
   // Command bar state
   const [cmdTask, setCmdTask] = useState("");
@@ -413,6 +450,7 @@ export function WorkspaceGrid({
                       (status === "current" ? " workspace-card--current" : "")
                     }
                     onClick={() => onSelectWorktree(wt)}
+                    onContextMenu={(e) => handleContextMenu(e, wt)}
                     title={shortcutHint ? `Open (${shortcutHint})` : undefined}
                   >
                     <div className="workspace-card-top">
@@ -475,6 +513,7 @@ export function WorkspaceGrid({
                           {snapshotMap?.current?.has(wt.path) ? (
                             <TerminalSnapshotLazy
                               text={snapshotMap.current.get(wt.path) ?? ""}
+                              themeId={themeId}
                             />
                           ) : (
                             <TerminalPreviewLazy
@@ -553,6 +592,51 @@ export function WorkspaceGrid({
           </div>
         )}
       </div>
+
+      {/* Context menu */}
+      {ctxMenu && (
+        <div
+          className="workspace-ctx-menu"
+          style={{ top: ctxMenu.y, left: ctxMenu.x }}
+        >
+          <button
+            type="button"
+            className="workspace-ctx-item"
+            onClick={() => {
+              onSelectWorktree(ctxMenu.wt);
+              setCtxMenu(null);
+            }}
+          >
+            Open Terminal
+          </button>
+          {onOpenAgent && (
+            <button
+              type="button"
+              className="workspace-ctx-item"
+              onClick={() => {
+                onSelectWorktree(ctxMenu.wt);
+                onOpenAgent(ctxMenu.wt);
+                setCtxMenu(null);
+              }}
+            >
+              Run Agent
+            </button>
+          )}
+          {onOpenDiff && (
+            <button
+              type="button"
+              className="workspace-ctx-item"
+              onClick={() => {
+                onSelectWorktree(ctxMenu.wt);
+                onOpenDiff(ctxMenu.wt);
+                setCtxMenu(null);
+              }}
+            >
+              View Changes
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

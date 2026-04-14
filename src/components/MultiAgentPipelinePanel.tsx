@@ -17,6 +17,17 @@ const GENERATOR_PRESETS: CliPreset[] = [
   { label: "Claude Code", role: "generator", command: "claude --print" },
   { label: "Aider", role: "generator", command: "aider --message" },
   { label: "Codex", role: "generator", command: "codex --quiet" },
+  {
+    label: "Test Writer",
+    role: "generator",
+    command: 'claude --print "Write tests for the following code"',
+  },
+  {
+    label: "PR Description",
+    role: "generator",
+    command:
+      'claude --print "Write a pull request description for the current changes"',
+  },
   { label: "Custom", role: "generator", command: "" },
 ];
 
@@ -31,6 +42,18 @@ const REVIEWER_PRESETS: CliPreset[] = [
     label: "Aider",
     role: "reviewer",
     command: 'aider --message "Review the following changes"',
+  },
+  {
+    label: "Lint Checker",
+    role: "reviewer",
+    command:
+      'claude --print "Check for lint issues, type errors, and style problems. Respond APPROVED if clean"',
+  },
+  {
+    label: "Security Review",
+    role: "reviewer",
+    command:
+      'claude --print "Review for security vulnerabilities (XSS, injection, secrets). Respond APPROVED if safe"',
   },
   { label: "Custom", role: "reviewer", command: "" },
 ];
@@ -150,6 +173,11 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
   const [progress, setProgress] = useState("");
   const unlistenRef = useRef<UnlistenFn | null>(null);
 
+  // Pipeline run history for sparkline display
+  const [pipelineHistory, setPipelineHistory] = useState<
+    Record<number, PipelineRun[]>
+  >({});
+
   // Load agents
   const loadAgents = useCallback(async () => {
     try {
@@ -160,11 +188,24 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
     }
   }, []);
 
-  // Load pipelines
+  // Load pipelines + their recent run history
   const loadPipelines = useCallback(async () => {
     try {
       const result = await invoke<PipelineDef[]>("list_pipelines");
       setPipelines(result);
+      // Load last 5 runs per pipeline for sparkline
+      const history: Record<number, PipelineRun[]> = {};
+      for (const p of result) {
+        try {
+          const r = await invoke<PipelineRun[]>("list_pipeline_runs", {
+            pipelineId: p.id,
+          });
+          history[p.id] = r.slice(0, 5);
+        } catch {
+          history[p.id] = [];
+        }
+      }
+      setPipelineHistory(history);
     } catch {
       // ignore
     }
@@ -265,6 +306,83 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
       void loadPipelines();
     } catch {
       // ignore
+    }
+  }
+
+  // ─── Pipeline config export/import ────────────────────────────────────────
+
+  async function handleExportConfig() {
+    const config = {
+      agents: agents.map(({ name, role, command }) => ({
+        name,
+        role,
+        command,
+      })),
+      pipelines: pipelines.map((p) => ({
+        name: p.name,
+        generator: agentName_(p.generator_id),
+        reviewer: agentName_(p.reviewer_id),
+        max_iterations: p.max_iterations,
+      })),
+    };
+    try {
+      const path = await save({
+        defaultPath: "pipeline-config.json",
+        filters: [{ name: "JSON", extensions: ["json"] }],
+      });
+      if (path) {
+        await invoke("save_text_file", {
+          path,
+          contents: JSON.stringify(config, null, 2),
+        });
+      }
+    } catch {
+      // cancelled
+    }
+  }
+
+  async function handleImportConfig(file: File) {
+    try {
+      const text = await file.text();
+      const config = JSON.parse(text) as {
+        agents: { name: string; role: string; command: string }[];
+        pipelines: {
+          name: string;
+          generator: string;
+          reviewer: string;
+          max_iterations: number;
+        }[];
+      };
+      // Create agents
+      for (const a of config.agents) {
+        await invoke("create_agent", {
+          name: a.name,
+          role: a.role,
+          command: a.command,
+        });
+      }
+      await loadAgents();
+      const updatedAgents = await invoke<AgentDef[]>("list_agents");
+      // Create pipelines
+      for (const p of config.pipelines) {
+        const gen = updatedAgents.find(
+          (a) => a.name === p.generator && a.role === "generator",
+        );
+        const rev = updatedAgents.find(
+          (a) => a.name === p.reviewer && a.role === "reviewer",
+        );
+        if (gen && rev) {
+          await invoke("create_pipeline", {
+            name: p.name,
+            generatorId: gen.id,
+            reviewerId: rev.id,
+            maxIterations: p.max_iterations,
+          });
+        }
+      }
+      await loadPipelines();
+    } catch {
+      // ignore parse errors
     }
   }
 
@@ -746,6 +864,28 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
                 runs in the worktree and can edit files. The reviewer receives
                 the task, generator output, and git diff via stdin.
               </div>
+              <div className="map-config-actions">
+                <button
+                  className="map-btn map-btn--export"
+                  onClick={() => void handleExportConfig()}
+                  disabled={agents.length === 0 && pipelines.length === 0}
+                >
+                  Export Config
+                </button>
+                <label className="map-btn map-btn--export map-import-label">
+                  Import Config
+                  <input
+                    type="file"
+                    accept=".json"
+                    hidden
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void handleImportConfig(f);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
               <h3 className="map-section-title">Create Pipeline</h3>
               <div className="map-form">
                 <input
@@ -823,6 +963,7 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
                       <th>Generator</th>
                       <th>Reviewer</th>
                       <th>Max iters</th>
+                      <th>History</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -833,6 +974,20 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
                         <td>{agentName_(p.generator_id)}</td>
                         <td>{agentName_(p.reviewer_id)}</td>
                         <td>{p.max_iterations}</td>
+                        <td>
+                          <div className="map-sparkline">
+                            {(pipelineHistory[p.id] ?? []).map((r) => (
+                              <span
+                                key={r.id}
+                                className={`map-spark-dot map-spark-dot--${r.status}`}
+                                title={`#${r.id}: ${r.status}`}
+                              />
+                            ))}
+                            {!pipelineHistory[p.id]?.length && (
+                              <span className="map-muted">—</span>
+                            )}
+                          </div>
+                        </td>
                         <td>
                           <button
                             className="map-btn map-btn--danger"
