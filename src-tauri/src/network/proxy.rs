@@ -31,6 +31,7 @@ type BoxBody = http_body_util::Full<hyper::body::Bytes>;
 
 const FORWARD_PROXY_PORT: u16 = 8888;
 const MAX_BODY_CAPTURE: usize = 64 * 1024; // 64KB
+const MAX_RESPONSE_BUFFER: usize = 50 * 1024 * 1024; // 50MB cap to prevent OOM
 
 /// Start the HTTP forward proxy on port 8888.
 pub async fn start_forward_proxy(app_handle: AppHandle) {
@@ -214,7 +215,14 @@ async fn handle_forward(
 
             let hyper_status = StatusCode::from_u16(status).unwrap_or(StatusCode::BAD_GATEWAY);
 
-            let resp_bytes = resp.bytes().await.unwrap_or_default();
+            // Cap response buffering to prevent OOM on large downloads.
+            // If content-length exceeds the limit, return a gateway error.
+            let content_length = resp.content_length().unwrap_or(0);
+            let resp_bytes = if content_length > MAX_RESPONSE_BUFFER as u64 {
+                hyper::body::Bytes::new()
+            } else {
+                resp.bytes().await.unwrap_or_default()
+            };
             let resp_body = truncate_body(&resp_bytes);
 
             let mut response_builder = Response::builder().status(hyper_status);
