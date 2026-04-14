@@ -258,6 +258,17 @@
   color: var(--success, #10b981);
 }
 
+/* "Running" status dot */
+.workspace-card-dot--running {
+  background: var(--warning, #f59e0b);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+/* "Running" status label */
+.workspace-card-status--running {
+  color: var(--warning, #f59e0b);
+}
+
 /* Shortcut hint badge */
 .workspace-card-shortcut {
   font-family: var(--font-mono);

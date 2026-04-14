@@ -35,6 +35,7 @@ interface TerminalPanelProps {
   shell: string;
   initCommand: string | null;
   themeId?: string;
+  onAgentActivity?: () => void;
   onAgentComplete?: () => void;
   onAgentNeedsAttention?: () => void;
   snapshotRef?: React.MutableRefObject<TerminalSnapshotMap>;
@@ -81,6 +82,7 @@ export function TerminalPanel({
   shell,
   initCommand,
   themeId,
+  onAgentActivity,
   onAgentComplete,
   onAgentNeedsAttention,
   snapshotRef,
@@ -420,6 +422,9 @@ export function TerminalPanel({
                       shell={shell}
                       initCommand={initCommand}
                       themeId={themeId}
+                      onAgentActivity={
+                        isActivePathAndTab ? onAgentActivity : undefined
+                      }
                       onAgentComplete={
                         isActivePathAndTab ? onAgentComplete : undefined
                       }
@@ -448,6 +453,7 @@ interface TerminalInstanceProps {
   shell: string;
   initCommand: string | null;
   themeId?: string;
+  onAgentActivity?: () => void;
   onAgentComplete?: () => void;
   onAgentNeedsAttention?: () => void;
   snapshotRef?: React.MutableRefObject<TerminalSnapshotMap>;
@@ -513,6 +519,7 @@ function TerminalInstance({
   shell,
   initCommand,
   themeId,
+  onAgentActivity,
   onAgentComplete,
   onAgentNeedsAttention,
   snapshotRef,
@@ -524,6 +531,8 @@ function TerminalInstance({
   const fitAddonRef = useRef<FitAddon | null>(null);
   const activityBytesRef = useRef(0);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onAgentActivityRef = useRef(onAgentActivity);
+  onAgentActivityRef.current = onAgentActivity;
   const onAgentCompleteRef = useRef(onAgentComplete);
   onAgentCompleteRef.current = onAgentComplete;
   const onAgentNeedsAttentionRef = useRef(onAgentNeedsAttention);
@@ -727,7 +736,15 @@ function TerminalInstance({
           // Activity tracking for agent-complete detection.
           const byteLen =
             typeof data === "string" ? data.length : (data?.length ?? 0);
+          const wasBelowThreshold =
+            activityBytesRef.current < ACTIVITY_THRESHOLD_BYTES;
           activityBytesRef.current += byteLen;
+          if (
+            wasBelowThreshold &&
+            activityBytesRef.current >= ACTIVITY_THRESHOLD_BYTES
+          ) {
+            onAgentActivityRef.current?.();
+          }
 
           // Check for patterns that suggest the agent needs user input.
           try {

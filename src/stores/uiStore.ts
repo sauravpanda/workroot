@@ -17,6 +17,9 @@ interface UiContextValue {
   agentNeedsAttentionIds: Set<number>;
   markAgentNeedsAttention: (id: number) => void;
   clearAgentNeedsAttention: (id: number) => void;
+  agentRunningWorktreeIds: Set<number>;
+  markAgentRunning: (id: number) => void;
+  clearAgentRunning: (id: number) => void;
 }
 
 export const UiContext = createContext<UiContextValue>({
@@ -36,6 +39,9 @@ export const UiContext = createContext<UiContextValue>({
   agentNeedsAttentionIds: new Set(),
   markAgentNeedsAttention: () => {},
   clearAgentNeedsAttention: () => {},
+  agentRunningWorktreeIds: new Set(),
+  markAgentRunning: () => {},
+  clearAgentRunning: () => {},
 });
 
 export function useUiStore() {

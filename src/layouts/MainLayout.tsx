@@ -72,6 +72,9 @@ export function MainLayout({
   const [agentNeedsAttentionIds, setAgentNeedsAttentionIds] = useState<
     Set<number>
   >(() => new Set());
+  const [agentRunningWorktreeIds, setAgentRunningWorktreeIds] = useState<
+    Set<number>
+  >(() => new Set());
 
   // Project tabs state
   const [allProjects, setAllProjects] = useState<ProjectTab[]>([]);
@@ -177,6 +180,18 @@ export function MainLayout({
     });
   }, []);
 
+  const markAgentRunning = useCallback((id: number) => {
+    setAgentRunningWorktreeIds((prev) => new Set(prev).add(id));
+  }, []);
+
+  const clearAgentRunning = useCallback((id: number) => {
+    setAgentRunningWorktreeIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
   const dragging = useRef(false);
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -239,6 +254,9 @@ export function MainLayout({
           agentNeedsAttentionIds,
           markAgentNeedsAttention,
           clearAgentNeedsAttention,
+          agentRunningWorktreeIds,
+          markAgentRunning,
+          clearAgentRunning,
         }),
         [
           selectedProjectId,
@@ -253,6 +271,9 @@ export function MainLayout({
           agentNeedsAttentionIds,
           markAgentNeedsAttention,
           clearAgentNeedsAttention,
+          agentRunningWorktreeIds,
+          markAgentRunning,
+          clearAgentRunning,
         ],
       )}
     >
