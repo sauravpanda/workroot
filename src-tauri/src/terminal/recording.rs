@@ -173,7 +173,7 @@ mod tests {
             [],
         )
         .unwrap();
-        AppDb(std::sync::Mutex::new(conn))
+        AppDb(std::sync::Arc::new(std::sync::Mutex::new(conn)))
     }
 
     #[test]

@@ -190,7 +190,7 @@ mod tests {
         )
         .unwrap();
 
-        let db = AppDb(std::sync::Mutex::new(conn));
+        let db = AppDb(std::sync::Arc::new(std::sync::Mutex::new(conn)));
         record_event(&db, 1, "/tmp/src/main.rs", "modify").unwrap();
         record_event(&db, 1, "/tmp/src/lib.rs", "create").unwrap();
 

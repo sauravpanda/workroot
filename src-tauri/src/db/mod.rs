@@ -1,7 +1,7 @@
 use rusqlite::Connection;
 use std::fs;
-use std::sync::Mutex;
 use std::sync::MutexGuard;
+use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager};
 use thiserror::Error;
 
@@ -26,7 +26,8 @@ impl From<DbError> for tauri::Error {
 }
 
 /// Thread-safe wrapper around a SQLite connection for use as Tauri managed state.
-pub struct AppDb(pub Mutex<Connection>);
+/// Uses Arc<Mutex<...>> so the inner mutex can be cloned into spawn_blocking tasks.
+pub struct AppDb(pub Arc<Mutex<Connection>>);
 
 impl AppDb {
     /// Acquire the database connection.
@@ -65,7 +66,7 @@ pub fn init_db(app: &AppHandle) -> Result<AppDb, DbError> {
 
     run_migrations(&conn)?;
 
-    Ok(AppDb(Mutex::new(conn)))
+    Ok(AppDb(Arc::new(Mutex::new(conn))))
 }
 
 /// Applies the schema from schema.sql. All statements use IF NOT EXISTS,

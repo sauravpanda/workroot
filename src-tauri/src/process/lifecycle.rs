@@ -152,15 +152,19 @@ pub fn monitor_process(
             let exit_code = status.ok().and_then(|s| s.code());
             let is_crash = exit_code.map(|c| c != 0).unwrap_or(true);
 
-            // Update DB status
-            let db = app.state::<AppDb>();
-            if let Ok(conn) = db.0.lock() {
-                if is_crash {
-                    let _ = queries::update_process_status(&conn, process_id, "crashed");
-                } else {
-                    let _ = queries::update_process_stopped(&conn, process_id);
+            // Update DB status via spawn_blocking to avoid blocking the tokio runtime
+            let db_ref = app.state::<AppDb>();
+            let db_inner = db_ref.0.clone();
+            let _ = tokio::task::spawn_blocking(move || {
+                if let Ok(conn) = db_inner.lock() {
+                    if is_crash {
+                        let _ = queries::update_process_status(&conn, process_id, "crashed");
+                    } else {
+                        let _ = queries::update_process_stopped(&conn, process_id);
+                    }
                 }
-            };
+            })
+            .await;
 
             // Emit event
             let event_name = if is_crash { "crashed" } else { "stopped" };
@@ -204,13 +208,17 @@ pub fn monitor_process(
 
             // Re-read the process info from DB to get the command
             let process_info = {
-                let db = app.state::<AppDb>();
-                let result = if let Ok(conn) = db.0.lock() {
-                    queries::get_process(&conn, process_id).ok().flatten()
-                } else {
-                    None
-                };
-                result
+                let db_ref = app.state::<AppDb>();
+                let db_inner = db_ref.0.clone();
+                tokio::task::spawn_blocking(move || {
+                    db_inner
+                        .lock()
+                        .ok()
+                        .and_then(|conn| queries::get_process(&conn, process_id).ok().flatten())
+                })
+                .await
+                .ok()
+                .flatten()
             };
 
             let proc = match process_info {
@@ -220,16 +228,20 @@ pub fn monitor_process(
 
             // Get worktree path for cwd
             let worktree_path = {
-                let db = app.state::<AppDb>();
-                let result = if let Ok(conn) = db.0.lock() {
-                    queries::get_worktree(&conn, proc.worktree_id)
-                        .ok()
-                        .flatten()
-                        .map(|w| w.path)
-                } else {
-                    None
-                };
-                result
+                let db_ref = app.state::<AppDb>();
+                let db_inner = db_ref.0.clone();
+                let wt_id = proc.worktree_id;
+                tokio::task::spawn_blocking(move || {
+                    db_inner.lock().ok().and_then(|conn| {
+                        queries::get_worktree(&conn, wt_id)
+                            .ok()
+                            .flatten()
+                            .map(|w| w.path)
+                    })
+                })
+                .await
+                .ok()
+                .flatten()
             };
 
             let cwd = match worktree_path {
@@ -259,13 +271,17 @@ pub fn monitor_process(
                     let new_pid = new_child.id();
 
                     // Update DB with new PID
-                    let db = app.state::<AppDb>();
-                    if let Ok(conn) = db.0.lock() {
-                        let _ = queries::update_process_status(&conn, process_id, "running");
-                        if let Some(pid) = new_pid {
-                            let _ = queries::update_process_pid(&conn, process_id, pid as i64);
+                    let db_ref = app.state::<AppDb>();
+                    let db_inner = db_ref.0.clone();
+                    let _ = tokio::task::spawn_blocking(move || {
+                        if let Ok(conn) = db_inner.lock() {
+                            let _ = queries::update_process_status(&conn, process_id, "running");
+                            if let Some(pid) = new_pid {
+                                let _ = queries::update_process_pid(&conn, process_id, pid as i64);
+                            }
                         }
-                    };
+                    })
+                    .await;
 
                     // Register new PID
                     if let Some(pid) = new_pid {
