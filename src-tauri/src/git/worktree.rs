@@ -111,11 +111,7 @@ pub fn create_worktree(
         let is_registered = repo
             .worktrees()
             .map(|wts| {
-                (0..wts.len()).any(|i| {
-                    wts.get(i)
-                        .map(|name| name == branch_name)
-                        .unwrap_or(false)
-                })
+                (0..wts.len()).any(|i| wts.get(i).map(|name| name == branch_name).unwrap_or(false))
             })
             .unwrap_or(false);
         if is_registered {
