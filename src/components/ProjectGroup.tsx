@@ -184,7 +184,13 @@ export function ProjectGroup({
 
         <CollapsibleContent>
           <div className="project-children">
-            {error && <div className="project-error">{error}</div>}
+            {error && (
+              <div className="project-error">
+                {error.includes("no commits yet")
+                  ? "This repo has no commits yet — make an initial commit to enable worktrees."
+                  : error}
+              </div>
+            )}
 
             {filteredWorktrees.length === 0 && !showNewWorktree && (
               <div className="project-empty">
