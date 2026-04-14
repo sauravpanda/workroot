@@ -279,6 +279,27 @@
   border-color: var(--accent-muted);
 }
 
+/* Dirty flag */
+.workspace-card-dirty {
+  font-family: var(--font-mono);
+  font-size: 0.65em;
+  font-weight: 600;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border-radius: 3px;
+  padding: 0 4px;
+  line-height: 1.6;
+  flex-shrink: 0;
+}
+
+/* Port badge */
+.workspace-card-port {
+  font-family: var(--font-mono);
+  font-size: 0.65em;
+  color: var(--accent, #10b981);
+  flex-shrink: 0;
+}
+
 /* Filter tabs */
 .workspace-filter-tabs {
   display: flex;
