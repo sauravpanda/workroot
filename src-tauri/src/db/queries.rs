@@ -151,7 +151,7 @@ pub fn get_project(conn: &Connection, id: i64) -> Result<Option<ProjectRow>, rus
 pub fn list_projects(conn: &Connection) -> Result<Vec<ProjectRow>, rusqlite::Error> {
     let mut stmt = conn.prepare(
         "SELECT id, name, github_url, local_path, framework, created_at, updated_at
-         FROM projects ORDER BY created_at DESC",
+         FROM projects ORDER BY created_at DESC LIMIT 500",
     )?;
     let rows = stmt.query_map([], |row| {
         Ok(ProjectRow {
