@@ -263,7 +263,7 @@ mod tests {
             [],
         )
         .unwrap();
-        AppDb(std::sync::Mutex::new(conn))
+        AppDb(std::sync::Arc::new(std::sync::Mutex::new(conn)))
     }
 
     /// Run the search logic directly against the connection (bypassing Tauri State).

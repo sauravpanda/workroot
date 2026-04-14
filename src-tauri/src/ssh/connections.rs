@@ -275,7 +275,7 @@ mod tests {
     use crate::db::{init_test_db, AppDb};
 
     fn setup_db() -> AppDb {
-        AppDb(std::sync::Mutex::new(init_test_db()))
+        AppDb(std::sync::Arc::new(std::sync::Mutex::new(init_test_db())))
     }
 
     #[test]

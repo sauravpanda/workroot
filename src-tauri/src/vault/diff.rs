@@ -115,7 +115,7 @@ mod tests {
             [],
         )
         .unwrap();
-        AppDb(std::sync::Mutex::new(conn))
+        AppDb(std::sync::Arc::new(std::sync::Mutex::new(conn)))
     }
 
     /// Helper: run the diff logic directly against the connection.

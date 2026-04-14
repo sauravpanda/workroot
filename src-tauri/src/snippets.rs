@@ -165,7 +165,7 @@ mod tests {
             [],
         )
         .unwrap();
-        AppDb(std::sync::Mutex::new(conn))
+        AppDb(std::sync::Arc::new(std::sync::Mutex::new(conn)))
     }
 
     /// Helper: insert a snippet directly via SQL and return its rowid.
