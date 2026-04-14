@@ -1,18 +1,13 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { Sidebar } from "../components/Sidebar";
 
 import { UiContext } from "../stores/uiStore";
 import { ErrorBoundary } from "../components/ErrorBoundary";
-import { ProjectTabBar, type ProjectTab } from "../components/ProjectTabBar";
 
 const SIDEBAR_MIN = 200;
 const SIDEBAR_MAX = 480;
 const SIDEBAR_DEFAULT = 260;
 const STORAGE_KEY = "workroot:sidebar-width";
-
-const OPEN_TABS_KEY = "workroot:open-project-tabs";
-const TAB_BAR_HEIGHT = 32;
 
 function getSavedWidth(): number {
   try {
@@ -25,16 +20,6 @@ function getSavedWidth(): number {
     // ignore
   }
   return SIDEBAR_DEFAULT;
-}
-
-function getSavedOpenTabIds(): number[] {
-  try {
-    const saved = localStorage.getItem(OPEN_TABS_KEY);
-    if (saved) return JSON.parse(saved) as number[];
-  } catch {
-    // ignore
-  }
-  return [];
 }
 
 interface MainLayoutProps {
@@ -53,7 +38,7 @@ export function MainLayout({
   onOpenSettings,
 }: MainLayoutProps) {
   const [sidebarWidth, setSidebarWidth] = useState(getSavedWidth);
-  const [selectedProjectId, setSelectedProjectIdRaw] = useState<number | null>(
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
     null,
   );
   const [selectedWorktreeId, setSelectedWorktreeId] = useState<number | null>(
@@ -72,86 +57,6 @@ export function MainLayout({
   const [agentNeedsAttentionIds, setAgentNeedsAttentionIds] = useState<
     Set<number>
   >(() => new Set());
-
-  // Project tabs state
-  const [allProjects, setAllProjects] = useState<ProjectTab[]>([]);
-  const [openTabIds, setOpenTabIds] = useState<number[]>(getSavedOpenTabIds);
-
-  // Fetch project list on mount
-  useEffect(() => {
-    invoke<{ id: number; name: string }[]>("list_projects")
-      .then((projects) =>
-        setAllProjects(projects.map((p) => ({ id: p.id, name: p.name }))),
-      )
-      .catch(() => {});
-  }, []);
-
-  // Persist open tab IDs
-  useEffect(() => {
-    try {
-      localStorage.setItem(OPEN_TABS_KEY, JSON.stringify(openTabIds));
-    } catch {
-      // ignore
-    }
-  }, [openTabIds]);
-
-  // Auto-add project to open tabs when selected
-  const setSelectedProjectId = useCallback((id: number | null) => {
-    setSelectedProjectIdRaw(id);
-    if (id !== null) {
-      setOpenTabIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    }
-  }, []);
-
-  // The tabs to display: open IDs that still exist in allProjects
-  const visibleTabs = openTabIds
-    .map((id) => allProjects.find((p) => p.id === id))
-    .filter((p): p is ProjectTab => p !== undefined);
-
-  const handleTabSelect = useCallback((id: number) => {
-    setSelectedProjectIdRaw(id);
-    // Reset worktree selection when switching projects
-    setSelectedWorktreeId(null);
-    setSelectedWorktreePath(null);
-    setSelectedWorktreeName(null);
-    setShowSettings(false);
-  }, []);
-
-  const handleTabClose = useCallback(
-    (id: number) => {
-      setOpenTabIds((prev) => prev.filter((tid) => tid !== id));
-      // If closing the active project, switch to the nearest remaining tab
-      setSelectedProjectIdRaw((current) => {
-        if (current !== id) return current;
-        const remaining = openTabIds.filter((tid) => tid !== id);
-        const next = remaining[remaining.length - 1] ?? null;
-        if (next !== current) {
-          setSelectedWorktreeId(null);
-          setSelectedWorktreePath(null);
-          setSelectedWorktreeName(null);
-        }
-        return next;
-      });
-    },
-    [openTabIds],
-  );
-
-  // Keyboard shortcuts: Cmd+1..9 to switch tabs
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey)) return;
-      const num = parseInt(e.key, 10);
-      if (num >= 1 && num <= 9) {
-        const tab = visibleTabs[num - 1];
-        if (tab) {
-          e.preventDefault();
-          handleTabSelect(tab.id);
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [visibleTabs, handleTabSelect]);
 
   const markAgentDone = useCallback((id: number) => {
     setAgentDoneWorktreeIds((prev) => new Set(prev).add(id));
@@ -217,8 +122,6 @@ export function MainLayout({
     }
   }, [sidebarWidth]);
 
-  const showTabBar = visibleTabs.length > 0;
-
   return (
     <UiContext.Provider
       value={useMemo(
@@ -256,25 +159,7 @@ export function MainLayout({
         ],
       )}
     >
-      {showTabBar && (
-        <ProjectTabBar
-          tabs={visibleTabs}
-          activeId={selectedProjectId}
-          onSelect={handleTabSelect}
-          onClose={handleTabClose}
-        />
-      )}
-      <div
-        className="main-layout"
-        style={
-          showTabBar
-            ? {
-                marginTop: TAB_BAR_HEIGHT,
-                height: `calc(100vh - 24px - ${TAB_BAR_HEIGHT}px)`,
-              }
-            : undefined
-        }
-      >
+      <div className="main-layout">
         {selectedWorktreePath && (
           <>
             <div className="sidebar-panel" style={{ width: sidebarWidth }}>
