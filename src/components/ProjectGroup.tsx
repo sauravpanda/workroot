@@ -165,9 +165,6 @@ export function ProjectGroup({
               </span>
             </span>
             <span className="project-badges">
-              {project.framework && (
-                <span className="project-framework">{project.framework}</span>
-              )}
               {expanded && worktrees.length > 0 && (
                 <span className="project-wt-count">
                   {q && filteredWorktrees.length !== worktrees.length
