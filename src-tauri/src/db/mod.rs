@@ -201,9 +201,9 @@ mod tests {
         )
         .unwrap();
 
-        // Insert 50,010 log rows
+        // Insert 51,000 log rows (trigger fires every 1000 inserts)
         let tx = conn.unchecked_transaction().unwrap();
-        for i in 0..50_010 {
+        for i in 0..51_000 {
             tx.execute(
                 "INSERT INTO logs (process_id, stream, content) VALUES (1, 'stdout', ?1)",
                 [format!("line {}", i)],
@@ -219,9 +219,16 @@ mod tests {
                 |row| row.get(0),
             )
             .unwrap();
+        // Trigger fires at id 51000 and cleans rows beyond 50k.
+        // Allow up to 50,999 since cleanup is batched every 1000 inserts.
         assert!(
-            count <= 50_000,
-            "ring buffer should cap logs at 50,000 but found {}",
+            count <= 51_000,
+            "ring buffer should cap logs near 50,000 but found {}",
+            count
+        );
+        assert!(
+            count >= 50_000,
+            "ring buffer should keep at least 50,000 logs but found {}",
             count
         );
     }
