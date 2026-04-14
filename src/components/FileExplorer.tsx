@@ -1,7 +1,57 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import hljs from "highlight.js/lib/core";
+import typescript from "highlight.js/lib/languages/typescript";
+import javascript from "highlight.js/lib/languages/javascript";
+import python from "highlight.js/lib/languages/python";
+import rust from "highlight.js/lib/languages/rust";
+import json from "highlight.js/lib/languages/json";
+import css from "highlight.js/lib/languages/css";
+import xml from "highlight.js/lib/languages/xml";
+import bash from "highlight.js/lib/languages/bash";
+import yaml from "highlight.js/lib/languages/yaml";
+import sql from "highlight.js/lib/languages/sql";
+import markdown from "highlight.js/lib/languages/markdown";
+import go from "highlight.js/lib/languages/go";
 import "../styles/file-explorer.css";
 import { useFocusTrap } from "../hooks/useFocusTrap";
+
+hljs.registerLanguage("typescript", typescript);
+hljs.registerLanguage("javascript", javascript);
+hljs.registerLanguage("python", python);
+hljs.registerLanguage("rust", rust);
+hljs.registerLanguage("json", json);
+hljs.registerLanguage("css", css);
+hljs.registerLanguage("xml", xml);
+hljs.registerLanguage("bash", bash);
+hljs.registerLanguage("yaml", yaml);
+hljs.registerLanguage("sql", sql);
+hljs.registerLanguage("markdown", markdown);
+hljs.registerLanguage("go", go);
+
+const EXT_TO_LANG: Record<string, string> = {
+  ts: "typescript",
+  tsx: "typescript",
+  js: "javascript",
+  jsx: "javascript",
+  py: "python",
+  rs: "rust",
+  json: "json",
+  css: "css",
+  html: "xml",
+  htm: "xml",
+  xml: "xml",
+  svg: "xml",
+  sh: "bash",
+  bash: "bash",
+  zsh: "bash",
+  yml: "yaml",
+  yaml: "yaml",
+  sql: "sql",
+  md: "markdown",
+  mdx: "markdown",
+  go: "go",
+};
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -237,6 +287,21 @@ export function FileExplorer({
   const isSearchMode = filter.trim().length > 0;
   const selectedRelPath = selectedPath ? toRelPath(selectedPath, cwd) : null;
   const lineCount = fileContent ? fileContent.split("\n").length : 0;
+
+  // Syntax highlight file content
+  const highlightedLines = useMemo(() => {
+    if (!fileContent || !selectedRelPath) return null;
+    const ext = selectedRelPath.split(".").pop()?.toLowerCase() ?? "";
+    const lang = EXT_TO_LANG[ext];
+    try {
+      const highlighted = lang
+        ? hljs.highlight(fileContent, { language: lang }).value
+        : hljs.highlightAuto(fileContent).value;
+      return highlighted.split("\n");
+    } catch {
+      return null;
+    }
+  }, [fileContent, selectedRelPath]);
   const worktreeName = cwd.split("/").pop() ?? cwd;
 
   /* ---- Keyboard: Escape closes ---- */
@@ -412,15 +477,26 @@ export function FileExplorer({
                   <span className="fe-preview-meta">{lineCount} lines</span>
                 </div>
                 <div className="fe-code-scroll">
-                  <pre className="fe-code">
-                    {fileContent.split("\n").map((line, i) => (
-                      <div key={i} className="fe-code-line">
-                        <span className="fe-line-num">{i + 1}</span>
-                        <span className="fe-line-content">
-                          {line || "\u200b"}
-                        </span>
-                      </div>
-                    ))}
+                  <pre className="fe-code hljs">
+                    {(highlightedLines ?? fileContent.split("\n")).map(
+                      (line, i) => (
+                        <div key={i} className="fe-code-line">
+                          <span className="fe-line-num">{i + 1}</span>
+                          {highlightedLines ? (
+                            <span
+                              className="fe-line-content"
+                              dangerouslySetInnerHTML={{
+                                __html: line || "\u200b",
+                              }}
+                            />
+                          ) : (
+                            <span className="fe-line-content">
+                              {(line as string) || "\u200b"}
+                            </span>
+                          )}
+                        </div>
+                      ),
+                    )}
                   </pre>
                 </div>
               </div>

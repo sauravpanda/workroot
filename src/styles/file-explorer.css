@@ -476,6 +476,54 @@
   padding-right: 16px;
 }
 
+/* ── Syntax highlighting (highlight.js) ── */
+
+.fe-code .hljs-keyword,
+.fe-code .hljs-selector-tag {
+  color: #c678dd;
+}
+.fe-code .hljs-string,
+.fe-code .hljs-template-variable {
+  color: #98c379;
+}
+.fe-code .hljs-comment,
+.fe-code .hljs-quote {
+  color: #5c6370;
+  font-style: italic;
+}
+.fe-code .hljs-number,
+.fe-code .hljs-literal {
+  color: #d19a66;
+}
+.fe-code .hljs-function .hljs-title,
+.fe-code .hljs-title.function_ {
+  color: #61afef;
+}
+.fe-code .hljs-type,
+.fe-code .hljs-built_in {
+  color: #e5c07b;
+}
+.fe-code .hljs-attr,
+.fe-code .hljs-attribute {
+  color: #d19a66;
+}
+.fe-code .hljs-variable,
+.fe-code .hljs-params {
+  color: #e06c75;
+}
+.fe-code .hljs-tag {
+  color: #e06c75;
+}
+.fe-code .hljs-name {
+  color: #e06c75;
+}
+.fe-code .hljs-meta {
+  color: #61afef;
+}
+.fe-code .hljs-punctuation {
+  color: #abb2bf;
+}
+
 /* ── Generic empty message ── */
 
 .fe-empty {
