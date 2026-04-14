@@ -468,7 +468,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .project-name-row {
@@ -480,7 +480,8 @@
 
 .project-name {
   font-weight: 600;
-  font-size: 0.88em;
+  font-size: 0.92em;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -492,12 +493,12 @@
 
 .project-path {
   font-family: var(--font-mono);
-  font-size: 0.74em;
+  font-size: 0.68em;
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  opacity: 0.6;
+  opacity: 0.5;
   transition: opacity var(--transition-fast);
   line-height: 1.3;
 }
