@@ -242,6 +242,7 @@ interface PanelHostProps {
   closePanel: (name: PanelKey) => void;
   selectedProjectId: number | null;
   selectedWorktreeId: number | null;
+  allWorktreeIds?: number[];
   selectedWorktreePath: string | null;
   selectedWorktreeName: string | null;
   blameFilePath: string;
@@ -268,6 +269,7 @@ export function PanelHost({
   closePanel,
   selectedProjectId,
   selectedWorktreeId,
+  allWorktreeIds,
   selectedWorktreePath,
   selectedWorktreeName,
   blameFilePath,
@@ -383,6 +385,7 @@ export function PanelHost({
         <PanelBoundary name="MultiAgentPipeline">
           <MultiAgentPipelinePanel
             worktreeId={selectedWorktreeId}
+            allWorktreeIds={allWorktreeIds}
             onClose={() => closePanel("multiAgentPipeline")}
           />
         </PanelBoundary>

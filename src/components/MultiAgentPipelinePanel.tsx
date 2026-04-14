@@ -101,6 +101,7 @@ interface PipelineRun {
 
 interface Props {
   worktreeId: number;
+  allWorktreeIds?: number[];
   onClose: () => void;
 }
 
@@ -142,7 +143,11 @@ const PIPELINE_TEMPLATES: PipelineTemplate[] = [
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
+export function MultiAgentPipelinePanel({
+  worktreeId,
+  allWorktreeIds,
+  onClose,
+}: Props) {
   const [tab, setTab] = useState<Tab>("quick");
 
   // Agents state
@@ -236,10 +241,11 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
     }
   }, [selectedPipelineId, loadRuns]);
 
-  // Cleanup progress listener on unmount
+  // Cleanup listeners on unmount
   useEffect(() => {
     return () => {
       unlistenRef.current?.();
+      for (const fn of quickUnlistenRef.current) fn();
     };
   }, []);
 
@@ -430,17 +436,17 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
     }
   }
 
-  // ─── Quick Run handler ──────────────────────────────────────────────────
+  // ─── Quick Run handler (streaming) ────────────────────────────────────
 
   const [quickCommand, setQuickCommand] = useState("");
   const [quickTask, setQuickTask] = useState("");
   const [quickRunning, setQuickRunning] = useState(false);
-  const [quickResult, setQuickResult] = useState<{
-    stdout: string;
-    stderr: string;
-    exit_code: number;
-  } | null>(null);
+  const [quickLines, setQuickLines] = useState<
+    { stream: string; line: string }[]
+  >([]);
+  const [quickExitCode, setQuickExitCode] = useState<number | null>(null);
   const [quickError, setQuickError] = useState("");
+  const quickUnlistenRef = useRef<UnlistenFn[]>([]);
 
   async function handleQuickRun() {
     setQuickError("");
@@ -449,21 +455,109 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
       return;
     }
     setQuickRunning(true);
-    setQuickResult(null);
+    setQuickLines([]);
+    setQuickExitCode(null);
+
+    // Clean up prior listeners
+    for (const fn of quickUnlistenRef.current) fn();
+    quickUnlistenRef.current = [];
+
     try {
-      const result = await invoke<{
-        command: string;
-        label: string;
-        stdout: string;
-        stderr: string;
-        exit_code: number;
-      }>("run_agent_task", {
+      const runId = await invoke<number>("run_agent_task_streaming", {
         worktreeId,
         command: quickCommand.trim(),
-        label: "Quick run",
         taskDesc: quickTask.trim(),
       });
-      setQuickResult(result);
+
+      // Listen for output lines
+      const unOutput = await listen<{
+        run_id: number;
+        stream: string;
+        line: string;
+      }>("agent:output", (event) => {
+        if (event.payload.run_id !== runId) return;
+        setQuickLines((prev) => [
+          ...prev,
+          { stream: event.payload.stream, line: event.payload.line },
+        ]);
+      });
+
+      // Listen for completion
+      const unDone = await listen<{
+        run_id: number;
+        exit_code: number;
+      }>("agent:done", (event) => {
+        if (event.payload.run_id !== runId) return;
+        setQuickExitCode(event.payload.exit_code);
+        setQuickRunning(false);
+        // Notify if backgrounded
+        if (
+          !document.hasFocus() &&
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
+          new Notification("Quick Run completed", {
+            body: `Exit code: ${event.payload.exit_code}`,
+            silent: false,
+          });
+        }
+      });
+
+      quickUnlistenRef.current = [unOutput, unDone];
+    } catch (e) {
+      setQuickError(String(e));
+      setQuickRunning(false);
+    }
+  }
+
+  // ─── Bulk Run handler ────────────────────────────────────────────────────
+
+  async function handleBulkRun() {
+    if (!allWorktreeIds || !quickCommand.trim() || !quickTask.trim()) return;
+    setQuickRunning(true);
+    setQuickLines([]);
+    setQuickExitCode(null);
+    setQuickError("");
+
+    try {
+      const results = await Promise.all(
+        allWorktreeIds.map((wtId) =>
+          invoke<{
+            command: string;
+            label: string;
+            stdout: string;
+            stderr: string;
+            exit_code: number;
+          }>("run_agent_task", {
+            worktreeId: wtId,
+            command: quickCommand.trim(),
+            label: `Bulk run (wt ${wtId})`,
+            taskDesc: quickTask.trim(),
+          }).catch((e) => ({
+            command: quickCommand,
+            label: `wt ${wtId}`,
+            stdout: "",
+            stderr: String(e),
+            exit_code: -1,
+          })),
+        ),
+      );
+      const lines = results.flatMap((r) => [
+        { stream: "stdout", line: `── ${r.label} (exit ${r.exit_code}) ──` },
+        ...(r.stdout
+          ? r.stdout
+              .split("\n")
+              .map((l: string) => ({ stream: "stdout", line: l }))
+          : []),
+        ...(r.stderr
+          ? r.stderr
+              .split("\n")
+              .map((l: string) => ({ stream: "stderr", line: l }))
+          : []),
+      ]);
+      setQuickLines(lines);
+      const allPassed = results.every((r) => r.exit_code === 0);
+      setQuickExitCode(allPassed ? 0 : 1);
     } catch (e) {
       setQuickError(String(e));
     } finally {
@@ -663,35 +757,49 @@ export function MultiAgentPipelinePanel({ worktreeId, onClose }: Props) {
                 >
                   {quickRunning ? "Running..." : "Run"}
                 </button>
+                {allWorktreeIds && allWorktreeIds.length > 1 && (
+                  <button
+                    className="map-btn map-btn--export"
+                    onClick={() => void handleBulkRun()}
+                    disabled={quickRunning}
+                    title={`Run on all ${allWorktreeIds.length} worktrees`}
+                  >
+                    Run All ({allWorktreeIds.length})
+                  </button>
+                )}
               </div>
 
-              {quickResult && (
+              {(quickLines.length > 0 || quickExitCode !== null) && (
                 <div className="map-run-result">
                   <div className="map-run-result-header">
                     <span>Quick Run</span>
-                    <span
-                      className={`map-badge map-badge--${quickResult.exit_code === 0 ? "approved" : "failed"}`}
-                    >
-                      exit {quickResult.exit_code}
-                    </span>
+                    {quickExitCode !== null ? (
+                      <span
+                        className={`map-badge map-badge--${quickExitCode === 0 ? "approved" : "failed"}`}
+                      >
+                        exit {quickExitCode}
+                      </span>
+                    ) : (
+                      <span className="map-badge map-badge--running">
+                        running
+                      </span>
+                    )}
                   </div>
                   <div className="map-step-body">
-                    {quickResult.stdout && (
-                      <>
-                        <p className="map-step-label">stdout</p>
-                        <pre className="map-pre">{quickResult.stdout}</pre>
-                      </>
-                    )}
-                    {quickResult.stderr && (
-                      <>
-                        <p className="map-step-label map-step-label--err">
-                          stderr
-                        </p>
-                        <pre className="map-pre map-pre--err">
-                          {quickResult.stderr}
-                        </pre>
-                      </>
-                    )}
+                    <pre className="map-pre map-pre--stream">
+                      {quickLines.map((l, i) => (
+                        <span
+                          key={i}
+                          className={
+                            l.stream === "stderr" ? "map-line--err" : ""
+                          }
+                        >
+                          {l.line}
+                          {"\n"}
+                        </span>
+                      ))}
+                      {quickRunning && <span className="map-cursor">_</span>}
+                    </pre>
                   </div>
                 </div>
               )}

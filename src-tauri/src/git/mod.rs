@@ -29,6 +29,8 @@ pub struct WorktreeInfo {
     pub status: String,
     pub is_dirty: bool,
     pub port: Option<i64>,
+    pub ahead: u32,
+    pub behind: u32,
     pub created_at: String,
     pub deleted_at: Option<String>,
     pub hidden_at: Option<String>,

@@ -2,8 +2,11 @@ use crate::db::AppDb;
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 use std::process::Stdio;
+use std::sync::atomic::{AtomicI64, Ordering};
 use tauri::{AppHandle, Emitter, State};
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+
+static AGENT_RUN_COUNTER: AtomicI64 = AtomicI64::new(0);
 
 #[tauri::command]
 pub async fn save_text_file(path: String, contents: String) -> Result<(), String> {
@@ -602,4 +605,107 @@ pub async fn run_agent_task(
         stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
         exit_code: output.status.code().unwrap_or(-1),
     })
+}
+
+#[derive(Debug, Serialize, Clone)]
+struct AgentOutputEvent {
+    run_id: i64,
+    stream: String,
+    line: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+struct AgentDoneEvent {
+    run_id: i64,
+    exit_code: i32,
+}
+
+/// Run an agent task with streaming output via events.
+/// Returns a run_id immediately; output arrives via `agent:output` events.
+/// Completion is signalled by an `agent:done` event.
+#[tauri::command]
+pub async fn run_agent_task_streaming(
+    app: AppHandle,
+    db: State<'_, AppDb>,
+    worktree_id: i64,
+    command: String,
+    task_desc: String,
+) -> Result<i64, String> {
+    let worktree_path: String = {
+        let conn = db.0.lock().map_err(|e| format!("DB lock: {e}"))?;
+        conn.query_row(
+            "SELECT path FROM worktrees WHERE id = ?1",
+            params![worktree_id],
+            |row| row.get(0),
+        )
+        .map_err(|e| format!("Worktree not found: {e}"))?
+    };
+
+    let parts = split_command(&command);
+    if parts.is_empty() {
+        return Err("Command must not be empty".into());
+    }
+
+    let run_id = AGENT_RUN_COUNTER.fetch_add(1, Ordering::Relaxed);
+
+    let mut child = tokio::process::Command::new(&parts[0])
+        .args(&parts[1..])
+        .current_dir(&worktree_path)
+        .env("TASK", &task_desc)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Failed to spawn: {e}"))?;
+
+    let stdout = child.stdout.take();
+    let stderr = child.stderr.take();
+
+    // Stream stdout
+    if let Some(out) = stdout {
+        let app_clone = app.clone();
+        tokio::spawn(async move {
+            let reader = BufReader::new(out);
+            let mut lines = reader.lines();
+            while let Ok(Some(line)) = lines.next_line().await {
+                let _ = app_clone.emit(
+                    "agent:output",
+                    AgentOutputEvent {
+                        run_id,
+                        stream: "stdout".into(),
+                        line,
+                    },
+                );
+            }
+        });
+    }
+
+    // Stream stderr
+    if let Some(err) = stderr {
+        let app_clone = app.clone();
+        tokio::spawn(async move {
+            let reader = BufReader::new(err);
+            let mut lines = reader.lines();
+            while let Ok(Some(line)) = lines.next_line().await {
+                let _ = app_clone.emit(
+                    "agent:output",
+                    AgentOutputEvent {
+                        run_id,
+                        stream: "stderr".into(),
+                        line,
+                    },
+                );
+            }
+        });
+    }
+
+    // Wait for exit in background
+    tokio::spawn(async move {
+        let exit_code = match child.wait().await {
+            Ok(status) => status.code().unwrap_or(-1),
+            Err(_) => -1,
+        };
+        let _ = app.emit("agent:done", AgentDoneEvent { run_id, exit_code });
+    });
+
+    Ok(run_id)
 }
