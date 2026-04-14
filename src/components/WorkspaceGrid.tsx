@@ -607,7 +607,11 @@ export function WorkspaceGrid({
               {spawning ? "Creating\u2026" : "Run"}
             </button>
             {spawnError && (
-              <div className="workspace-cmd-error">{spawnError}</div>
+              <div className="workspace-cmd-error">
+                {spawnError.includes("no commits yet")
+                  ? "This repo has no commits yet — make an initial commit to enable worktrees."
+                  : spawnError}
+              </div>
             )}
           </div>
         )}
