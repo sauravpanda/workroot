@@ -537,3 +537,43 @@
   font-size: 11px;
   color: var(--color-text-muted, #6c7086);
 }
+
+/* Sparkline history dots */
+.map-sparkline {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.map-spark-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.map-spark-dot--approved {
+  background: #a6e3a1;
+}
+
+.map-spark-dot--failed {
+  background: #f38ba8;
+}
+
+.map-spark-dot--max_iterations {
+  background: #cba6f7;
+}
+
+.map-spark-dot--running {
+  background: #f9e2af;
+}
+
+/* Config export/import actions */
+.map-config-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.map-import-label {
+  cursor: pointer;
+}

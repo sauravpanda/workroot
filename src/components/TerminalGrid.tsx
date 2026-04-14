@@ -139,8 +139,20 @@ export function TerminalPreview({ cwd, shell, themeId }: TerminalPreviewProps) {
 
 interface TerminalSnapshotProps {
   text: string;
+  themeId?: string;
 }
 
-export function TerminalSnapshot({ text }: TerminalSnapshotProps) {
-  return <pre className="terminal-snapshot">{text || "\n  No output yet"}</pre>;
+export function TerminalSnapshot({ text, themeId }: TerminalSnapshotProps) {
+  const theme = getThemeById(themeId || DEFAULT_THEME_ID);
+  return (
+    <pre
+      className="terminal-snapshot"
+      style={{
+        background: theme.theme.background,
+        color: theme.theme.foreground,
+      }}
+    >
+      {text || "\n  No output yet"}
+    </pre>
+  );
 }

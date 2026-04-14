@@ -779,6 +779,7 @@ function AppContent({
       {
         id: "ai:multi-agent-pipeline",
         label: "Multi-Agent Pipeline",
+        shortcut: "Cmd+Shift+R",
         category: "AI",
         icon: "\u25B6",
         enabled: () => selectedWorktreeId !== null,
@@ -903,6 +904,12 @@ function AppContent({
         shift: true,
         action: () => togglePanel("errorDiagnosis"),
       },
+      {
+        key: "r",
+        meta: true,
+        shift: true,
+        action: () => togglePanel("multiAgentPipeline"),
+      },
     ],
     [
       setShowSettings,
@@ -995,6 +1002,8 @@ function AppContent({
             onNewWorktree={(projectId: number) => {
               setSelectedProjectId(projectId);
             }}
+            onOpenAgent={() => openPanel("multiAgentPipeline")}
+            onOpenDiff={() => openPanel("gitDiff")}
             shell={terminalShell}
             themeId={terminalThemeId}
             snapshotMap={terminalSnapshotMapRef}
