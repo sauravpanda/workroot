@@ -1061,6 +1061,7 @@ function AppContent({
         closePanel={closePanel}
         selectedProjectId={selectedProjectId}
         selectedWorktreeId={selectedWorktreeId}
+        allWorktreeIds={allWorktrees.map((wt) => wt.id)}
         selectedWorktreePath={selectedWorktreePath}
         selectedWorktreeName={selectedWorktreeName}
         blameFilePath={blameFilePath}

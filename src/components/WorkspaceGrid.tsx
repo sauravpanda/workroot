@@ -37,6 +37,8 @@ interface WorktreeInfo {
   status: string;
   is_dirty?: boolean;
   port?: number | null;
+  ahead?: number;
+  behind?: number;
 }
 
 interface WorkspaceGridProps {
@@ -505,6 +507,20 @@ export function WorkspaceGrid({
                       )}
                       {wt.port ? (
                         <span className="workspace-card-port">:{wt.port}</span>
+                      ) : null}
+                      {(wt.ahead ?? 0) > 0 || (wt.behind ?? 0) > 0 ? (
+                        <span className="workspace-card-sync">
+                          {(wt.ahead ?? 0) > 0 && (
+                            <span className="workspace-card-ahead">
+                              {wt.ahead}↑
+                            </span>
+                          )}
+                          {(wt.behind ?? 0) > 0 && (
+                            <span className="workspace-card-behind">
+                              {wt.behind}↓
+                            </span>
+                          )}
+                        </span>
                       ) : null}
                     </div>
                     {viewMode === "terminals" && shell && (

@@ -460,6 +460,23 @@
   border-radius: var(--radius);
 }
 
+/* Git sync indicators */
+.workspace-card-sync {
+  font-family: var(--font-mono);
+  font-size: 0.65em;
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.workspace-card-ahead {
+  color: #3b82f6;
+}
+
+.workspace-card-behind {
+  color: #f59e0b;
+}
+
 /* Context menu */
 .workspace-ctx-menu {
   position: fixed;

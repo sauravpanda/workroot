@@ -27,6 +27,7 @@ fn check_is_dirty(path: &str) -> bool {
 
 fn row_to_info(row: queries::WorktreeRow) -> WorktreeInfo {
     let is_dirty = check_is_dirty(&row.path);
+    let (ahead, behind) = count_ahead_behind(&row.path);
     WorktreeInfo {
         id: row.id,
         project_id: row.project_id,
@@ -35,6 +36,8 @@ fn row_to_info(row: queries::WorktreeRow) -> WorktreeInfo {
         status: row.status,
         is_dirty,
         port: row.port,
+        ahead,
+        behind,
         created_at: row.created_at,
         deleted_at: row.deleted_at,
         hidden_at: row.hidden_at,
@@ -190,6 +193,34 @@ pub fn delete_worktree(db: State<'_, AppDb>, worktree_id: i64) -> Result<bool, S
 }
 
 /// Counts commits on the local branch that have not been pushed to its upstream remote.
+fn count_ahead_behind(path: &str) -> (u32, u32) {
+    let repo = match Repository::open(path) {
+        Ok(r) => r,
+        Err(_) => return (0, 0),
+    };
+    let head = match repo.head() {
+        Ok(h) => h,
+        Err(_) => return (0, 0),
+    };
+    let local_oid = match head.target() {
+        Some(oid) => oid,
+        None => return (0, 0),
+    };
+    let branch_name = match head.shorthand() {
+        Some(name) => name.to_string(),
+        None => return (0, 0),
+    };
+    let upstream_ref = format!("refs/remotes/origin/{}", branch_name);
+    let remote_oid = match repo.refname_to_id(&upstream_ref) {
+        Ok(oid) => oid,
+        Err(_) => return (0, 0), // no tracking branch
+    };
+    match repo.graph_ahead_behind(local_oid, remote_oid) {
+        Ok((ahead, behind)) => (ahead as u32, behind as u32),
+        Err(_) => (0, 0),
+    }
+}
+
 fn count_unpushed_commits(path: &str) -> u32 {
     let repo = match Repository::open(path) {
         Ok(r) => r,
@@ -297,6 +328,8 @@ pub fn get_worktree_status(db: State<'_, AppDb>, worktree_id: i64) -> Result<Wor
         row.status.clone()
     };
 
+    let (ahead, behind) = count_ahead_behind(&row.path);
+
     Ok(WorktreeInfo {
         id: row.id,
         project_id: row.project_id,
@@ -305,6 +338,8 @@ pub fn get_worktree_status(db: State<'_, AppDb>, worktree_id: i64) -> Result<Wor
         status,
         is_dirty,
         port: row.port,
+        ahead,
+        behind,
         created_at: row.created_at,
         deleted_at: row.deleted_at,
         hidden_at: row.hidden_at,

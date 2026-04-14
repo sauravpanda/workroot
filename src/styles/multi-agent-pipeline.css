@@ -577,3 +577,27 @@
 .map-import-label {
   cursor: pointer;
 }
+
+/* Streaming output */
+.map-pre--stream {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.map-line--err {
+  color: var(--color-red, #f38ba8);
+}
+
+.map-cursor {
+  animation: map-blink 1s step-end infinite;
+}
+
+@keyframes map-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
