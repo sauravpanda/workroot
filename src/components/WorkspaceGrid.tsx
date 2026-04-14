@@ -75,9 +75,9 @@ function slugifyTask(task: string): string {
     .trim()
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
-    .slice(0, 50)
+    .slice(0, 40)
     .replace(/-$/, "");
-  return slug ? `task/${slug}` : "task/new";
+  return slug ? `task-${slug}` : `task-${Date.now()}`;
 }
 
 type ViewMode = "cards" | "terminals";
