@@ -76,7 +76,7 @@
   width: 200px;
   flex-shrink: 0;
   border-right: 1px solid var(--border-subtle);
-  padding: 8px;
+  padding: 12px 8px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -97,6 +97,9 @@
   text-align: left;
   justify-content: flex-start;
   height: auto;
+  transition:
+    background-color 0.12s,
+    color 0.12s;
 }
 
 .settings-page__nav-item:hover {
@@ -115,19 +118,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   font-size: 0.72em;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   flex-shrink: 0;
+  transition:
+    color 0.12s,
+    background-color 0.12s,
+    border-color 0.12s;
+}
+
+.settings-page__nav-item:hover .settings-page__nav-icon {
+  color: var(--text-primary);
+  border-color: var(--border);
 }
 
 .settings-page__nav-item--active .settings-page__nav-icon {
   color: var(--accent);
   background: var(--accent-muted);
+  border-color: transparent;
 }
 
 .settings-page__nav-label {
@@ -167,21 +181,24 @@
 /* ── Section content ── */
 
 .settings-page__section-content {
-  padding: 20px 24px 24px;
+  padding: 24px 28px 28px;
 }
 
 .settings-page__section-title {
-  font-size: 1em;
+  font-size: 1.05em;
   font-weight: 600;
-  margin: 0 0 4px;
+  margin: 0 0 6px;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .settings-page__section-desc {
   font-size: 0.78em;
   color: var(--text-secondary);
-  margin: 0 0 20px;
+  margin: 0 0 24px;
   line-height: 1.5;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 /* ── Text fields ── */
@@ -192,8 +209,10 @@
 
 .settings-page__field-label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   color: var(--text-primary);
+  font-size: 0.82em;
+  font-weight: 500;
 }
 
 .settings-page__field-row {
