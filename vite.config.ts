@@ -16,10 +16,27 @@ export default defineConfig(async () => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          'xterm': ['@xterm/xterm', '@xterm/addon-fit', '@xterm/addon-webgl', '@xterm/addon-web-links'],
-        }
-      }
-    }
+          xterm: [
+            "@xterm/xterm",
+            "@xterm/addon-fit",
+            "@xterm/addon-webgl",
+            "@xterm/addon-web-links",
+          ],
+          "react-vendor": ["react", "react-dom"],
+          radix: [
+            "@radix-ui/react-popover",
+            "@radix-ui/react-select",
+            "radix-ui",
+          ],
+          "ui-vendor": [
+            "lucide-react",
+            "class-variance-authority",
+            "clsx",
+            "tailwind-merge",
+          ],
+        },
+      },
+    },
   },
   clearScreen: false,
   server: {
