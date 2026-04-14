@@ -82,6 +82,8 @@ function AppContent({
     setSelectedWorktreeName,
     markAgentDone,
     markAgentNeedsAttention,
+    markAgentRunning,
+    clearAgentRunning,
   } = useUiStore();
 
   const [isGitHubConnected, setIsGitHubConnected] = useState(false);
@@ -149,10 +151,18 @@ function AppContent({
   const contentTabRef = useRef(contentTab);
   contentTabRef.current = contentTab;
 
+  const handleAgentActivity = useCallback(() => {
+    const id = selectedWorktreeIdRef.current;
+    if (id !== null) markAgentRunning(id);
+  }, [markAgentRunning]);
+
   const handleAgentComplete = useCallback(() => {
     const id = selectedWorktreeIdRef.current;
     const name = selectedWorktreeNameRef.current ?? "Terminal";
-    if (id !== null) markAgentDone(id);
+    if (id !== null) {
+      markAgentDone(id);
+      clearAgentRunning(id);
+    }
     if (!document.hasFocus()) {
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("Agent completed", {
@@ -163,11 +173,14 @@ function AppContent({
     } else if (contentTabRef.current !== "terminal") {
       setAgentDoneToast(name);
     }
-  }, [markAgentDone]);
+  }, [markAgentDone, clearAgentRunning]);
 
   const handleAgentNeedsAttention = useCallback(() => {
     const id = selectedWorktreeIdRef.current;
-    if (id !== null) markAgentNeedsAttention(id);
+    if (id !== null) {
+      markAgentNeedsAttention(id);
+      clearAgentRunning(id);
+    }
     if (!document.hasFocus()) {
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("Agent needs attention", {
@@ -176,7 +189,7 @@ function AppContent({
         });
       }
     }
-  }, [markAgentNeedsAttention]);
+  }, [markAgentNeedsAttention, clearAgentRunning]);
 
   // Reset content tab and close tab-launched panels when switching worktrees
   useEffect(() => {
@@ -1041,6 +1054,7 @@ function AppContent({
               shell={terminalShell}
               initCommand={terminalInitCommand}
               themeId={terminalThemeId}
+              onAgentActivity={handleAgentActivity}
               onAgentComplete={handleAgentComplete}
               onAgentNeedsAttention={handleAgentNeedsAttention}
               snapshotRef={terminalSnapshotMapRef}

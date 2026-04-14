@@ -53,14 +53,15 @@ interface WorkspaceGridProps {
   snapshotMap?: React.MutableRefObject<TerminalSnapshotMap>;
 }
 
-type CardStatus = "current" | "attention" | "done" | "idle";
+type CardStatus = "current" | "attention" | "done" | "running" | "idle";
 type FilterTab = "all" | "attention" | "active" | "done";
 
 const STATUS_RANK: Record<CardStatus, number> = {
   attention: 0,
   current: 1,
-  done: 2,
-  idle: 3,
+  running: 2,
+  done: 3,
+  idle: 4,
 };
 
 function formatPath(path: string): string {
@@ -93,8 +94,12 @@ export function WorkspaceGrid({
   themeId,
   snapshotMap,
 }: WorkspaceGridProps) {
-  const { selectedWorktreeId, agentNeedsAttentionIds, agentDoneWorktreeIds } =
-    useUiStore();
+  const {
+    selectedWorktreeId,
+    agentNeedsAttentionIds,
+    agentDoneWorktreeIds,
+    agentRunningWorktreeIds,
+  } = useUiStore();
 
   const [filterTab, setFilterTab] = useState<FilterTab>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
@@ -190,9 +195,15 @@ export function WorkspaceGrid({
       if (agentNeedsAttentionIds.has(wt.id)) return "attention";
       if (selectedWorktreeId === wt.id) return "current";
       if (agentDoneWorktreeIds.has(wt.id)) return "done";
+      if (agentRunningWorktreeIds.has(wt.id)) return "running";
       return "idle";
     },
-    [selectedWorktreeId, agentNeedsAttentionIds, agentDoneWorktreeIds],
+    [
+      selectedWorktreeId,
+      agentNeedsAttentionIds,
+      agentDoneWorktreeIds,
+      agentRunningWorktreeIds,
+    ],
   );
 
   // All worktrees sorted by activity (attention > current > done > idle),
@@ -465,7 +476,9 @@ export function WorkspaceGrid({
                               ? " workspace-card-dot--attention"
                               : status === "done"
                                 ? " workspace-card-dot--done"
-                                : "")
+                                : status === "running"
+                                  ? " workspace-card-dot--running"
+                                  : "")
                         }
                         aria-hidden
                       />
@@ -491,7 +504,9 @@ export function WorkspaceGrid({
                               ? " workspace-card-status--attention"
                               : status === "done"
                                 ? " workspace-card-status--done"
-                                : "")
+                                : status === "running"
+                                  ? " workspace-card-status--running"
+                                  : "")
                         }
                       >
                         {status === "current"
@@ -500,7 +515,9 @@ export function WorkspaceGrid({
                             ? "Attention"
                             : status === "done"
                               ? "Done"
-                              : "Idle"}
+                              : status === "running"
+                                ? "Running"
+                                : "Idle"}
                       </span>
                       {wt.is_dirty && (
                         <span className="workspace-card-dirty">M</span>

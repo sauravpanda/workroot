@@ -57,6 +57,9 @@ export function MainLayout({
   const [agentNeedsAttentionIds, setAgentNeedsAttentionIds] = useState<
     Set<number>
   >(() => new Set());
+  const [agentRunningWorktreeIds, setAgentRunningWorktreeIds] = useState<
+    Set<number>
+  >(() => new Set());
 
   const markAgentDone = useCallback((id: number) => {
     setAgentDoneWorktreeIds((prev) => new Set(prev).add(id));
@@ -76,6 +79,18 @@ export function MainLayout({
 
   const clearAgentNeedsAttention = useCallback((id: number) => {
     setAgentNeedsAttentionIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const markAgentRunning = useCallback((id: number) => {
+    setAgentRunningWorktreeIds((prev) => new Set(prev).add(id));
+  }, []);
+
+  const clearAgentRunning = useCallback((id: number) => {
+    setAgentRunningWorktreeIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
@@ -142,6 +157,9 @@ export function MainLayout({
           agentNeedsAttentionIds,
           markAgentNeedsAttention,
           clearAgentNeedsAttention,
+          agentRunningWorktreeIds,
+          markAgentRunning,
+          clearAgentRunning,
         }),
         [
           selectedProjectId,
@@ -156,6 +174,9 @@ export function MainLayout({
           agentNeedsAttentionIds,
           markAgentNeedsAttention,
           clearAgentNeedsAttention,
+          agentRunningWorktreeIds,
+          markAgentRunning,
+          clearAgentRunning,
         ],
       )}
     >
