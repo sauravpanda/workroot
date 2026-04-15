@@ -19,7 +19,6 @@ export default defineConfig(async () => ({
           xterm: [
             "@xterm/xterm",
             "@xterm/addon-fit",
-            "@xterm/addon-webgl",
             "@xterm/addon-web-links",
           ],
           "react-vendor": ["react", "react-dom"],
