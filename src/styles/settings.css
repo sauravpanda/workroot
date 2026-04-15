@@ -7,6 +7,38 @@
   max-width: 560px;
   overflow-y: auto;
   height: 100%;
+  position: relative;
+}
+
+.settings-close-btn {
+  position: absolute;
+  top: 1em;
+  right: 1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.settings-close-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+}
+
+.settings-close-btn:focus-visible {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .settings-title {

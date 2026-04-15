@@ -998,7 +998,7 @@ function AppContent({
     <Suspense fallback={null}>
       {showSettings ? (
         <PanelBoundary name="Settings">
-          <SettingsTab />
+          <SettingsTab onClose={() => setShowSettings(false)} />
         </PanelBoundary>
       ) : !selectedWorktreePath ? (
         <PanelBoundary name="WorkspaceGrid">
