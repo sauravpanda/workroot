@@ -379,8 +379,7 @@ export function TerminalPanel({
                         paneContainersRef.current.set(paneId, div);
                         triggerUpdate();
                       }
-                      const container =
-                        paneContainersRef.current.get(paneId)!;
+                      const container = paneContainersRef.current.get(paneId)!;
                       if (!slotEl.contains(container)) {
                         slotEl.replaceChildren(container);
                         triggerUpdate();
@@ -399,8 +398,7 @@ export function TerminalPanel({
               {collectLeafIds(tab.paneTree).map((paneId) => {
                 const container = paneContainersRef.current.get(paneId);
                 if (!container) return null;
-                const isFocusedPane =
-                  isActiveTab && paneId === focusedPaneId;
+                const isFocusedPane = isActiveTab && paneId === focusedPaneId;
                 return createPortal(
                   <TerminalInstance
                     cwd={activeCwd}
@@ -409,12 +407,8 @@ export function TerminalPanel({
                     shell={shell}
                     initCommand={initCommand}
                     themeId={themeId}
-                    onAgentActivity={
-                      isActiveTab ? onAgentActivity : undefined
-                    }
-                    onAgentComplete={
-                      isActiveTab ? onAgentComplete : undefined
-                    }
+                    onAgentActivity={isActiveTab ? onAgentActivity : undefined}
+                    onAgentComplete={isActiveTab ? onAgentComplete : undefined}
                     onAgentNeedsAttention={
                       isActiveTab ? onAgentNeedsAttention : undefined
                     }
