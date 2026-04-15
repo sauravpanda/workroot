@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback, useReducer } from "react";
 import { createPortal } from "react-dom";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
-import { WebglAddon } from "@xterm/addon-webgl";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
@@ -104,8 +103,11 @@ export function TerminalPanel({
   const [, triggerUpdate] = useReducer((n: number) => n + 1, 0);
 
   // When the cwd prop changes (user switches worktree), create a new path state
-  // if one doesn't exist yet — but never destroy existing states so PTY
-  // processes on other paths stay alive.
+  // if one doesn't exist yet. Tab/split structure for other worktrees is kept
+  // in state but their TerminalInstances unmount — their PTYs are killed.
+  // Rendering every worktree's terminals blew past the browser's WebGL context
+  // limit and piled up ResizeObservers, causing panes to render blank once a
+  // user accumulated many tabs across worktrees.
   useEffect(() => {
     setActiveCwd(cwd);
     setPathStates((prev) => {
@@ -113,6 +115,12 @@ export function TerminalPanel({
       return { ...prev, [cwd]: makeInitialPathState(worktreeName, cwd) };
     });
   }, [cwd, worktreeName]);
+
+  // Drop stale pane containers when the active path changes. Keeping them
+  // around after their portal target unmounts just leaks detached divs.
+  useEffect(() => {
+    paneContainersRef.current.clear();
+  }, [activeCwd]);
 
   // Convenience: current path's state + derived values.
   const currentState = pathStates[activeCwd];
@@ -331,116 +339,94 @@ export function TerminalPanel({
         )}
       </div>
       <div className="terminal-tab-content">
-        {/* Render ALL paths' tabs so their TerminalInstance components stay
-            mounted and PTY processes survive worktree switches. Only the
-            active path + active tab is made visible. */}
-        {Object.entries(pathStates).flatMap(([path, state]) =>
-          state.tabs.map((tab) => {
-            const isActivePathAndTab =
-              path === activeCwd && tab.id === state.activeTabId;
-            return (
-              <div
-                key={tab.id}
-                className={`terminal-instance ${isActivePathAndTab ? "terminal-instance-active" : ""}`}
-              >
-                <SplitPane
-                  node={tab.paneTree}
-                  onUpdateNode={(newTree) =>
-                    setPathStates((prev) => {
-                      const s = prev[path];
-                      if (!s) return prev;
-                      return {
-                        ...prev,
-                        [path]: {
-                          ...s,
-                          tabs: s.tabs.map((t) =>
-                            t.id === tab.id ? { ...t, paneTree: newTree } : t,
-                          ),
-                        },
-                      };
-                    })
-                  }
-                  renderLeaf={(paneId) => (
-                    // Each leaf renders a thin slot div.  The ref callback
-                    // places (or moves) the stable per-pane container into this
-                    // slot so the terminal content appears in the right place.
-                    <div
-                      style={{ width: "100%", height: "100%" }}
-                      ref={(slotEl) => {
-                        if (!slotEl) return;
-                        // Create a stable container for this pane on first use.
-                        if (!paneContainersRef.current.has(paneId)) {
-                          const div = document.createElement("div");
-                          div.style.cssText =
-                            "width:100%;height:100%;display:flex;flex-direction:column;";
-                          paneContainersRef.current.set(paneId, div);
-                          triggerUpdate();
-                        }
-                        const container =
-                          paneContainersRef.current.get(paneId)!;
-                        // Move the container into this slot if it isn't already
-                        // there (e.g. after a split restructures the tree).
-                        if (!slotEl.contains(container)) {
-                          slotEl.replaceChildren(container);
-                          triggerUpdate();
-                        }
-                      }}
-                    />
-                  )}
-                  focusedId={
-                    path === activeCwd && tab.id === activeTabId
-                      ? focusedPaneId
-                      : null
-                  }
-                  onFocusLeaf={
-                    path === activeCwd && tab.id === activeTabId
-                      ? setFocusedPaneId
-                      : () => {}
-                  }
-                  leafCount={collectLeafIds(tab.paneTree).length}
-                  onCloseLeaf={
-                    isActivePathAndTab ? handleClosePaneById : undefined
-                  }
-                  onSplitLeaf={isActivePathAndTab ? handleSplitLeaf : undefined}
-                />
-                {/* Render TerminalInstances via portals into the stable per-pane
-                    containers. The portal key (paneId) and container object are
-                    both stable across splits, so React never unmounts an existing
-                    TerminalInstance — the PTY process is preserved. */}
-                {collectLeafIds(tab.paneTree).map((paneId) => {
-                  const container = paneContainersRef.current.get(paneId);
-                  if (!container) return null;
-                  const isFocusedPane =
-                    path === activeCwd &&
-                    tab.id === state.activeTabId &&
-                    paneId === focusedPaneId;
-                  return createPortal(
-                    <TerminalInstance
-                      cwd={path}
-                      active={isActivePathAndTab && isFocusedPane}
-                      visible={isActivePathAndTab}
-                      shell={shell}
-                      initCommand={initCommand}
-                      themeId={themeId}
-                      onAgentActivity={
-                        isActivePathAndTab ? onAgentActivity : undefined
+        {/* Render only the active path's tabs. All tabs in the active path stay
+            mounted (so switching tabs within a worktree is free); other
+            worktrees' live terminals are torn down but their tab/split
+            structure is preserved in pathStates and recreated on return. */}
+        {tabs.map((tab) => {
+          const isActiveTab = tab.id === activeTabId;
+          return (
+            <div
+              key={tab.id}
+              className={`terminal-instance ${isActiveTab ? "terminal-instance-active" : ""}`}
+            >
+              <SplitPane
+                node={tab.paneTree}
+                onUpdateNode={(newTree) =>
+                  setPathStates((prev) => {
+                    const s = prev[activeCwd];
+                    if (!s) return prev;
+                    return {
+                      ...prev,
+                      [activeCwd]: {
+                        ...s,
+                        tabs: s.tabs.map((t) =>
+                          t.id === tab.id ? { ...t, paneTree: newTree } : t,
+                        ),
+                      },
+                    };
+                  })
+                }
+                renderLeaf={(paneId) => (
+                  <div
+                    style={{ width: "100%", height: "100%" }}
+                    ref={(slotEl) => {
+                      if (!slotEl) return;
+                      if (!paneContainersRef.current.has(paneId)) {
+                        const div = document.createElement("div");
+                        div.style.cssText =
+                          "width:100%;height:100%;display:flex;flex-direction:column;";
+                        paneContainersRef.current.set(paneId, div);
+                        triggerUpdate();
                       }
-                      onAgentComplete={
-                        isActivePathAndTab ? onAgentComplete : undefined
+                      const container =
+                        paneContainersRef.current.get(paneId)!;
+                      if (!slotEl.contains(container)) {
+                        slotEl.replaceChildren(container);
+                        triggerUpdate();
                       }
-                      onAgentNeedsAttention={
-                        isActivePathAndTab ? onAgentNeedsAttention : undefined
-                      }
-                      snapshotRef={snapshotRef}
-                    />,
-                    container,
-                    paneId,
-                  );
-                })}
-              </div>
-            );
-          }),
-        )}
+                    }}
+                  />
+                )}
+                focusedId={isActiveTab ? focusedPaneId : null}
+                onFocusLeaf={isActiveTab ? setFocusedPaneId : () => {}}
+                leafCount={collectLeafIds(tab.paneTree).length}
+                onCloseLeaf={isActiveTab ? handleClosePaneById : undefined}
+                onSplitLeaf={isActiveTab ? handleSplitLeaf : undefined}
+              />
+              {/* Portals keep TerminalInstance mounted across split
+                  restructuring within the same tab (stable paneId + container). */}
+              {collectLeafIds(tab.paneTree).map((paneId) => {
+                const container = paneContainersRef.current.get(paneId);
+                if (!container) return null;
+                const isFocusedPane =
+                  isActiveTab && paneId === focusedPaneId;
+                return createPortal(
+                  <TerminalInstance
+                    cwd={activeCwd}
+                    active={isActiveTab && isFocusedPane}
+                    visible={isActiveTab}
+                    shell={shell}
+                    initCommand={initCommand}
+                    themeId={themeId}
+                    onAgentActivity={
+                      isActiveTab ? onAgentActivity : undefined
+                    }
+                    onAgentComplete={
+                      isActiveTab ? onAgentComplete : undefined
+                    }
+                    onAgentNeedsAttention={
+                      isActiveTab ? onAgentNeedsAttention : undefined
+                    }
+                    snapshotRef={snapshotRef}
+                  />,
+                  container,
+                  paneId,
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -669,14 +655,8 @@ function TerminalInstance({
     // once layout settles.
     term.open(el);
 
-    // GPU-accelerated renderer; fall back silently if WebGL is unavailable.
-    try {
-      const webgl = new WebglAddon();
-      webgl.onContextLoss(() => webgl.dispose());
-      term.loadAddon(webgl);
-    } catch {
-      // WebGL not available — xterm falls back to its canvas renderer.
-    }
+    // Canvas renderer only. WebGL was dropped because browsers cap concurrent
+    // WebGL contexts at ~8-16; terminals past the limit silently fail to init.
 
     termRef.current = term;
     fitAddonRef.current = fitAddon;
