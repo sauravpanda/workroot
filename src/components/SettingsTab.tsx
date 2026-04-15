@@ -84,7 +84,11 @@ type UpdateStatus =
   | { state: "downloading" }
   | { state: "error"; message: string };
 
-export function SettingsTab() {
+interface SettingsTabProps {
+  onClose?: () => void;
+}
+
+export function SettingsTab({ onClose }: SettingsTabProps = {}) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
@@ -177,6 +181,24 @@ export function SettingsTab() {
   if (loading) {
     return (
       <div className="settings-tab">
+        {onClose && (
+          <button
+            type="button"
+            className="settings-close-btn"
+            onClick={onClose}
+            aria-label="Close settings"
+            title="Close settings (Esc)"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M3 3L11 11M11 3L3 11"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        )}
         <p className="settings-loading">Loading settings...</p>
       </div>
     );
@@ -237,6 +259,24 @@ export function SettingsTab() {
 
   return (
     <div className="settings-tab">
+      {onClose && (
+        <button
+          type="button"
+          className="settings-close-btn"
+          onClick={onClose}
+          aria-label="Close settings"
+          title="Close settings (Esc)"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path
+              d="M3 3L11 11M11 3L3 11"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      )}
       <h2 className="settings-title">Settings</h2>
 
       <section className="settings-section">
