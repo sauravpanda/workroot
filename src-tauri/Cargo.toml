@@ -30,7 +30,6 @@ axum = "0.8"
 tower = "0.5"
 tower-http = { version = "0.6", features = ["cors"] }
 notify = "7"
-notify-debouncer-mini = "0.5"
 base64 = "0.22"
 rand = "0.8"
 regex = "1"

@@ -692,23 +692,6 @@ pub fn list_memory_notes_with_embeddings(
 }
 
 // ============================================================
-// File Events
-// ============================================================
-
-pub fn insert_file_event(
-    conn: &Connection,
-    project_id: i64,
-    file_path: &str,
-    event_type: &str,
-) -> Result<i64, rusqlite::Error> {
-    conn.execute(
-        "INSERT INTO file_events (project_id, file_path, event_type) VALUES (?1, ?2, ?3)",
-        params![project_id, file_path, event_type],
-    )?;
-    Ok(conn.last_insert_rowid())
-}
-
-// ============================================================
 // Network Traffic
 // ============================================================
 
