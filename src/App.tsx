@@ -630,13 +630,6 @@ function AppContent({
         action: () => openPanel("depAnalyzer"),
       },
       {
-        id: "network:ports",
-        label: "Port Scanner",
-        category: "Network",
-        icon: "\u2299",
-        action: () => openPanel("portScanner"),
-      },
-      {
         id: "git:tags",
         label: "Tag Manager",
         category: "Git",
@@ -703,13 +696,6 @@ function AppContent({
         category: "View",
         icon: "\u2600",
         action: () => openPanel("morningBriefing"),
-      },
-      {
-        id: "view:network-traffic",
-        label: "Network Traffic",
-        category: "View",
-        icon: "\u21C6",
-        action: () => openPanel("networkTab"),
       },
       {
         id: "git:pr-status",

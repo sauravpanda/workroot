@@ -2,9 +2,7 @@ pub mod db;
 pub mod env;
 pub mod logs;
 pub mod memory;
-pub mod network;
 pub mod projects;
-pub mod proxy;
 pub mod shell;
 
 use serde_json::Value;
@@ -52,12 +50,6 @@ pub fn dispatch(app: &AppHandle, method: &str, params: Option<Value>) -> Result<
                 .and_then(|v| v.as_i64());
             logs::get_error_logs(app, process_id, lines)
         }
-        "get_active_proxy" => proxy::get_active_proxy(app),
-        "switch_active_proxy" => {
-            let worktree_id = extract_i64(&params, "worktree_id")?;
-            proxy::switch_active_proxy(app, worktree_id)
-        }
-        "get_proxy_status" => proxy::get_proxy_status(app),
         "get_shell_history" => {
             let worktree_id = extract_i64(&params, "worktree_id")?;
             let limit = params
@@ -106,51 +98,6 @@ pub fn dispatch(app: &AppHandle, method: &str, params: Option<Value>) -> Result<
         "get_db_relationships" => {
             let worktree_id = extract_i64(&params, "worktree_id")?;
             db::get_db_relationships(app, worktree_id)
-        }
-        "get_http_traffic" => {
-            let method_filter = params
-                .as_ref()
-                .and_then(|p| p.get("method"))
-                .and_then(|v| v.as_str());
-            let url_pattern = params
-                .as_ref()
-                .and_then(|p| p.get("url_pattern"))
-                .and_then(|v| v.as_str());
-            let status_min = params
-                .as_ref()
-                .and_then(|p| p.get("status_min"))
-                .and_then(|v| v.as_i64());
-            let status_max = params
-                .as_ref()
-                .and_then(|p| p.get("status_max"))
-                .and_then(|v| v.as_i64());
-            let limit = params
-                .as_ref()
-                .and_then(|p| p.get("limit"))
-                .and_then(|v| v.as_i64());
-            network::get_http_traffic(
-                app,
-                method_filter,
-                url_pattern,
-                status_min,
-                status_max,
-                limit,
-            )
-        }
-        "get_failed_requests" => {
-            let limit = params
-                .as_ref()
-                .and_then(|p| p.get("limit"))
-                .and_then(|v| v.as_i64());
-            network::get_failed_requests(app, limit)
-        }
-        "search_traffic" => {
-            let url_pattern = extract_string(&params, "url_pattern")?;
-            let limit = params
-                .as_ref()
-                .and_then(|p| p.get("limit"))
-                .and_then(|v| v.as_i64());
-            network::search_http_traffic(app, &url_pattern, limit)
         }
         _ => Err(format!("Method not found: {}", method)),
     }

@@ -219,35 +219,6 @@ async fn handle_tools() -> Json<Vec<ToolDef>> {
             }),
         },
         ToolDef {
-            name: "get_active_proxy".into(),
-            description: "Get the project currently routed through the :3000 proxy".into(),
-            parameters: serde_json::json!({
-                "type": "object",
-                "properties": {},
-                "required": []
-            }),
-        },
-        ToolDef {
-            name: "switch_active_proxy".into(),
-            description: "Switch the :3000 proxy target to a different worktree".into(),
-            parameters: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "worktree_id": { "type": "integer" }
-                },
-                "required": ["worktree_id"]
-            }),
-        },
-        ToolDef {
-            name: "get_proxy_status".into(),
-            description: "Get proxy health status".into(),
-            parameters: serde_json::json!({
-                "type": "object",
-                "properties": {},
-                "required": []
-            }),
-        },
-        ToolDef {
             name: "get_shell_history".into(),
             description: "Get recent shell commands for a worktree".into(),
             parameters: serde_json::json!({
@@ -361,42 +332,6 @@ async fn handle_tools() -> Json<Vec<ToolDef>> {
                     "worktree_id": { "type": "integer" }
                 },
                 "required": ["worktree_id"]
-            }),
-        },
-        ToolDef {
-            name: "get_http_traffic".into(),
-            description: "Get recent HTTP traffic captured by the forward proxy".into(),
-            parameters: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "method": { "type": "string", "description": "Filter by HTTP method (GET, POST, etc.)" },
-                    "url_pattern": { "type": "string", "description": "Filter by URL substring" },
-                    "status_min": { "type": "integer", "description": "Minimum status code" },
-                    "status_max": { "type": "integer", "description": "Maximum status code" },
-                    "limit": { "type": "integer", "description": "Max results (default 50)" }
-                }
-            }),
-        },
-        ToolDef {
-            name: "get_failed_requests".into(),
-            description: "Get HTTP requests that returned 4xx or 5xx status codes".into(),
-            parameters: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "limit": { "type": "integer", "description": "Max results (default 50)" }
-                }
-            }),
-        },
-        ToolDef {
-            name: "search_traffic".into(),
-            description: "Search HTTP traffic by URL pattern".into(),
-            parameters: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "url_pattern": { "type": "string", "description": "URL substring to search for" },
-                    "limit": { "type": "integer", "description": "Max results (default 50)" }
-                },
-                "required": ["url_pattern"]
             }),
         },
     ];

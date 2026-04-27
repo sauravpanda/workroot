@@ -174,7 +174,6 @@ const DependencyAnalyzer = namedLazy(
   () => import("./DependencyAnalyzer"),
   "DependencyAnalyzer",
 );
-const PortScanner = namedLazy(() => import("./PortScanner"), "PortScanner");
 const TagManager = namedLazy(() => import("./TagManager"), "TagManager");
 const GitLogViewer = namedLazy(() => import("./GitLogViewer"), "GitLogViewer");
 const WorkspaceManager = namedLazy(
@@ -206,7 +205,6 @@ const OnboardingWizard = namedLazy(
   () => import("./OnboardingWizard"),
   "OnboardingWizard",
 );
-const NetworkTab = namedLazy(() => import("./NetworkTab"), "NetworkTab");
 const PRStatusPanel = namedLazy(
   () => import("./PRStatusPanel"),
   "PRStatusPanel",
@@ -673,11 +671,6 @@ export function PanelHost({
           />
         </PanelBoundary>
       )}
-      {panels.has("portScanner") && (
-        <PanelBoundary name="PortScanner">
-          <PortScanner onClose={() => closePanel("portScanner")} />
-        </PanelBoundary>
-      )}
       {panels.has("tagManager") && selectedWorktreeId !== null && (
         <PanelBoundary name="TagManager">
           <TagManager
@@ -752,27 +745,6 @@ export function PanelHost({
                 }}
                 onClose={() => closePanel("onboarding")}
               />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("networkTab") && (
-        <PanelBoundary name="NetworkTab">
-          <FocusTrapOverlay onClick={() => closePanel("networkTab")}>
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="panel-dialog-header">
-                <span>Network Traffic</span>
-                <button
-                  className="panel-dialog-close"
-                  onClick={() => closePanel("networkTab")}
-                >
-                  &times;
-                </button>
-              </div>
-              <NetworkTab />
             </div>
           </FocusTrapOverlay>
         </PanelBoundary>

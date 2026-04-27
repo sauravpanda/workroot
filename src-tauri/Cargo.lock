@@ -6125,9 +6125,7 @@ dependencies = [
  "base64 0.22.1",
  "chrono",
  "git2",
- "http-body-util",
  "hyper",
- "hyper-util",
  "keyring",
  "libz-sys",
  "nix 0.29.0",
@@ -6148,7 +6146,6 @@ dependencies = [
  "tempfile",
  "thiserror 1.0.69",
  "tokio",
- "tower",
  "tower-http",
 ]
 

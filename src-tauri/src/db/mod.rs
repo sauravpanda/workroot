@@ -122,7 +122,6 @@ mod tests {
             "logs",
             "shell_history",
             "memory_notes",
-            "network_traffic",
             "browser_events",
             "settings",
         ];
@@ -151,8 +150,6 @@ mod tests {
             "idx_shell_history_project_id",
             "idx_shell_history_timestamp",
             "idx_memory_notes_worktree_id",
-            "idx_network_traffic_process_id",
-            "idx_network_traffic_timestamp",
             "idx_browser_events_timestamp",
             "idx_browser_events_type",
         ];

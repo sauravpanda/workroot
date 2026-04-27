@@ -692,27 +692,6 @@ pub fn list_memory_notes_with_embeddings(
 }
 
 // ============================================================
-// Network Traffic
-// ============================================================
-
-pub fn insert_network_traffic(
-    conn: &Connection,
-    process_id: i64,
-    method: &str,
-    url: &str,
-    status_code: Option<i64>,
-    request_body: Option<&str>,
-    response_body: Option<&str>,
-) -> Result<i64, rusqlite::Error> {
-    conn.execute(
-        "INSERT INTO network_traffic (process_id, method, url, status_code, request_body, response_body)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-        params![process_id, method, url, status_code, request_body, response_body],
-    )?;
-    Ok(conn.last_insert_rowid())
-}
-
-// ============================================================
 // Env Profiles
 // ============================================================
 
