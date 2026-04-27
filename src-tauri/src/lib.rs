@@ -7,7 +7,6 @@ pub mod claudemd;
 pub mod clipboard;
 pub mod collaboration;
 pub mod db;
-pub mod dbconnect;
 pub mod deps;
 pub mod docker;
 pub mod errors;
@@ -40,7 +39,6 @@ pub mod workspace;
 
 use claudemd::watcher::ClaudeMdWatcher;
 use db::{init_db, AppDb};
-use dbconnect::schema::SchemaCache;
 use github::auth;
 use github::{DeviceCodeResponse, GitHubUser};
 use process::lifecycle::ProcessRegistry;
@@ -178,9 +176,6 @@ pub fn run() {
             memory::add_dead_end,
             memory::get_dead_ends,
             memory::search_dead_ends,
-            dbconnect::detect::detect_worktree_database,
-            dbconnect::schema::get_db_schema,
-            dbconnect::schema::refresh_db_schema,
             git::diff::get_changed_files,
             git::diff::get_file_diff,
             git::diff::stage_files,
@@ -353,7 +348,6 @@ pub fn run() {
             app.manage(ProcessRegistry::new());
             app.manage(HttpClient::new());
             app.manage(ClaudeMdWatcher::new());
-            app.manage(SchemaCache::new());
             app.manage(WatchState::new());
 
             // Start CLAUDE.md watcher loop

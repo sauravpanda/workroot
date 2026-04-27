@@ -1,4 +1,3 @@
-pub mod db;
 pub mod env;
 pub mod logs;
 pub mod memory;
@@ -85,19 +84,6 @@ pub fn dispatch(app: &AppHandle, method: &str, params: Option<Value>) -> Result<
         "get_dead_ends" => {
             let worktree_id = extract_i64(&params, "worktree_id")?;
             memory::get_dead_ends(app, worktree_id)
-        }
-        "get_db_schema" => {
-            let worktree_id = extract_i64(&params, "worktree_id")?;
-            db::get_db_schema(app, worktree_id)
-        }
-        "get_table_details" => {
-            let worktree_id = extract_i64(&params, "worktree_id")?;
-            let table_name = extract_string(&params, "table_name")?;
-            db::get_table_details(app, worktree_id, &table_name)
-        }
-        "get_db_relationships" => {
-            let worktree_id = extract_i64(&params, "worktree_id")?;
-            db::get_db_relationships(app, worktree_id)
         }
         _ => Err(format!("Method not found: {}", method)),
     }
