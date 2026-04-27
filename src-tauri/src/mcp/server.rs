@@ -399,42 +399,6 @@ async fn handle_tools() -> Json<Vec<ToolDef>> {
                 "required": ["url_pattern"]
             }),
         },
-        ToolDef {
-            name: "get_file_hotspots".into(),
-            description: "Get most frequently changed files in a project".into(),
-            parameters: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "project_id": { "type": "integer" },
-                    "period": { "type": "string", "description": "Time period: 1h, 24h, 7d (default 24h)" }
-                },
-                "required": ["project_id"]
-            }),
-        },
-        ToolDef {
-            name: "get_related_files".into(),
-            description: "Get files that frequently co-change with a given file".into(),
-            parameters: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "project_id": { "type": "integer" },
-                    "file_path": { "type": "string" }
-                },
-                "required": ["project_id", "file_path"]
-            }),
-        },
-        ToolDef {
-            name: "get_recent_file_changes".into(),
-            description: "Get recent file change events for a project".into(),
-            parameters: serde_json::json!({
-                "type": "object",
-                "properties": {
-                    "project_id": { "type": "integer" },
-                    "limit": { "type": "integer", "description": "Max results (default 50)" }
-                },
-                "required": ["project_id"]
-            }),
-        },
     ];
 
     Json(tools)

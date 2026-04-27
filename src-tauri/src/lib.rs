@@ -12,7 +12,6 @@ pub mod deps;
 pub mod docker;
 pub mod errors;
 pub mod fileview;
-pub mod filewatcher;
 pub mod git;
 pub mod github;
 pub mod mcp;
@@ -44,7 +43,6 @@ pub mod workspace;
 use claudemd::watcher::ClaudeMdWatcher;
 use db::{init_db, AppDb};
 use dbconnect::schema::SchemaCache;
-use filewatcher::tracker::FileWatcherRegistry;
 use github::auth;
 use github::{DeviceCodeResponse, GitHubUser};
 use process::lifecycle::ProcessRegistry;
@@ -322,7 +320,6 @@ pub fn run() {
             plugins::runtime::install_plugin_from_url,
             deps::analyze::analyze_dependencies,
             network::ports::scan_local_ports,
-            filewatcher::stats::get_directory_stats,
             git::tags::list_tags,
             git::tags::create_tag,
             git::tags::delete_tag,
@@ -372,7 +369,6 @@ pub fn run() {
             app.manage(ProxyState::new());
             app.manage(ClaudeMdWatcher::new());
             app.manage(SchemaCache::new());
-            app.manage(FileWatcherRegistry::new());
             app.manage(WatchState::new());
 
             // Start CLAUDE.md watcher loop

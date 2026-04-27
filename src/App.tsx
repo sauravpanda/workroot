@@ -637,14 +637,6 @@ function AppContent({
         action: () => openPanel("portScanner"),
       },
       {
-        id: "tools:dir-stats",
-        label: "Directory Stats",
-        category: "Tools",
-        icon: "\u25A7",
-        enabled: () => selectedWorktreePath !== null,
-        action: () => openPanel("dirStats"),
-      },
-      {
         id: "git:tags",
         label: "Tag Manager",
         category: "Git",

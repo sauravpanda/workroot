@@ -88,14 +88,6 @@ CREATE TABLE IF NOT EXISTS memory_notes (
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE IF NOT EXISTS file_events (
-    id          INTEGER PRIMARY KEY,
-    project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    file_path   TEXT NOT NULL,
-    event_type  TEXT NOT NULL,
-    timestamp   TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
 CREATE TABLE IF NOT EXISTS network_traffic (
     id                INTEGER PRIMARY KEY,
     process_id        INTEGER REFERENCES processes(id) ON DELETE CASCADE,
@@ -147,8 +139,6 @@ CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON logs(timestamp);
 CREATE INDEX IF NOT EXISTS idx_shell_history_project_id ON shell_history(project_id);
 CREATE INDEX IF NOT EXISTS idx_shell_history_timestamp ON shell_history(timestamp);
 CREATE INDEX IF NOT EXISTS idx_memory_notes_worktree_id ON memory_notes(worktree_id);
-CREATE INDEX IF NOT EXISTS idx_file_events_project_id ON file_events(project_id);
-CREATE INDEX IF NOT EXISTS idx_file_events_timestamp ON file_events(timestamp);
 CREATE INDEX IF NOT EXISTS idx_network_traffic_process_id ON network_traffic(process_id);
 CREATE INDEX IF NOT EXISTS idx_network_traffic_timestamp ON network_traffic(timestamp);
 CREATE INDEX IF NOT EXISTS idx_browser_events_timestamp ON browser_events(timestamp);

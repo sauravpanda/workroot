@@ -175,10 +175,6 @@ const DependencyAnalyzer = namedLazy(
   "DependencyAnalyzer",
 );
 const PortScanner = namedLazy(() => import("./PortScanner"), "PortScanner");
-const DirectoryStats = namedLazy(
-  () => import("./DirectoryStats"),
-  "DirectoryStats",
-);
 const TagManager = namedLazy(() => import("./TagManager"), "TagManager");
 const GitLogViewer = namedLazy(() => import("./GitLogViewer"), "GitLogViewer");
 const WorkspaceManager = namedLazy(
@@ -680,14 +676,6 @@ export function PanelHost({
       {panels.has("portScanner") && (
         <PanelBoundary name="PortScanner">
           <PortScanner onClose={() => closePanel("portScanner")} />
-        </PanelBoundary>
-      )}
-      {panels.has("dirStats") && selectedWorktreePath && (
-        <PanelBoundary name="DirectoryStats">
-          <DirectoryStats
-            cwd={selectedWorktreePath}
-            onClose={() => closePanel("dirStats")}
-          />
         </PanelBoundary>
       )}
       {panels.has("tagManager") && selectedWorktreeId !== null && (

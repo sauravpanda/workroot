@@ -50,7 +50,6 @@ export type PanelKey =
   | "pluginRuntime"
   | "depAnalyzer"
   | "portScanner"
-  | "dirStats"
   | "tagManager"
   | "gitLog"
   | "workspaceManager"
