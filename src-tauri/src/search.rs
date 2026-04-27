@@ -240,7 +240,7 @@ pub fn unified_search(
     }
 
     // Sort by relevance (highest first), then take top 50
-    results.sort_by(|a, b| b.0.cmp(&a.0));
+    results.sort_by_key(|r| std::cmp::Reverse(r.0));
     let final_results: Vec<SearchResult> = results.into_iter().take(50).map(|(_, r)| r).collect();
 
     Ok(final_results)

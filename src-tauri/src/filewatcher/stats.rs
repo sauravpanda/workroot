@@ -59,7 +59,7 @@ pub fn get_directory_stats(cwd: String) -> Result<DirectoryStats, String> {
     .map_err(|e| format!("Walk dir: {e}"))?;
 
     // Sort by size descending, take top 10
-    all_files.sort_by(|a, b| b.size_bytes.cmp(&a.size_bytes));
+    all_files.sort_by_key(|f| std::cmp::Reverse(f.size_bytes));
     all_files.truncate(10);
 
     let mut by_extension: Vec<ExtensionCount> = ext_map
@@ -70,7 +70,7 @@ pub fn get_directory_stats(cwd: String) -> Result<DirectoryStats, String> {
             total_bytes: bytes,
         })
         .collect();
-    by_extension.sort_by(|a, b| b.count.cmp(&a.count));
+    by_extension.sort_by_key(|e| std::cmp::Reverse(e.count));
 
     Ok(DirectoryStats {
         total_files,
