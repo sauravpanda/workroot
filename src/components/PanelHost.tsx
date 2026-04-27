@@ -220,14 +220,9 @@ const ShellHistoryTab = namedLazy(
   "ShellHistoryTab",
 );
 const DeadEndsLog = namedLazy(() => import("./DeadEndsLog"), "DeadEndsLog");
-const DbSchemaTab = namedLazy(() => import("./DbSchemaTab"), "DbSchemaTab");
 const BrowserEvents = namedLazy(
   () => import("./BrowserEvents"),
   "BrowserEvents",
-);
-const DatabaseExplorer = namedLazy(
-  () => import("./DatabaseExplorer"),
-  "DatabaseExplorer",
 );
 
 interface PanelHostProps {
@@ -890,27 +885,6 @@ export function PanelHost({
           </FocusTrapOverlay>
         </PanelBoundary>
       )}
-      {panels.has("dbSchema") && selectedWorktreeId && (
-        <PanelBoundary name="DbSchema">
-          <FocusTrapOverlay onClick={() => closePanel("dbSchema")}>
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="panel-dialog-header">
-                <span>Database Schema</span>
-                <button
-                  className="panel-dialog-close"
-                  onClick={() => closePanel("dbSchema")}
-                >
-                  &times;
-                </button>
-              </div>
-              <DbSchemaTab worktreeId={selectedWorktreeId} />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
       {panels.has("browserEvents") && selectedWorktreeId && (
         <PanelBoundary name="BrowserEvents">
           <FocusTrapOverlay onClick={() => closePanel("browserEvents")}>
@@ -921,21 +895,6 @@ export function PanelHost({
               <BrowserEvents
                 worktreeId={selectedWorktreeId}
                 onClose={() => closePanel("browserEvents")}
-              />
-            </div>
-          </FocusTrapOverlay>
-        </PanelBoundary>
-      )}
-      {panels.has("dbExplorer") && selectedWorktreeId && (
-        <PanelBoundary name="DatabaseExplorer">
-          <FocusTrapOverlay onClick={() => closePanel("dbExplorer")}>
-            <div
-              className="panel-dialog panel-dialog--wide"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DatabaseExplorer
-                worktreeId={selectedWorktreeId}
-                onClose={() => closePanel("dbExplorer")}
               />
             </div>
           </FocusTrapOverlay>

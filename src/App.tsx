@@ -740,13 +740,6 @@ function AppContent({
         action: () => openPanel("deadEnds"),
       },
       {
-        id: "view:db-schema",
-        label: "Database Schema",
-        category: "View",
-        icon: "\u2637",
-        action: () => openPanel("dbSchema"),
-      },
-      {
         id: "help:onboarding",
         label: "Setup Wizard",
         category: "Help",
@@ -759,13 +752,6 @@ function AppContent({
         category: "View",
         icon: "\u2301",
         action: () => openPanel("browserEvents"),
-      },
-      {
-        id: "view:db-explorer",
-        label: "Database Explorer",
-        category: "View",
-        icon: "\u2338",
-        action: () => openPanel("dbExplorer"),
       },
       {
         id: "ai:multi-agent-pipeline",
