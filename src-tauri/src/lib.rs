@@ -17,12 +17,10 @@ pub mod github;
 pub mod mcp;
 pub mod memory;
 pub mod metrics;
-pub mod network;
 pub mod perf;
 pub mod plugins;
 pub mod process;
 pub mod projects;
-pub mod proxy;
 pub mod scheduler;
 pub mod search;
 pub mod security;
@@ -46,7 +44,6 @@ use dbconnect::schema::SchemaCache;
 use github::auth;
 use github::{DeviceCodeResponse, GitHubUser};
 use process::lifecycle::ProcessRegistry;
-use proxy::ProxyState;
 
 /// Shared reqwest HTTP client — reuse across all requests to benefit from
 /// connection pooling, DNS caching, and reduced allocations.
@@ -167,12 +164,6 @@ pub fn run() {
             process::logs::search_process_logs,
             process::logs::clear_process_logs,
             process::lifecycle::cleanup_worktree_processes,
-            proxy::server::get_proxy_status,
-            proxy::server::set_proxy_target,
-            proxy::server::clear_proxy_target,
-            proxy::switch::set_active_project,
-            proxy::switch::get_active_project,
-            proxy::switch::clear_active_project,
             claudemd::generate_worktree_claude_md,
             claudemd::read_worktree_claude_md,
             shell::install_shell_hook,
@@ -206,10 +197,6 @@ pub fn run() {
             github::activity::list_repo_pulls,
             github::activity::list_repo_issues,
             github::activity::get_repo_activity,
-            network::get_network_traffic,
-            network::search_network_traffic,
-            network::get_failed_requests,
-            network::clear_network_traffic,
             browser::correlate::get_browser_events,
             browser::correlate::get_correlated_event,
             settings::get_setting,
@@ -319,7 +306,6 @@ pub fn run() {
             plugins::runtime::execute_plugin,
             plugins::runtime::install_plugin_from_url,
             deps::analyze::analyze_dependencies,
-            network::ports::scan_local_ports,
             git::tags::list_tags,
             git::tags::create_tag,
             git::tags::delete_tag,
@@ -366,7 +352,6 @@ pub fn run() {
             app.manage(db);
             app.manage(ProcessRegistry::new());
             app.manage(HttpClient::new());
-            app.manage(ProxyState::new());
             app.manage(ClaudeMdWatcher::new());
             app.manage(SchemaCache::new());
             app.manage(WatchState::new());
@@ -374,29 +359,6 @@ pub fn run() {
             // Start CLAUDE.md watcher loop
             let watcher_handle = app.handle().clone();
             claudemd::watcher::start_watcher_loop(watcher_handle);
-
-            // Start the reverse proxy on port 3000
-            let proxy_handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                eprintln!("[startup] Starting reverse proxy on port 3000...");
-                proxy::server::start_proxy(proxy_handle).await;
-                eprintln!("[startup] Reverse proxy exited unexpectedly");
-            });
-
-            // Start the HTTP forward proxy on port 8888
-            let fwd_proxy_handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                eprintln!("[startup] Starting forward proxy on port 8888...");
-                network::proxy::start_forward_proxy(fwd_proxy_handle.clone()).await;
-                eprintln!("[startup] Forward proxy exited unexpectedly");
-                let _ = fwd_proxy_handle.emit(
-                    "service-error",
-                    serde_json::json!({
-                        "service": "forward-proxy",
-                        "message": "Forward proxy on port 8888 exited unexpectedly"
-                    }),
-                );
-            });
 
             // Start the MCP server on port 4444
             let mcp_handle = app.handle().clone();
