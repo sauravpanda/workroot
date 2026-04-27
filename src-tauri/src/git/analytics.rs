@@ -116,7 +116,7 @@ pub fn get_git_analytics(
             }
         })
         .collect();
-    authors.sort_by(|a, b| b.commit_count.cmp(&a.commit_count));
+    authors.sort_by_key(|a| std::cmp::Reverse(a.commit_count));
 
     let mut commits_by_day: Vec<DayCount> = day_map
         .into_iter()
