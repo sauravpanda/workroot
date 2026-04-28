@@ -1,12 +1,18 @@
+import { useState } from "react";
 import { useAgentDetail } from "../hooks/useAgentDetail";
-import { type ThreadEvent, type Turn } from "../lib/helm-api";
+import { clientFor, type ThreadEvent, type Turn } from "../lib/helm-api";
 import "../styles/agent-detail.css";
 
 interface AgentDetailPaneProps {
   machineId: number | null;
   agentId: string | null;
   onClose: () => void;
+  /** Called after a successful DELETE so the parent can drop selection
+   *  before the next poll catches up. */
+  onDeleted?: () => void;
 }
+
+const TERMINAL_STATES = new Set(["done", "failed"]);
 
 function formatCost(usd: number): string {
   return `$${usd.toFixed(4)}`;
@@ -86,11 +92,15 @@ export function AgentDetailPane({
   machineId,
   agentId,
   onClose,
+  onDeleted,
 }: AgentDetailPaneProps) {
-  const { detail, machine, loading, error } = useAgentDetail(
+  const { detail, machine, loading, error, refresh } = useAgentDetail(
     machineId,
     agentId,
   );
+  const [reply, setReply] = useState("");
+  const [busy, setBusy] = useState<"reply" | "kill" | "delete" | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   if (machineId === null || agentId === null) {
     return (
@@ -99,6 +109,60 @@ export function AgentDetailPane({
       </aside>
     );
   }
+
+  const sendReply = async () => {
+    if (!machine || !detail || !reply.trim()) return;
+    setBusy("reply");
+    setActionError(null);
+    try {
+      await clientFor(machine).replyAgent(detail.id, reply);
+      setReply("");
+      refresh();
+    } catch (e) {
+      setActionError(String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const kill = async () => {
+    if (!machine || !detail) return;
+    if (!window.confirm(`Kill agent "${detail.name}"?`)) return;
+    setBusy("kill");
+    setActionError(null);
+    try {
+      await clientFor(machine).killAgent(detail.id);
+      refresh();
+    } catch (e) {
+      setActionError(String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const remove = async () => {
+    if (!machine || !detail) return;
+    if (
+      !window.confirm(
+        `Delete agent "${detail.name}"? This removes the worktree, logs, and DB row.`,
+      )
+    )
+      return;
+    setBusy("delete");
+    setActionError(null);
+    try {
+      await clientFor(machine).deleteAgent(detail.id);
+      onDeleted?.();
+      onClose();
+    } catch (e) {
+      setActionError(String(e));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const isTerminal = detail ? TERMINAL_STATES.has(detail.state) : false;
+  const canReply = !!detail && detail.backend === "claude" && !isTerminal;
 
   return (
     <aside className="agent-detail">
@@ -127,7 +191,33 @@ export function AgentDetailPane({
             <span className="agent-detail__meta-item">{detail.branch}</span>
           </div>
         )}
+        {detail && (
+          <div className="agent-detail__actions">
+            <button
+              className="agent-detail__action-btn"
+              onClick={() => void kill()}
+              disabled={isTerminal || busy !== null}
+              title={isTerminal ? "Agent already finished" : "Kill agent"}
+            >
+              {busy === "kill" ? "Killing…" : "Kill"}
+            </button>
+            <button
+              className="agent-detail__action-btn agent-detail__action-btn--danger"
+              onClick={() => void remove()}
+              disabled={!isTerminal || busy !== null}
+              title={
+                isTerminal
+                  ? "Delete agent"
+                  : "Kill the agent before deleting (daemon refuses delete on running agents)"
+              }
+            >
+              {busy === "delete" ? "Deleting…" : "Delete"}
+            </button>
+          </div>
+        )}
       </div>
+
+      {actionError && <p className="agent-detail__error">{actionError}</p>}
 
       {error && <p className="agent-detail__error">{error}</p>}
 
@@ -180,6 +270,39 @@ export function AgentDetailPane({
                 {formatTokens(detail.usage.cache_read_tokens)}
               </span>
               <span>{formatCost(detail.usage.cost_usd)}</span>
+            </div>
+          )}
+
+          {canReply && (
+            <div className="agent-detail__reply">
+              <textarea
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+                onKeyDown={(e) => {
+                  if (
+                    (e.metaKey || e.ctrlKey) &&
+                    e.key === "Enter" &&
+                    reply.trim()
+                  ) {
+                    e.preventDefault();
+                    void sendReply();
+                  }
+                }}
+                placeholder="Reply to the agent…"
+                disabled={busy !== null}
+              />
+              <div className="agent-detail__reply-row">
+                <span className="agent-detail__reply-hint">
+                  ⌘/Ctrl + Enter to send
+                </span>
+                <button
+                  className="agent-detail__action-btn"
+                  onClick={() => void sendReply()}
+                  disabled={!reply.trim() || busy !== null}
+                >
+                  {busy === "reply" ? "Sending…" : "Send"}
+                </button>
+              </div>
             </div>
           )}
         </>

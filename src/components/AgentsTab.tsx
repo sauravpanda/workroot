@@ -163,6 +163,7 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
           machineId={selected.machineId}
           agentId={selected.agentId}
           onClose={closeDetail}
+          onDeleted={closeDetail}
         />
       </div>
     </div>
