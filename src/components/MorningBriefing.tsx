@@ -2,11 +2,6 @@ import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "../styles/morning-briefing.css";
 
-interface FileHotspot {
-  file_path: string;
-  change_count: number;
-}
-
 interface MemoryNote {
   id: number;
   content: string;
@@ -22,7 +17,6 @@ interface DeadEnd {
 }
 
 interface BriefingData {
-  hotFiles: FileHotspot[];
   recentNotes: MemoryNote[];
   deadEnds: DeadEnd[];
 }
@@ -41,11 +35,7 @@ export function MorningBriefing({ projectId }: MorningBriefingProps) {
     async function load() {
       setLoading(true);
       try {
-        const [hotFiles, recentNotes, deadEnds] = await Promise.allSettled([
-          invoke<FileHotspot[]>("get_file_hotspots", {
-            projectId,
-            period: "24h",
-          }).catch(() => []),
+        const [recentNotes, deadEnds] = await Promise.allSettled([
           invoke<MemoryNote[]>("get_memory_notes", {
             worktreeId: projectId,
             limit: 5,
@@ -58,10 +48,6 @@ export function MorningBriefing({ projectId }: MorningBriefingProps) {
 
         if (!cancelled) {
           setData({
-            hotFiles:
-              hotFiles.status === "fulfilled"
-                ? (hotFiles.value as FileHotspot[])
-                : [],
             recentNotes:
               recentNotes.status === "fulfilled"
                 ? (recentNotes.value as MemoryNote[])
@@ -108,24 +94,6 @@ export function MorningBriefing({ projectId }: MorningBriefingProps) {
 
       {data && (
         <div className="briefing-sections">
-          <section className="briefing-section">
-            <h4>Hot Files (24h)</h4>
-            {data.hotFiles.length === 0 ? (
-              <p className="briefing-empty">No recent file activity.</p>
-            ) : (
-              <ul className="briefing-list">
-                {data.hotFiles.slice(0, 5).map((f) => (
-                  <li key={f.file_path} className="briefing-item">
-                    <span className="briefing-file">{f.file_path}</span>
-                    <span className="briefing-count">
-                      {f.change_count} changes
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
           <section className="briefing-section">
             <h4>Recent Notes</h4>
             {data.recentNotes.length === 0 ? (
