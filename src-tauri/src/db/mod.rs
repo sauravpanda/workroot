@@ -124,6 +124,7 @@ mod tests {
             "memory_notes",
             "browser_events",
             "settings",
+            "helm_machines",
         ];
         for table in &expected {
             let count: i64 = conn
@@ -152,6 +153,7 @@ mod tests {
             "idx_memory_notes_worktree_id",
             "idx_browser_events_timestamp",
             "idx_browser_events_type",
+            "idx_helm_machines_enabled",
         ];
         for idx in &expected_indexes {
             let count: i64 = conn

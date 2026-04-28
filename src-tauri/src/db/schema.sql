@@ -436,3 +436,20 @@ CREATE TABLE IF NOT EXISTS pipeline_runs (
 CREATE INDEX IF NOT EXISTS idx_pipeline_runs_pipeline ON pipeline_runs(pipeline_id);
 CREATE INDEX IF NOT EXISTS idx_pipeline_runs_worktree ON pipeline_runs(worktree_id);
 CREATE INDEX IF NOT EXISTS idx_pipeline_runs_started  ON pipeline_runs(started_at);
+
+-- ============================================================
+-- Helm Machines (Phase 1 — pivot/helm-desktop)
+-- ============================================================
+-- One row per registered helm-daemon. The bearer token (if any) lives
+-- in the OS keyring, not here — see src/helm/mod.rs.
+
+CREATE TABLE IF NOT EXISTS helm_machines (
+    id              INTEGER PRIMARY KEY,
+    label           TEXT NOT NULL,
+    base_url        TEXT NOT NULL,
+    enabled         INTEGER NOT NULL DEFAULT 1,
+    last_seen_at    TEXT,
+    created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_helm_machines_enabled ON helm_machines(enabled);

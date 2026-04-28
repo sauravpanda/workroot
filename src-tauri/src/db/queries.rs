@@ -923,6 +923,101 @@ pub fn delete_bookmark(conn: &Connection, id: i64) -> Result<bool, rusqlite::Err
     Ok(affected > 0)
 }
 
+// ============================================================
+// Helm Machines
+// ============================================================
+
+#[derive(Debug, Serialize)]
+pub struct HelmMachineRow {
+    pub id: i64,
+    pub label: String,
+    pub base_url: String,
+    pub enabled: bool,
+    pub last_seen_at: Option<String>,
+    pub created_at: String,
+}
+
+pub fn insert_helm_machine(
+    conn: &Connection,
+    label: &str,
+    base_url: &str,
+) -> Result<i64, rusqlite::Error> {
+    conn.execute(
+        "INSERT INTO helm_machines (label, base_url) VALUES (?1, ?2)",
+        params![label, base_url],
+    )?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn list_helm_machines(conn: &Connection) -> Result<Vec<HelmMachineRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, label, base_url, enabled, last_seen_at, created_at
+         FROM helm_machines
+         ORDER BY created_at ASC",
+    )?;
+    let rows = stmt.query_map([], |row| {
+        let enabled: i64 = row.get(3)?;
+        Ok(HelmMachineRow {
+            id: row.get(0)?,
+            label: row.get(1)?,
+            base_url: row.get(2)?,
+            enabled: enabled != 0,
+            last_seen_at: row.get(4)?,
+            created_at: row.get(5)?,
+        })
+    })?;
+    rows.collect()
+}
+
+pub fn get_helm_machine(
+    conn: &Connection,
+    id: i64,
+) -> Result<Option<HelmMachineRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT id, label, base_url, enabled, last_seen_at, created_at
+         FROM helm_machines WHERE id = ?1",
+    )?;
+    let mut rows = stmt.query_map(params![id], |row| {
+        let enabled: i64 = row.get(3)?;
+        Ok(HelmMachineRow {
+            id: row.get(0)?,
+            label: row.get(1)?,
+            base_url: row.get(2)?,
+            enabled: enabled != 0,
+            last_seen_at: row.get(4)?,
+            created_at: row.get(5)?,
+        })
+    })?;
+    rows.next().transpose()
+}
+
+pub fn update_helm_machine(
+    conn: &Connection,
+    id: i64,
+    label: &str,
+    base_url: &str,
+    enabled: bool,
+) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute(
+        "UPDATE helm_machines SET label = ?2, base_url = ?3, enabled = ?4 WHERE id = ?1",
+        params![id, label, base_url, enabled as i64],
+    )?;
+    Ok(affected > 0)
+}
+
+pub fn delete_helm_machine(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute("DELETE FROM helm_machines WHERE id = ?1", params![id])?;
+    Ok(affected > 0)
+}
+
+pub fn touch_helm_machine_last_seen(conn: &Connection, id: i64) -> Result<bool, rusqlite::Error> {
+    let affected = conn.execute(
+        "UPDATE helm_machines SET last_seen_at = datetime('now') WHERE id = ?1",
+        params![id],
+    )?;
+    Ok(affected > 0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::init_test_db;
