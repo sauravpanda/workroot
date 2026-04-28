@@ -7,6 +7,39 @@
   overflow: auto;
 }
 
+.agents-tab--two-pane {
+  flex-direction: row;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.agents-tab__list-pane {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 32px;
+  overflow: auto;
+}
+
+.agents-tab__detail-pane {
+  flex: 1 1 0;
+  min-width: 380px;
+  max-width: 640px;
+  overflow: hidden;
+}
+
+.agents-tab__row {
+  cursor: pointer;
+}
+
+.agents-tab__row--selected {
+  border-color: var(--color-accent, #60a5fa);
+  background: rgba(96, 165, 250, 0.08);
+}
+
 .agents-tab__header {
   display: flex;
   justify-content: space-between;

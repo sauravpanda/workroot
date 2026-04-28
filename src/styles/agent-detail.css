@@ -1,0 +1,191 @@
+.agent-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 24px;
+  height: 100%;
+  overflow: auto;
+  border-left: 1px solid var(--color-border, #2a2a2a);
+  background: var(--color-bg, #111);
+}
+
+.agent-detail__header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border, #2a2a2a);
+}
+
+.agent-detail__title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.agent-detail__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.agent-detail__close {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, #888);
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.agent-detail__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11px;
+  color: var(--color-text-secondary, #888);
+}
+
+.agent-detail__meta-item {
+  font-family: var(--font-mono, monospace);
+}
+
+.agent-detail__state-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  border-radius: 999px;
+  background: var(--color-bg-secondary, #181818);
+  border: 1px solid var(--color-border, #2a2a2a);
+}
+
+.agent-detail__state-pill--waiting_input {
+  color: var(--color-warning, #fbbf24);
+  border-color: var(--color-warning, #fbbf24);
+}
+.agent-detail__state-pill--working {
+  color: var(--color-success, #4ade80);
+  border-color: var(--color-success, #4ade80);
+}
+.agent-detail__state-pill--failed {
+  color: var(--color-danger, #f87171);
+  border-color: var(--color-danger, #f87171);
+}
+
+.agent-detail__pending {
+  padding: 10px 12px;
+  border: 1px solid var(--color-warning, #fbbf24);
+  border-radius: 6px;
+  background: rgba(251, 191, 36, 0.08);
+  font-size: 13px;
+}
+
+.agent-detail__pending-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-warning, #fbbf24);
+  margin-bottom: 4px;
+}
+
+.agent-detail__pr {
+  font-size: 12px;
+  color: var(--color-link, #60a5fa);
+  text-decoration: none;
+}
+
+.agent-detail__pr:hover {
+  text-decoration: underline;
+}
+
+.agent-detail__events {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agent-detail__event {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.agent-detail__event--user {
+  background: var(--color-bg-secondary, #181818);
+  border: 1px solid var(--color-border, #2a2a2a);
+}
+
+.agent-detail__event--assistant {
+  background: rgba(96, 165, 250, 0.06);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+}
+
+.agent-detail__event--thinking {
+  font-style: italic;
+  color: var(--color-text-secondary, #888);
+  font-size: 12px;
+  background: transparent;
+  border: none;
+  padding: 4px 12px;
+}
+
+.agent-detail__event--tool_use {
+  background: var(--color-bg-secondary, #181818);
+  border: 1px dashed var(--color-border, #2a2a2a);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+}
+
+.agent-detail__event--tool_result {
+  background: var(--color-bg-secondary, #181818);
+  border-left: 2px solid var(--color-text-secondary, #888);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  padding-left: 10px;
+  border-radius: 0;
+}
+
+.agent-detail__event--tool_result.is-error {
+  border-left-color: var(--color-danger, #f87171);
+  color: var(--color-danger, #f87171);
+}
+
+.agent-detail__event-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary, #888);
+  margin-bottom: 4px;
+}
+
+.agent-detail__usage {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border, #2a2a2a);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 11px;
+  color: var(--color-text-secondary, #888);
+  font-family: var(--font-mono, monospace);
+}
+
+.agent-detail__loading,
+.agent-detail__error,
+.agent-detail__empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-text-secondary, #888);
+  font-size: 13px;
+}
+
+.agent-detail__error {
+  color: var(--color-danger, #f87171);
+}
