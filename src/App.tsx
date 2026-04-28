@@ -44,18 +44,10 @@ const SettingsTab = namedLazy(
   () => import("./components/SettingsTab"),
   "SettingsTab",
 );
-const WorkspaceGrid = namedLazy(
-  () => import("./components/WorkspaceGrid"),
-  "WorkspaceGrid",
+const AgentsTab = namedLazy(
+  () => import("./components/AgentsTab"),
+  "AgentsTab",
 );
-
-interface WorktreeInfo {
-  id: number;
-  project_id: number;
-  branch_name: string;
-  path: string;
-  status: string;
-}
 
 interface SidebarActions {
   openSearch: () => void;
@@ -972,26 +964,8 @@ function AppContent({
           <SettingsTab onClose={() => setShowSettings(false)} />
         </PanelBoundary>
       ) : !selectedWorktreePath ? (
-        <PanelBoundary name="WorkspaceGrid">
-          <WorkspaceGrid
-            projects={allProjects}
-            worktrees={allWorktrees}
-            onSelectWorktree={(wt: WorktreeInfo) => {
-              setSelectedProjectId(wt.project_id);
-              setSelectedWorktreeId(wt.id);
-              setSelectedWorktreePath(wt.path);
-              setSelectedWorktreeName(wt.branch_name);
-              setShowSettings(false);
-            }}
-            onNewWorktree={(projectId: number) => {
-              setSelectedProjectId(projectId);
-            }}
-            onOpenAgent={() => openPanel("multiAgentPipeline")}
-            onOpenDiff={() => openPanel("gitDiff")}
-            shell={terminalShell}
-            themeId={terminalThemeId}
-            snapshotMap={terminalSnapshotMapRef}
-          />
+        <PanelBoundary name="AgentsTab">
+          <AgentsTab onOpenMachines={() => openPanel("helmMachines")} />
         </PanelBoundary>
       ) : null}
       {/* TerminalPanel is rendered outside the ternary so it stays mounted
