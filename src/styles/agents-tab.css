@@ -1,0 +1,148 @@
+.agents-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 32px;
+  height: 100%;
+  overflow: auto;
+}
+
+.agents-tab__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.agents-tab__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.agents-tab__machines-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.agents-tab__machine-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  border: 1px solid var(--color-border, #2a2a2a);
+  border-radius: 999px;
+  background: var(--color-bg-secondary, #181818);
+}
+
+.agents-tab__machine-pill--err {
+  border-color: var(--color-danger, #f87171);
+  color: var(--color-danger, #f87171);
+}
+
+.agents-tab__machine-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-success, #4ade80);
+}
+
+.agents-tab__machine-pill--err .agents-tab__machine-pill-dot {
+  background: var(--color-danger, #f87171);
+}
+
+.agents-tab__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.agents-tab__row {
+  display: grid;
+  grid-template-columns: 90px 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border, #2a2a2a);
+  border-radius: 6px;
+  background: var(--color-bg-secondary, #181818);
+}
+
+.agents-tab__row-state {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #888);
+}
+
+.agents-tab__row-state--waiting_input {
+  color: var(--color-warning, #fbbf24);
+}
+.agents-tab__row-state--working {
+  color: var(--color-success, #4ade80);
+}
+.agents-tab__row-state--failed {
+  color: var(--color-danger, #f87171);
+}
+.agents-tab__row-state--done {
+  color: var(--color-text-secondary, #888);
+}
+
+.agents-tab__row-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.agents-tab__row-task {
+  font-size: 12px;
+  color: var(--color-text-secondary, #888);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agents-tab__row-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.agents-tab__row-machine {
+  font-size: 11px;
+  color: var(--color-text-secondary, #888);
+}
+
+.agents-tab__row-repo {
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  color: var(--color-text-secondary, #888);
+}
+
+.agents-tab__empty {
+  margin-top: 32px;
+  padding: 32px;
+  text-align: center;
+  border: 1px dashed var(--color-border, #2a2a2a);
+  border-radius: 6px;
+  color: var(--color-text-secondary, #888);
+}
+
+.agents-tab__empty-cta {
+  margin-top: 12px;
+  padding: 6px 12px;
+  font-size: 12px;
+  border: 1px solid var(--color-border, #2a2a2a);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text, #e4e4e4);
+  cursor: pointer;
+}
+
+.agents-tab__empty-cta:hover {
+  background: var(--color-bg-hover, #222);
+}
