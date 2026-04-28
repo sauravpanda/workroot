@@ -66,6 +66,7 @@ export type PanelKey =
   | "shellHistory"
   | "deadEnds"
   | "browserEvents"
+  | "helmMachines"
   | "checkpointManager"
   | "multiAgentPipeline"
   | "modelComparison"

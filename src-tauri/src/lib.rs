@@ -13,6 +13,7 @@ pub mod errors;
 pub mod fileview;
 pub mod git;
 pub mod github;
+pub mod helm;
 pub mod mcp;
 pub mod memory;
 pub mod metrics;
@@ -162,6 +163,11 @@ pub fn run() {
             process::logs::search_process_logs,
             process::logs::clear_process_logs,
             process::lifecycle::cleanup_worktree_processes,
+            helm::list_helm_machines,
+            helm::add_helm_machine,
+            helm::update_helm_machine,
+            helm::remove_helm_machine,
+            helm::touch_helm_machine_seen,
             claudemd::generate_worktree_claude_md,
             claudemd::read_worktree_claude_md,
             shell::install_shell_hook,

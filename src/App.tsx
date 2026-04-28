@@ -249,6 +249,13 @@ function AppContent({
         },
       },
       {
+        id: "settings:helm-machines",
+        label: "Helm Machines",
+        category: "Navigation",
+        icon: "\u2756",
+        action: () => openPanel("helmMachines"),
+      },
+      {
         id: "nav:close-settings",
         label: "Close Settings",
         category: "Navigation",

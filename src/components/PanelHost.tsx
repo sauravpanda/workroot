@@ -224,6 +224,10 @@ const BrowserEvents = namedLazy(
   () => import("./BrowserEvents"),
   "BrowserEvents",
 );
+const HelmMachinesPanel = namedLazy(
+  () => import("./HelmMachinesPanel"),
+  "HelmMachinesPanel",
+);
 
 interface PanelHostProps {
   panels: ReadonlySet<PanelKey>;
@@ -898,6 +902,11 @@ export function PanelHost({
               />
             </div>
           </FocusTrapOverlay>
+        </PanelBoundary>
+      )}
+      {panels.has("helmMachines") && (
+        <PanelBoundary name="HelmMachinesPanel">
+          <HelmMachinesPanel onClose={() => closePanel("helmMachines")} />
         </PanelBoundary>
       )}
       <PanelBoundary name="QuickSwitcher">
