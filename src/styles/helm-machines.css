@@ -1,9 +1,23 @@
 .helm-machines {
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9500;
+  width: 560px;
+  max-width: calc(100vw - 40px);
+  max-height: 80vh;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 16px;
-  min-width: 520px;
+  padding: 20px;
+  background-color: var(--bg-surface, #181818);
+  border: 1px solid var(--border, #2a2a2a);
+  border-radius: 8px;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .helm-machines__header {
