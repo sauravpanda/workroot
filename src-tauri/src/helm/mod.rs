@@ -12,7 +12,10 @@
 use crate::db::queries::{self, HelmMachineRow};
 use crate::db::AppDb;
 use keyring::Entry;
+use regex::Regex;
 use serde::Serialize;
+use std::path::PathBuf;
+use std::time::Duration;
 use tauri::State;
 
 const KEYRING_SERVICE: &str = "com.workroot.app";
@@ -169,8 +172,80 @@ pub fn touch_helm_machine_seen(db: State<'_, AppDb>, id: i64) -> Result<(), Stri
 }
 
 fn normalize_base_url(raw: &str) -> String {
-    let trimmed = raw.trim().trim_end_matches('/').to_string();
-    trimmed
+    raw.trim().trim_end_matches('/').to_string()
+}
+
+const HELM_DEFAULT_PORT: u16 = 8421;
+const LOCAL_PROBE_TIMEOUT: Duration = Duration::from_secs(3);
+
+/// Find ~/.config/helm/config.toml, extract `port = N` if present.
+/// Returns None if the file isn't there (helm probably isn't installed).
+async fn read_local_helm_port() -> Option<u16> {
+    let home = std::env::var_os("HOME")?;
+    let path = PathBuf::from(home).join(".config/helm/config.toml");
+    let content = tokio::fs::read_to_string(&path).await.ok()?;
+    // Match `port = 1234` at line start; ignore comments / inline values.
+    let re = Regex::new(r"(?m)^\s*port\s*=\s*(\d+)").ok()?;
+    re.captures(&content)
+        .and_then(|c| c.get(1))
+        .and_then(|m| m.as_str().parse::<u16>().ok())
+}
+
+/// On app boot, look for a local helm-daemon and register it as a
+/// machine row if it isn't already there. Silent on failure — no
+/// dialogs, no panics; if helm isn't installed or isn't running we
+/// just don't add anything.
+pub async fn try_register_local_daemon(db: AppDb) {
+    let port = read_local_helm_port().await.unwrap_or(HELM_DEFAULT_PORT);
+    let base_url = format!("http://localhost:{}", port);
+
+    // Bail early if a row with this base_url already exists. Doing
+    // this before the network probe keeps us idempotent across app
+    // restarts even when the daemon is up.
+    let already = {
+        let Ok(conn) = db.0.lock() else {
+            return;
+        };
+        match queries::list_helm_machines(&conn) {
+            Ok(rows) => rows.iter().any(|r| r.base_url == base_url),
+            Err(_) => return,
+        }
+    };
+    if already {
+        return;
+    }
+
+    let Ok(client) = reqwest::Client::builder()
+        .timeout(LOCAL_PROBE_TIMEOUT)
+        .build()
+    else {
+        return;
+    };
+
+    let url = format!("{}/v1/health", base_url);
+    let Ok(resp) = client.get(&url).send().await else {
+        return;
+    };
+    if !resp.status().is_success() {
+        return;
+    }
+    let Ok(health): Result<serde_json::Value, _> = resp.json().await else {
+        return;
+    };
+    let label = health
+        .get("machine_name")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "Local helm".to_string());
+
+    let Ok(conn) = db.0.lock() else {
+        return;
+    };
+    let _ = queries::insert_helm_machine(&conn, &label, &base_url);
+    eprintln!(
+        "[helm] auto-registered local daemon at {} as \"{}\"",
+        base_url, label
+    );
 }
 
 #[cfg(test)]
