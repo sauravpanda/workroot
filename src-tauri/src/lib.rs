@@ -350,6 +350,7 @@ pub fn run() {
         .setup(|app| {
             let app_handle = app.handle().clone();
             let db = init_db(&app_handle)?;
+            let db_for_helm_probe = AppDb(std::sync::Arc::clone(&db.0));
             app.manage(db);
             app.manage(ProcessRegistry::new());
             app.manage(HttpClient::new());
@@ -359,6 +360,13 @@ pub fn run() {
             // Start CLAUDE.md watcher loop
             let watcher_handle = app.handle().clone();
             claudemd::watcher::start_watcher_loop(watcher_handle);
+
+            // Auto-register a local helm-daemon if one is running. Silent
+            // on failure — if helm isn't installed or the daemon isn't up
+            // we just don't add anything.
+            tauri::async_runtime::spawn(async move {
+                helm::try_register_local_daemon(db_for_helm_probe).await;
+            });
 
             // Start the MCP server on port 4444
             let mcp_handle = app.handle().clone();
