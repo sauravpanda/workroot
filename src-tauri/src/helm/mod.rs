@@ -15,6 +15,7 @@ use keyring::Entry;
 use regex::Regex;
 use serde::Serialize;
 use std::path::PathBuf;
+use std::process::Command;
 use std::time::Duration;
 use tauri::State;
 
@@ -169,6 +170,157 @@ pub fn touch_helm_machine_seen(db: State<'_, AppDb>, id: i64) -> Result<(), Stri
     queries::touch_helm_machine_last_seen(&conn, id)
         .map_err(|e| format!("Touch helm machine: {}", e))?;
     Ok(())
+}
+
+/// One peer that responded to /v1/health. Sent to the frontend so the
+/// user can pick which to add.
+#[derive(Debug, Serialize)]
+pub struct DiscoveredHelm {
+    /// Display name (typically the tailnet HostName).
+    pub hostname: String,
+    /// Full base URL we'd register, e.g. http://peer.tailxxx.ts.net:8421.
+    pub base_url: String,
+    /// machine_name from the daemon's /v1/health response.
+    pub machine_name: String,
+    /// Daemon version string.
+    pub version: String,
+    /// True if a row with this base_url is already in helm_machines.
+    pub already_registered: bool,
+}
+
+const TAILSCALE_PROBE_TIMEOUT: Duration = Duration::from_secs(2);
+
+/// Run `tailscale status --json` against whatever `tailscale` is on
+/// PATH. Falls back to launching it through the user's login shell so
+/// GUI apps on macOS pick up Homebrew installs (matches the pattern
+/// in github/auth.rs::run_in_login_shell).
+fn run_tailscale_status_json() -> Option<String> {
+    if let Ok(out) = Command::new("tailscale")
+        .args(["status", "--json"])
+        .output()
+    {
+        if out.status.success() {
+            return Some(String::from_utf8_lossy(&out.stdout).into_owned());
+        }
+    }
+    let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/sh".to_string());
+    let out = Command::new(&shell)
+        .args(["-l", "-c", "tailscale status --json"])
+        .output()
+        .ok()?;
+    if out.status.success() {
+        Some(String::from_utf8_lossy(&out.stdout).into_owned())
+    } else {
+        None
+    }
+}
+
+#[tauri::command]
+pub async fn discover_helm_via_tailscale(
+    db: State<'_, AppDb>,
+) -> Result<Vec<DiscoveredHelm>, String> {
+    let raw = run_tailscale_status_json().ok_or_else(|| {
+        "Tailscale CLI not found. If you use the Mac App Store version, click the Tailscale menu-bar icon and choose \"Install CLI\". Otherwise install with `brew install tailscale`."
+            .to_string()
+    })?;
+    let parsed: serde_json::Value = serde_json::from_str(&raw)
+        .map_err(|e| format!("Couldn't parse `tailscale status --json` output: {}", e))?;
+
+    let peers = parsed
+        .get("Peer")
+        .and_then(|v| v.as_object())
+        .ok_or_else(|| "Tailscale status JSON missing the `Peer` field".to_string())?;
+
+    // Build (display_name, base_url) candidates for each online peer.
+    // Prefer the FQDN from DNSName (always resolves on a tailnet);
+    // fall back to HostName for setups without MagicDNS.
+    let mut candidates: Vec<(String, String)> = Vec::new();
+    for peer in peers.values() {
+        if !peer
+            .get("Online")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false)
+        {
+            continue;
+        }
+        let host = peer
+            .get("HostName")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let dns = peer
+            .get("DNSName")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .trim_end_matches('.')
+            .to_string();
+        let target = if !dns.is_empty() {
+            dns.clone()
+        } else if !host.is_empty() {
+            host.clone()
+        } else {
+            continue;
+        };
+        let display = if !host.is_empty() {
+            host
+        } else {
+            target.clone()
+        };
+        candidates.push((display, format!("http://{}:{}", target, HELM_DEFAULT_PORT)));
+    }
+
+    // Snapshot the existing rows once for dedup checks; release the
+    // lock before kicking off async probes.
+    let existing: Vec<String> = {
+        let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
+        queries::list_helm_machines(&conn)
+            .map_err(|e| format!("List helm machines: {}", e))?
+            .into_iter()
+            .map(|r| r.base_url)
+            .collect()
+    };
+
+    let client = reqwest::Client::builder()
+        .timeout(TAILSCALE_PROBE_TIMEOUT)
+        .build()
+        .map_err(|e| format!("HTTP client: {}", e))?;
+
+    let mut set = tokio::task::JoinSet::new();
+    for (host, url) in candidates {
+        let client = client.clone();
+        let registered = existing.iter().any(|e| e == &url);
+        set.spawn(async move {
+            let resp = client.get(format!("{}/v1/health", url)).send().await.ok()?;
+            if !resp.status().is_success() {
+                return None;
+            }
+            let health: serde_json::Value = resp.json().await.ok()?;
+            Some(DiscoveredHelm {
+                hostname: host,
+                base_url: url,
+                machine_name: health
+                    .get("machine_name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                version: health
+                    .get("version")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string(),
+                already_registered: registered,
+            })
+        });
+    }
+
+    let mut results: Vec<DiscoveredHelm> = Vec::new();
+    while let Some(joined) = set.join_next().await {
+        if let Ok(Some(d)) = joined {
+            results.push(d);
+        }
+    }
+    results.sort_by(|a, b| a.hostname.cmp(&b.hostname));
+    Ok(results)
 }
 
 fn normalize_base_url(raw: &str) -> String {
