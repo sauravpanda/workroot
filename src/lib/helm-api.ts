@@ -1,8 +1,10 @@
 // Daemon HTTP client. One instance per machine.
 //
-// Mirrors helm/app/lib/api.ts (the phone app's client). Workroot fetches
-// directly from React rather than proxying through Tauri commands —
-// helm's API is JSON over HTTP, no native plumbing needed.
+// Shape mirrors helm/app/lib/api.ts (the phone app's client). Calls go
+// through the `helm_proxy_request` Tauri command rather than `fetch()`
+// directly — workroot's WebView CSP locks `connect-src` to 'self', and
+// the daemon doesn't send CORS headers either, so a browser-side fetch
+// would be doubly blocked. Routing through Rust sidesteps both.
 
 // ---- shared types (kept in step with helm/shared/api-spec/types.ts) ----
 
@@ -114,88 +116,59 @@ export interface HelmMachine {
 
 // ---- client ----
 
-const HEALTH_TIMEOUT_MS = 5_000;
-const DEFAULT_TIMEOUT_MS = 15_000;
+import { invoke } from "@tauri-apps/api/core";
 
 export class DaemonClient {
-  constructor(
-    private readonly baseUrl: string,
-    private readonly token: string | null = null,
-  ) {}
-
-  private authHeader(): Record<string, string> {
-    return this.token ? { Authorization: `Bearer ${this.token}` } : {};
-  }
+  constructor(private readonly machineId: number) {}
 
   private async request<T>(
+    method: "GET" | "POST" | "DELETE" | "PUT",
     path: string,
-    init?: RequestInit,
-    timeoutMs: number = DEFAULT_TIMEOUT_MS,
+    body?: unknown,
   ): Promise<T> {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const res = await fetch(`${this.baseUrl}/v1${path}`, {
-        ...init,
-        signal: controller.signal,
-        headers: {
-          "Content-Type": "application/json",
-          ...this.authHeader(),
-          ...(init?.headers ?? {}),
-        },
-      });
-      if (!res.ok) {
-        throw new Error(`${res.status} ${res.statusText} on ${path}`);
-      }
-      return (await res.json()) as T;
-    } finally {
-      clearTimeout(timer);
-    }
+    return (await invoke<T>("helm_proxy_request", {
+      machineId: this.machineId,
+      method,
+      path: `/v1${path}`,
+      body: body === undefined ? null : JSON.stringify(body),
+    })) as T;
   }
 
   health(): Promise<Health> {
-    return this.request<Health>("/health", undefined, HEALTH_TIMEOUT_MS);
+    return this.request<Health>("GET", "/health");
   }
 
   agents(): Promise<{ agents: Agent[] }> {
-    return this.request<{ agents: Agent[] }>("/agents");
+    return this.request<{ agents: Agent[] }>("GET", "/agents");
   }
 
   agent(id: string): Promise<AgentDetail> {
-    return this.request<AgentDetail>(`/agents/${id}`);
+    return this.request<AgentDetail>("GET", `/agents/${id}`);
   }
 
   repos(): Promise<{ repos: Repo[] }> {
-    return this.request<{ repos: Repo[] }>("/repos");
+    return this.request<{ repos: Repo[] }>("GET", "/repos");
   }
 
   spawnAgent(body: NewAgentRequest): Promise<Agent> {
-    return this.request<Agent>("/agents", {
-      method: "POST",
-      body: JSON.stringify(body),
-    });
+    return this.request<Agent>("POST", "/agents", body);
   }
 
   replyAgent(id: string, message: string): Promise<{ ok: boolean }> {
-    return this.request<{ ok: boolean }>(`/agents/${id}/reply`, {
-      method: "POST",
-      body: JSON.stringify({ message }),
+    return this.request<{ ok: boolean }>("POST", `/agents/${id}/reply`, {
+      message,
     });
   }
 
   killAgent(id: string): Promise<{ ok: boolean }> {
-    return this.request<{ ok: boolean }>(`/agents/${id}/kill`, {
-      method: "POST",
-    });
+    return this.request<{ ok: boolean }>("POST", `/agents/${id}/kill`);
   }
 
   deleteAgent(id: string): Promise<{ ok: boolean }> {
-    return this.request<{ ok: boolean }>(`/agents/${id}`, {
-      method: "DELETE",
-    });
+    return this.request<{ ok: boolean }>("DELETE", `/agents/${id}`);
   }
 }
 
 export function clientFor(m: HelmMachine): DaemonClient {
-  return new DaemonClient(m.base_url, m.api_token);
+  return new DaemonClient(m.id);
 }

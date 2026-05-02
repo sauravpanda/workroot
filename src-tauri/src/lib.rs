@@ -169,6 +169,7 @@ pub fn run() {
             helm::remove_helm_machine,
             helm::touch_helm_machine_seen,
             helm::discover_helm_via_tailscale,
+            helm::helm_proxy_request,
             claudemd::generate_worktree_claude_md,
             claudemd::read_worktree_claude_md,
             shell::install_shell_hook,

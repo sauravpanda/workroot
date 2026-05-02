@@ -1,6 +1,6 @@
 [package]
 name = "workroot"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 authors = ["Saurav Panda <saurav@workroot.dev>"]
 description = "A local-first developer workspace for managing projects, terminals, and Git workflows."
@@ -9,7 +9,7 @@ description = "A local-first developer workspace for managing projects, terminal
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon"] }
+tauri = { version = "2", features = ["tray-icon", "devtools"] }
 tauri-plugin-shell = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

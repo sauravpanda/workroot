@@ -172,6 +172,85 @@ pub fn touch_helm_machine_seen(db: State<'_, AppDb>, id: i64) -> Result<(), Stri
     Ok(())
 }
 
+const PROXY_TIMEOUT: Duration = Duration::from_secs(15);
+
+/// Proxy a JSON request to a registered helm-daemon.
+///
+/// Workroot's WebView is locked to `default-src 'self'` so direct
+/// `fetch()` to a daemon URL is blocked by CSP. Instead, the React side
+/// hands the request to this Tauri command and we make it from Rust,
+/// where neither CSP nor CORS apply.
+///
+/// `body` is sent verbatim as the request body when present (callers
+/// pass a JSON-encoded string). The response body is parsed as JSON
+/// when the daemon returns 2xx and a JSON content type; otherwise the
+/// raw text is wrapped in `{"text": "..."}` so the React side can still
+/// surface it.
+#[tauri::command]
+pub async fn helm_proxy_request(
+    db: State<'_, AppDb>,
+    machine_id: i64,
+    method: String,
+    path: String,
+    body: Option<String>,
+) -> Result<serde_json::Value, String> {
+    if !path.starts_with('/') {
+        return Err(format!("Path must start with '/': {}", path));
+    }
+
+    let row = {
+        let conn = db.0.lock().map_err(|e| format!("DB lock: {}", e))?;
+        queries::get_helm_machine(&conn, machine_id)
+            .map_err(|e| format!("Get helm machine: {}", e))?
+            .ok_or_else(|| format!("No helm machine with id {}", machine_id))?
+    };
+    let token = read_token(machine_id)?;
+
+    let url = format!("{}{}", row.base_url, path);
+    let client = reqwest::Client::builder()
+        .timeout(PROXY_TIMEOUT)
+        .build()
+        .map_err(|e| format!("HTTP client: {}", e))?;
+
+    let mut req = match method.to_uppercase().as_str() {
+        "GET" => client.get(&url),
+        "POST" => client.post(&url),
+        "DELETE" => client.delete(&url),
+        "PUT" => client.put(&url),
+        other => return Err(format!("Unsupported method: {}", other)),
+    };
+    if let Some(t) = token {
+        req = req.bearer_auth(t);
+    }
+    if let Some(b) = body {
+        req = req.header("Content-Type", "application/json").body(b);
+    }
+
+    let resp = req
+        .send()
+        .await
+        .map_err(|e| format!("Daemon request failed: {}", e))?;
+    let status = resp.status();
+    let raw = resp
+        .text()
+        .await
+        .map_err(|e| format!("Read daemon response body: {}", e))?;
+
+    if !status.is_success() {
+        return Err(format!(
+            "Daemon returned {}: {}",
+            status,
+            raw.chars().take(400).collect::<String>()
+        ));
+    }
+
+    if raw.is_empty() {
+        return Ok(serde_json::Value::Null);
+    }
+    serde_json::from_str::<serde_json::Value>(&raw)
+        .or_else(|_| Ok(serde_json::json!({ "text": raw })))
+}
+
 /// One peer that responded to /v1/health. Sent to the frontend so the
 /// user can pick which to add.
 #[derive(Debug, Serialize)]
