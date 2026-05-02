@@ -515,7 +515,10 @@ export function AgentDetailPane({
   };
 
   const isTerminal = detail ? TERMINAL_STATES.has(detail.state) : false;
-  const canReply = !!detail && detail.backend === "claude" && !isTerminal;
+  // Replying to a terminal Claude agent resumes it (the daemon supports
+  // this — same behavior the helm phone app uses). Codex backends are
+  // still gated since their session-resume story differs.
+  const canReply = !!detail && detail.backend === "claude";
   const hasTranscript = items.length > 0;
 
   return (
@@ -674,7 +677,9 @@ export function AgentDetailPane({
                 void sendReply();
               }
             }}
-            placeholder="Reply to the agent…"
+            placeholder={
+              isTerminal ? "Reply to resume the agent…" : "Reply to the agent…"
+            }
             disabled={busy !== null}
           />
           <div className="agent-detail__reply-row">

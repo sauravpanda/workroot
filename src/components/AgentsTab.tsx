@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { useAllAgents } from "../hooks/useAllAgents";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { useAllAgents, type MachineStatus } from "../hooks/useAllAgents";
 import { AgentDetailPane } from "./AgentDetailPane";
 import "../styles/agents-tab.css";
 
@@ -21,14 +22,85 @@ const STATE_LABELS: Record<string, string> = {
   failed: "Failed",
 };
 
+// "Office Mac" → "Office", "personal-mac" → "personal", etc. The "-mac"
+// suffix is the same on every machine and is wasted column width.
+function shortMachineLabel(label: string): string {
+  return label
+    .replace(/[\s_-]?mac$/i, "")
+    .replace(/[\s_-]?macbook$/i, "")
+    .trim();
+}
+
+// Compact "time ago" — 1m / 2h / 3d / "now". Driven by the 5 s poll tick;
+// resolution coarser than 1 m doesn't matter for an agent log.
+function ageSince(iso: string, now: number): string {
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return "—";
+  const secs = Math.max(0, Math.floor((now - t) / 1000));
+  if (secs < 30) return "now";
+  if (secs < 60 * 60) return `${Math.floor(secs / 60)}m`;
+  if (secs < 60 * 60 * 24) return `${Math.floor(secs / 3600)}h`;
+  return `${Math.floor(secs / 86400)}d`;
+}
+
+function OfflineBanner({
+  status,
+  onOpenMachines,
+  onRetry,
+}: {
+  status: MachineStatus;
+  onOpenMachines: () => void;
+  onRetry: () => void;
+}) {
+  const lastSeen = status.machine.last_seen_at
+    ? ageSince(status.machine.last_seen_at, Date.now())
+    : null;
+  return (
+    <div className="agents-tab__banner" role="alert">
+      <span className="agents-tab__banner-dot" />
+      <span className="agents-tab__banner-msg">
+        <strong>{status.machine.label}</strong> unreachable
+        {lastSeen ? ` — last seen ${lastSeen} ago` : ""}
+      </span>
+      <span className="agents-tab__banner-err" title={status.error ?? ""}>
+        {status.error ?? "no response"}
+      </span>
+      <div className="agents-tab__banner-actions">
+        <button
+          type="button"
+          className="agents-tab__banner-btn"
+          onClick={onRetry}
+        >
+          Retry
+        </button>
+        <button
+          type="button"
+          className="agents-tab__banner-btn"
+          onClick={onOpenMachines}
+        >
+          Open machines
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
-  const { agents, machines, loading } = useAllAgents();
+  const { agents, machines, loading, refresh } = useAllAgents();
   const [selected, setSelected] = useState<Selection | null>(null);
+  const [now, setNow] = useState<number>(() => Date.now());
+
+  // Re-tick the "age" column every 30 s so rows update between polls
+  // without a full re-fetch.
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const closeDetail = useCallback(() => setSelected(null), []);
 
-  // Drop the selection if the underlying agent disappears (e.g. deleted
-  // remotely) — keeps the right pane from rendering stale data.
+  // Drop selection if the underlying agent disappears (deleted remotely,
+  // or its machine went offline).
   useEffect(() => {
     if (!selected) return;
     const stillThere = agents.some(
@@ -47,8 +119,23 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [selected, closeDetail]);
 
+  const offlineMachines = useMemo(
+    () => machines.filter((m) => m.error !== null),
+    [machines],
+  );
+
   const noMachines = machines.length === 0;
   const twoPane = selected !== null;
+
+  const onRetryMachine = useCallback(
+    (machineId: number) => {
+      // No per-machine retry endpoint — kick a full refresh. The fan-out
+      // re-tries every enabled machine.
+      void invoke("touch_helm_machine_seen", { id: machineId }).catch(() => {});
+      refresh();
+    },
+    [refresh],
+  );
 
   const list = (
     <>
@@ -80,6 +167,15 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
         </div>
       </div>
 
+      {offlineMachines.map((m) => (
+        <OfflineBanner
+          key={m.machine.id}
+          status={m}
+          onOpenMachines={onOpenMachines}
+          onRetry={() => onRetryMachine(m.machine.id)}
+        />
+      ))}
+
       {noMachines ? (
         <div className="agents-tab__empty">
           <p>No helm machines registered.</p>
@@ -100,52 +196,77 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
           </p>
         </div>
       ) : (
-        <div className="agents-tab__list">
-          {agents.map((a) => {
-            const isSelected =
-              selected?.agentId === a.id &&
-              selected?.machineId === a.machine_id;
-            return (
-              <div
-                key={`${a.machine_id}:${a.id}`}
-                className={
-                  isSelected
-                    ? "agents-tab__row agents-tab__row--selected"
-                    : "agents-tab__row"
-                }
-                onClick={() =>
-                  setSelected({ machineId: a.machine_id, agentId: a.id })
-                }
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setSelected({
-                      machineId: a.machine_id,
-                      agentId: a.id,
-                    });
+        <div className="agents-tab__table" role="table" aria-label="Agents">
+          <div className="agents-tab__thead" role="row">
+            <span role="columnheader">State</span>
+            <span role="columnheader">Name</span>
+            <span role="columnheader">Activity</span>
+            <span role="columnheader">Repo</span>
+            <span role="columnheader">Backend</span>
+            <span role="columnheader">Machine</span>
+            <span role="columnheader" className="agents-tab__col-age">
+              Age
+            </span>
+          </div>
+          <div className="agents-tab__tbody">
+            {agents.map((a) => {
+              const isSelected =
+                selected?.agentId === a.id &&
+                selected?.machineId === a.machine_id;
+              const stateLabel = STATE_LABELS[a.state] ?? a.state;
+              const activity = a.last_activity ?? a.task;
+              const machineShort = shortMachineLabel(a.machine_label);
+              return (
+                <div
+                  key={`${a.machine_id}:${a.id}`}
+                  className={
+                    isSelected
+                      ? "agents-tab__row agents-tab__row--selected"
+                      : "agents-tab__row"
                   }
-                }}
-              >
-                <span
-                  className={`agents-tab__row-state agents-tab__row-state--${a.state}`}
+                  onClick={() =>
+                    setSelected({ machineId: a.machine_id, agentId: a.id })
+                  }
+                  role="row"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelected({
+                        machineId: a.machine_id,
+                        agentId: a.id,
+                      });
+                    }
+                  }}
                 >
-                  {STATE_LABELS[a.state] ?? a.state}
-                </span>
-                <div className="agents-tab__row-meta">
-                  <span className="agents-tab__row-name">{a.name}</span>
-                  <span className="agents-tab__row-task">
-                    {a.last_activity ?? a.task}
+                  <span
+                    className={`agents-tab__state-pill agents-tab__state-pill--${a.state}`}
+                  >
+                    {stateLabel}
+                  </span>
+                  <span className="agents-tab__cell-name" title={a.name}>
+                    {a.name}
+                  </span>
+                  <span className="agents-tab__cell-activity" title={activity}>
+                    {activity}
+                  </span>
+                  <span className="agents-tab__cell-repo" title={a.repo}>
+                    {a.repo}
+                  </span>
+                  <span className="agents-tab__cell-backend">{a.backend}</span>
+                  <span
+                    className="agents-tab__cell-machine"
+                    title={a.machine_label}
+                  >
+                    {machineShort}
+                  </span>
+                  <span className="agents-tab__cell-age">
+                    {ageSince(a.updated_at, now)}
                   </span>
                 </div>
-                <span className="agents-tab__row-repo">{a.repo}</span>
-                <span className="agents-tab__row-machine">
-                  {a.machine_label}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
     </>
