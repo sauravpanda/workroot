@@ -1,8 +1,8 @@
 .agents-tab {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 24px 32px;
+  gap: 12px;
+  padding: 20px 28px;
   height: 100%;
   overflow: auto;
 }
@@ -19,8 +19,8 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 24px 32px;
+  gap: 12px;
+  padding: 20px 28px;
   overflow: auto;
 }
 
@@ -31,20 +31,12 @@
   overflow: hidden;
 }
 
-.agents-tab__row {
-  cursor: pointer;
-}
-
-.agents-tab__row--selected {
-  border-color: var(--color-accent, #60a5fa);
-  background: rgba(96, 165, 250, 0.08);
-}
-
 .agents-tab__header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .agents-tab__title {
@@ -87,74 +79,214 @@
   background: var(--color-danger, #f87171);
 }
 
-.agents-tab__list {
+/* ---- offline machine banner ---- */
+
+.agents-tab__banner {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.agents-tab__row {
-  display: grid;
-  grid-template-columns: 90px 1fr auto auto;
-  gap: 16px;
   align-items: center;
-  padding: 12px 16px;
-  border: 1px solid var(--color-border, #2a2a2a);
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-warning, #fbbf24);
   border-radius: 6px;
-  background: var(--color-bg-secondary, #181818);
-}
-
-.agents-tab__row-state {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  color: var(--color-text-secondary, #888);
-}
-
-.agents-tab__row-state--waiting_input {
-  color: var(--color-warning, #fbbf24);
-}
-.agents-tab__row-state--working {
-  color: var(--color-success, #4ade80);
-}
-.agents-tab__row-state--failed {
-  color: var(--color-danger, #f87171);
-}
-.agents-tab__row-state--done {
-  color: var(--color-text-secondary, #888);
-}
-
-.agents-tab__row-name {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.agents-tab__row-task {
+  background: rgba(251, 191, 36, 0.08);
   font-size: 12px;
+  color: var(--color-text, #e4e4e4);
+}
+
+.agents-tab__banner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-warning, #fbbf24);
+  flex: 0 0 auto;
+}
+
+.agents-tab__banner-msg {
+  flex: 0 0 auto;
+}
+
+.agents-tab__banner-err {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
   color: var(--color-text-secondary, #888);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.agents-tab__row-meta {
+.agents-tab__banner-actions {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.agents-tab__banner-btn {
+  padding: 3px 10px;
+  font-size: 11px;
+  border: 1px solid var(--color-border, #2a2a2a);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text, #e4e4e4);
+  cursor: pointer;
+}
+
+.agents-tab__banner-btn:hover {
+  background: var(--color-bg-hover, #222);
+}
+
+/* ---- dense agents table ---- */
+
+.agents-tab__table {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  border-top: 1px solid var(--color-border, #2a2a2a);
+  border-bottom: 1px solid var(--color-border, #2a2a2a);
+}
+
+/* Same template on header + rows so columns align. */
+.agents-tab__thead,
+.agents-tab__row {
+  display: grid;
+  grid-template-columns:
+    90px /* state pill */
+    minmax(140px, 1.4fr) /* name */
+    minmax(180px, 2.6fr) /* activity */
+    minmax(120px, 1fr) /* repo */
+    62px /* backend */
+    96px /* machine */
+    52px; /* age */
+  gap: 14px;
+  align-items: center;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.agents-tab__thead {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary, #888);
+  border-bottom: 1px solid var(--color-border, #2a2a2a);
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.agents-tab__tbody {
+  display: flex;
+  flex-direction: column;
+}
+
+.agents-tab__row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  min-height: 30px;
+}
+
+.agents-tab__row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.agents-tab__row--selected {
+  border-left-color: var(--color-accent, #60a5fa);
+  background: rgba(96, 165, 250, 0.08);
+}
+
+.agents-tab__row--selected:hover {
+  background: rgba(96, 165, 250, 0.1);
+}
+
+/* state pill — mirrors detail-pane treatment */
+.agents-tab__state-pill {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  border-radius: 999px;
+  background: var(--color-bg-secondary, #181818);
+  border: 1px solid var(--color-border, #2a2a2a);
+  color: var(--color-text-secondary, #888);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agents-tab__state-pill--waiting_input {
+  color: var(--color-warning, #fbbf24);
+  border-color: var(--color-warning, #fbbf24);
+}
+.agents-tab__state-pill--working {
+  color: var(--color-success, #4ade80);
+  border-color: var(--color-success, #4ade80);
+}
+.agents-tab__state-pill--failed {
+  color: var(--color-danger, #f87171);
+  border-color: var(--color-danger, #f87171);
+}
+.agents-tab__state-pill--planning,
+.agents-tab__state-pill--queued {
+  color: var(--color-text-secondary, #aaa);
+}
+
+/* row cells — every column gets ellipsis overflow so the grid stays tight */
+.agents-tab__row > span,
+.agents-tab__thead > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   min-width: 0;
 }
 
-.agents-tab__row-machine {
-  font-size: 11px;
+.agents-tab__cell-name {
+  font-weight: 500;
+  color: var(--color-text, #e4e4e4);
+}
+
+.agents-tab__row
+  .agents-tab__state-pill--waiting_input
+  ~ .agents-tab__cell-name,
+.agents-tab__row .agents-tab__state-pill--failed ~ .agents-tab__cell-name {
+  font-weight: 600;
+}
+
+.agents-tab__cell-activity {
   color: var(--color-text-secondary, #888);
 }
 
-.agents-tab__row-repo {
-  font-size: 11px;
+.agents-tab__cell-repo {
   font-family: var(--font-mono, monospace);
+  font-size: 12px;
   color: var(--color-text-secondary, #888);
+  direction: rtl; /* truncate from the left so the repo basename stays visible */
+  text-align: left;
 }
+
+.agents-tab__cell-backend {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--color-text-secondary, #888);
+  text-transform: lowercase;
+}
+
+.agents-tab__cell-machine {
+  font-size: 12px;
+  color: var(--color-text-secondary, #aaa);
+}
+
+.agents-tab__cell-age,
+.agents-tab__col-age {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--color-text-secondary, #888);
+  text-align: right;
+}
+
+/* ---- empty / loading ---- */
 
 .agents-tab__empty {
   margin-top: 32px;
