@@ -91,6 +91,7 @@
   background: rgba(251, 191, 36, 0.08);
   font-size: 12px;
   color: var(--color-text, #e4e4e4);
+  min-width: 0;
 }
 
 .agents-tab__banner-dot {
@@ -102,15 +103,8 @@
 }
 
 .agents-tab__banner-msg {
-  flex: 0 0 auto;
-}
-
-.agents-tab__banner-err {
   flex: 1 1 auto;
   min-width: 0;
-  font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  color: var(--color-text-secondary, #888);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -145,22 +139,26 @@
   border-bottom: 1px solid var(--color-border, #2a2a2a);
 }
 
-/* Same template on header + rows so columns align. */
+/* Same template on header + rows so columns align. Tuned to fit the
+ * narrower list pane when the detail pane is open (window width minus
+ * the right pane's 380–640 px). Backend column is dropped — it shows
+ * the same value ("claude") for almost every row and isn't worth the
+ * width; the detail pane still surfaces it. */
 .agents-tab__thead,
 .agents-tab__row {
   display: grid;
   grid-template-columns:
-    90px /* state pill */
-    minmax(140px, 1.4fr) /* name */
-    minmax(180px, 2.6fr) /* activity */
-    minmax(120px, 1fr) /* repo */
-    62px /* backend */
-    96px /* machine */
-    52px; /* age */
-  gap: 14px;
+    72px /* state pill */
+    minmax(120px, 1.4fr) /* name */
+    minmax(140px, 2.4fr) /* activity */
+    minmax(96px, 1fr) /* repo */
+    72px /* machine */
+    44px; /* age */
+  gap: 12px;
   align-items: center;
   padding: 6px 8px;
   font-size: 13px;
+  min-width: 0;
 }
 
 .agents-tab__thead {
@@ -262,15 +260,6 @@
   font-family: var(--font-mono, monospace);
   font-size: 12px;
   color: var(--color-text-secondary, #888);
-  direction: rtl; /* truncate from the left so the repo basename stays visible */
-  text-align: left;
-}
-
-.agents-tab__cell-backend {
-  font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  color: var(--color-text-secondary, #888);
-  text-transform: lowercase;
 }
 
 .agents-tab__cell-machine {

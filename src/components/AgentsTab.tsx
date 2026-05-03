@@ -43,6 +43,15 @@ function ageSince(iso: string, now: number): string {
   return `${Math.floor(secs / 86400)}d`;
 }
 
+// "now" → "just now"; everything else → "last seen 3m ago"
+function lastSeenPhrase(iso: string | null): string {
+  if (!iso) return "";
+  const ago = ageSince(iso, Date.now());
+  if (ago === "now") return " — last seen just now";
+  if (ago === "—") return "";
+  return ` — last seen ${ago} ago`;
+}
+
 function OfflineBanner({
   status,
   onOpenMachines,
@@ -52,18 +61,13 @@ function OfflineBanner({
   onOpenMachines: () => void;
   onRetry: () => void;
 }) {
-  const lastSeen = status.machine.last_seen_at
-    ? ageSince(status.machine.last_seen_at, Date.now())
-    : null;
+  const errTitle = status.error ?? "no response";
   return (
     <div className="agents-tab__banner" role="alert">
       <span className="agents-tab__banner-dot" />
-      <span className="agents-tab__banner-msg">
+      <span className="agents-tab__banner-msg" title={errTitle}>
         <strong>{status.machine.label}</strong> unreachable
-        {lastSeen ? ` — last seen ${lastSeen} ago` : ""}
-      </span>
-      <span className="agents-tab__banner-err" title={status.error ?? ""}>
-        {status.error ?? "no response"}
+        {lastSeenPhrase(status.machine.last_seen_at)}
       </span>
       <div className="agents-tab__banner-actions">
         <button
@@ -202,7 +206,6 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
             <span role="columnheader">Name</span>
             <span role="columnheader">Activity</span>
             <span role="columnheader">Repo</span>
-            <span role="columnheader">Backend</span>
             <span role="columnheader">Machine</span>
             <span role="columnheader" className="agents-tab__col-age">
               Age
@@ -253,7 +256,6 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
                   <span className="agents-tab__cell-repo" title={a.repo}>
                     {a.repo}
                   </span>
-                  <span className="agents-tab__cell-backend">{a.backend}</span>
                   <span
                     className="agents-tab__cell-machine"
                     title={a.machine_label}
