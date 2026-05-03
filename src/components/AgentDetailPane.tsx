@@ -20,6 +20,15 @@ interface AgentDetailPaneProps {
 }
 
 const TERMINAL_STATES = new Set(["done", "failed"]);
+// States where the agent is actively doing something — used to surface a
+// "thinking" / typing-bubble at the bottom of the events list.
+const ACTIVE_STATES = new Set(["working", "planning", "queued"]);
+
+const ACTIVE_STATE_LABEL: Record<string, string> = {
+  working: "Agent is working",
+  planning: "Agent is planning",
+  queued: "Agent is queued",
+};
 
 // How many lines to keep visible from a long stdout/result before truncating.
 // We show the first half + last half, joined by an ellipsis row.
@@ -633,6 +642,22 @@ export function AgentDetailPane({
                 />
               );
             })
+          )}
+          {detail && ACTIVE_STATES.has(detail.state) && (
+            <div
+              className="agent-detail__working"
+              aria-live="polite"
+              aria-label={ACTIVE_STATE_LABEL[detail.state] ?? "Agent is busy"}
+            >
+              <span className="agent-detail__working-dots">
+                <span />
+                <span />
+                <span />
+              </span>
+              <span className="agent-detail__working-label">
+                {ACTIVE_STATE_LABEL[detail.state] ?? "working"}
+              </span>
+            </div>
           )}
         </div>
 
