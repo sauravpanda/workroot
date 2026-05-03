@@ -7,7 +7,7 @@
   overflow: auto;
 }
 
-.agents-tab--two-pane {
+.agents-tab--splits {
   flex-direction: row;
   gap: 0;
   padding: 0;
@@ -15,20 +15,68 @@
 }
 
 .agents-tab__list-pane {
-  flex: 1 1 0;
+  flex: 0 0 clamp(280px, 28%, 420px);
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 20px 28px;
+  padding: 16px 20px;
   overflow: auto;
+  border-right: 1px solid var(--color-border, #2a2a2a);
 }
 
-.agents-tab__detail-pane {
-  flex: 1 1 0;
-  min-width: 380px;
-  max-width: 640px;
+/* ---- splits container (the right side, holds 1–4 detail panes) ---- */
+
+.agents-tab__panes {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--color-border, #2a2a2a);
   overflow: hidden;
+}
+
+.agents-tab__panes--n1 {
+  grid-template-columns: 1fr;
+}
+.agents-tab__panes--n2 {
+  grid-template-columns: 1fr 1fr;
+}
+.agents-tab__panes--n3 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.agents-tab__panes--n3 .agents-tab__pane:nth-child(3) {
+  grid-column: 1 / -1; /* third pane spans the full bottom row */
+}
+.agents-tab__panes--n4 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.agents-tab__pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-bg, #111);
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+}
+
+.agents-tab__pane--focused {
+  outline-color: var(--color-accent, #60a5fa);
+}
+
+.agents-tab__hint {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--color-text-secondary, #888);
+  padding: 6px 8px;
+  border-top: 1px solid var(--color-border, #2a2a2a);
 }
 
 .agents-tab__header {
