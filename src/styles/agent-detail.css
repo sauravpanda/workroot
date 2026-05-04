@@ -11,46 +11,112 @@
   background: var(--color-bg, #111);
 }
 
+/* Single-row pane header: state pill · name · repo:branch @ machine · ⋯ · ×.
+ * Reclaims vertical space for the transcript at 4 panes open. Action
+ * buttons (Kill/Delete/Copy/Open) live in the ⋯ popover. */
 .agent-detail__header {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding-bottom: 12px;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 6px 6px;
   border-bottom: 1px solid var(--color-border, #2a2a2a);
+  font-size: 12px;
+  flex: 0 0 auto;
+  min-height: 28px;
+  min-width: 0;
+}
+
+.agent-detail__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text, #e4e4e4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.agent-detail__sep {
+  color: var(--color-text-secondary, #555);
   flex: 0 0 auto;
 }
 
-.agent-detail__title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-}
-
-.agent-detail__title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.agent-detail__close {
-  background: transparent;
-  border: none;
-  color: var(--color-text-secondary, #888);
-  cursor: pointer;
-  font-size: 18px;
-}
-
-.agent-detail__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
+.agent-detail__crumb {
+  font-family: var(--font-mono, monospace);
   font-size: 11px;
   color: var(--color-text-secondary, #888);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
-.agent-detail__meta-item {
-  font-family: var(--font-mono, monospace);
+.agent-detail__spacer {
+  flex: 1 1 auto;
+}
+
+.agent-detail__icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, #aaa);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+
+.agent-detail__icon-btn:hover {
+  background: var(--color-bg-hover, #222);
+  color: var(--color-text, #e4e4e4);
+}
+
+/* ---- ⋯ popover menu ---- */
+
+.agent-detail__menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 4px;
+  background: var(--color-bg-secondary, #181818);
+  border: 1px solid var(--color-border, #2a2a2a);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.agent-detail__menu-item {
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--color-text, #e4e4e4);
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.agent-detail__menu-item:hover:not(:disabled) {
+  background: var(--color-bg-hover, #222);
+}
+
+.agent-detail__menu-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.agent-detail__menu-item--danger {
+  color: var(--color-danger, #f87171);
+}
+
+.agent-detail__menu-sep {
+  height: 1px;
+  background: var(--color-border, #2a2a2a);
+  margin: 4px 0;
 }
 
 .agent-detail__state-pill {
