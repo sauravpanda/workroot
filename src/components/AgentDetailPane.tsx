@@ -6,7 +6,9 @@ import {
   useRef,
   useState,
 } from "react";
+import * as Popover from "@radix-ui/react-popover";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { open as openShell } from "@tauri-apps/plugin-shell";
 import { useAgentDetail } from "../hooks/useAgentDetail";
 import { clientFor, type ThreadEvent, type Turn } from "../lib/helm-api";
 import "../styles/agent-detail.css";
@@ -517,6 +519,22 @@ export function AgentDetailPane({
     }
   };
 
+  const copyText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      setActionError(`Copy failed: ${e}`);
+    }
+  };
+
+  const openPath = async (path: string) => {
+    try {
+      await openShell(path);
+    } catch (e) {
+      setActionError(`Open failed: ${e}`);
+    }
+  };
+
   const remove = async () => {
     if (!machine || !detail) return;
     if (
@@ -547,56 +565,131 @@ export function AgentDetailPane({
 
   return (
     <aside className="agent-detail">
-      <div className="agent-detail__header">
-        <div className="agent-detail__title-row">
-          <h3 className="agent-detail__title">{detail?.name ?? "Loading…"}</h3>
-          <button
-            className="agent-detail__close"
-            onClick={onClose}
-            aria-label="Close detail pane"
-          >
-            ×
-          </button>
-        </div>
+      <header className="agent-detail__header">
         {detail && (
-          <div className="agent-detail__meta">
+          <span
+            className={`agent-detail__state-pill agent-detail__state-pill--${detail.state}`}
+            title={detail.state}
+          >
+            {detail.state}
+          </span>
+        )}
+        <span className="agent-detail__name" title={detail?.name ?? undefined}>
+          {detail?.name ?? "Loading…"}
+        </span>
+        {detail && (
+          <>
+            <span className="agent-detail__sep">·</span>
             <span
-              className={`agent-detail__state-pill agent-detail__state-pill--${detail.state}`}
+              className="agent-detail__crumb"
+              title={`${detail.repo}:${detail.branch}`}
             >
-              {detail.state}
+              {detail.repo}:{detail.branch}
             </span>
-            <span className="agent-detail__meta-item">
+            <span className="agent-detail__sep">@</span>
+            <span
+              className="agent-detail__crumb"
+              title={machine?.label ?? detail.machine_name}
+            >
               {machine?.label ?? detail.machine_name}
             </span>
-            <span className="agent-detail__meta-item">{detail.repo}</span>
-            <span className="agent-detail__meta-item">{detail.branch}</span>
-          </div>
+          </>
         )}
+        <span className="agent-detail__spacer" />
         {detail && (
-          <div className="agent-detail__actions">
-            <button
-              className="agent-detail__action-btn"
-              onClick={() => void kill()}
-              disabled={isTerminal || busy !== null}
-              title={isTerminal ? "Agent already finished" : "Kill agent"}
-            >
-              {busy === "kill" ? "Killing…" : "Kill"}
-            </button>
-            <button
-              className="agent-detail__action-btn agent-detail__action-btn--danger"
-              onClick={() => void remove()}
-              disabled={!isTerminal || busy !== null}
-              title={
-                isTerminal
-                  ? "Delete agent"
-                  : "Kill the agent before deleting (daemon refuses delete on running agents)"
-              }
-            >
-              {busy === "delete" ? "Deleting…" : "Delete"}
-            </button>
-          </div>
+          <Popover.Root>
+            <Popover.Trigger asChild>
+              <button
+                className="agent-detail__icon-btn"
+                aria-label="More actions"
+                title="More actions"
+              >
+                ⋯
+              </button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content
+                className="agent-detail__menu"
+                sideOffset={4}
+                align="end"
+              >
+                <button
+                  type="button"
+                  className="agent-detail__menu-item"
+                  onClick={() => void kill()}
+                  disabled={isTerminal || busy !== null}
+                >
+                  {busy === "kill" ? "Killing…" : "Kill"}
+                </button>
+                <button
+                  type="button"
+                  className="agent-detail__menu-item agent-detail__menu-item--danger"
+                  onClick={() => void remove()}
+                  disabled={!isTerminal || busy !== null}
+                  title={
+                    isTerminal
+                      ? "Delete agent"
+                      : "Kill the agent before deleting"
+                  }
+                >
+                  {busy === "delete" ? "Deleting…" : "Delete"}
+                </button>
+                <div className="agent-detail__menu-sep" />
+                <button
+                  type="button"
+                  className="agent-detail__menu-item"
+                  onClick={() => void copyText(detail.id)}
+                >
+                  Copy agent ID
+                </button>
+                {detail.worktree_path && (
+                  <>
+                    <button
+                      type="button"
+                      className="agent-detail__menu-item"
+                      onClick={() => void copyText(detail.worktree_path)}
+                    >
+                      Copy worktree path
+                    </button>
+                    <button
+                      type="button"
+                      className="agent-detail__menu-item"
+                      onClick={() => void openPath(detail.worktree_path)}
+                    >
+                      Open worktree in Finder
+                    </button>
+                  </>
+                )}
+                {detail.pr_url && (
+                  <button
+                    type="button"
+                    className="agent-detail__menu-item"
+                    onClick={() => void openPath(detail.pr_url!)}
+                  >
+                    Open PR
+                  </button>
+                )}
+                <div className="agent-detail__menu-sep" />
+                <button
+                  type="button"
+                  className="agent-detail__menu-item"
+                  onClick={() => refresh()}
+                >
+                  Refresh
+                </button>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
         )}
-      </div>
+        <button
+          className="agent-detail__icon-btn"
+          onClick={onClose}
+          aria-label="Close pane"
+          title="Close pane"
+        >
+          ×
+        </button>
+      </header>
 
       {actionError && <p className="agent-detail__error">{actionError}</p>}
       {error && <p className="agent-detail__error">{error}</p>}
