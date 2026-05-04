@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useAllAgents, type MachineStatus } from "../hooks/useAllAgents";
 import { AgentDetailPane } from "./AgentDetailPane";
@@ -8,10 +8,16 @@ interface AgentsTabProps {
   onOpenMachines: () => void;
 }
 
-interface Selection {
+interface Pane {
+  paneId: number;
   machineId: number;
   agentId: string;
 }
+
+// Cap on simultaneously open agent panes. 4 fits a 2×2 grid; beyond
+// that each pane gets too narrow to be useful and the per-pane 3 s
+// poll starts adding up.
+const MAX_PANES = 4;
 
 const STATE_LABELS: Record<string, string> = {
   waiting_input: "Needs you",
@@ -22,7 +28,7 @@ const STATE_LABELS: Record<string, string> = {
   failed: "Failed",
 };
 
-// "Office Mac" → "Office", "personal-mac" → "personal", etc. The "-mac"
+// "Office Mac" → "Office", "personal-mac" → "personal". The "-mac"
 // suffix is the same on every machine and is wasted column width.
 function shortMachineLabel(label: string): string {
   return label
@@ -31,7 +37,7 @@ function shortMachineLabel(label: string): string {
     .trim();
 }
 
-// Compact "time ago" — 1m / 2h / 3d / "now". Driven by the 5 s poll tick;
+// Compact "time ago" — 1m / 2h / 3d / "now". Driven by a 30 s tick;
 // resolution coarser than 1 m doesn't matter for an agent log.
 function ageSince(iso: string, now: number): string {
   const t = Date.parse(iso);
@@ -43,7 +49,6 @@ function ageSince(iso: string, now: number): string {
   return `${Math.floor(secs / 86400)}d`;
 }
 
-// "now" → "just now"; everything else → "last seen 3m ago"
 function lastSeenPhrase(iso: string | null): string {
   if (!iso) return "";
   const ago = ageSince(iso, Date.now());
@@ -91,37 +96,86 @@ function OfflineBanner({
 
 export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
   const { agents, machines, loading, refresh } = useAllAgents();
-  const [selected, setSelected] = useState<Selection | null>(null);
+  const [panes, setPanes] = useState<Pane[]>([]);
+  const [focusedPaneId, setFocusedPaneId] = useState<number | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
+  const paneIdRef = useRef(1);
 
-  // Re-tick the "age" column every 30 s so rows update between polls
-  // without a full re-fetch.
+  // Re-tick the "age" column every 30 s.
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(id);
   }, []);
 
-  const closeDetail = useCallback(() => setSelected(null), []);
+  // Open an agent in a pane. If it's already open, just focus that pane.
+  // If we're at MAX_PANES, evict the oldest.
+  const openAgent = useCallback((machineId: number, agentId: string) => {
+    setPanes((prev) => {
+      const existing = prev.find(
+        (p) => p.machineId === machineId && p.agentId === agentId,
+      );
+      if (existing) {
+        setFocusedPaneId(existing.paneId);
+        return prev;
+      }
+      const newPane: Pane = {
+        paneId: paneIdRef.current++,
+        machineId,
+        agentId,
+      };
+      const next =
+        prev.length >= MAX_PANES
+          ? [...prev.slice(1), newPane]
+          : [...prev, newPane];
+      setFocusedPaneId(newPane.paneId);
+      return next;
+    });
+  }, []);
 
-  // Drop selection if the underlying agent disappears (deleted remotely,
-  // or its machine went offline).
+  const closePane = useCallback((paneId: number) => {
+    setPanes((prev) => {
+      const next = prev.filter((p) => p.paneId !== paneId);
+      // If we just closed the focused pane, focus the new last one
+      // (or null if empty).
+      setFocusedPaneId((prevFocus) => {
+        if (prevFocus !== paneId) return prevFocus;
+        return next.length > 0 ? next[next.length - 1].paneId : null;
+      });
+      return next;
+    });
+  }, []);
+
+  // Drop any pane whose underlying agent has disappeared (deleted
+  // remotely, or its machine went offline).
   useEffect(() => {
-    if (!selected) return;
-    const stillThere = agents.some(
-      (a) => a.id === selected.agentId && a.machine_id === selected.machineId,
+    setPanes((prev) =>
+      prev.filter((p) =>
+        agents.some((a) => a.id === p.agentId && a.machine_id === p.machineId),
+      ),
     );
-    if (!stillThere) setSelected(null);
-  }, [agents, selected]);
+  }, [agents]);
 
-  // Esc closes the detail pane.
+  // Esc closes the focused pane.
   useEffect(() => {
-    if (!selected) return;
+    if (panes.length === 0) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeDetail();
+      if (e.key !== "Escape") return;
+      const target = e.target as HTMLElement | null;
+      // Don't intercept Esc inside text inputs (clears the input).
+      if (
+        target &&
+        (target.tagName === "TEXTAREA" || target.tagName === "INPUT")
+      ) {
+        return;
+      }
+      const id =
+        focusedPaneId ??
+        (panes.length > 0 ? panes[panes.length - 1].paneId : null);
+      if (id !== null) closePane(id);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selected, closeDetail]);
+  }, [panes, focusedPaneId, closePane]);
 
   const offlineMachines = useMemo(
     () => machines.filter((m) => m.error !== null),
@@ -129,17 +183,23 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
   );
 
   const noMachines = machines.length === 0;
-  const twoPane = selected !== null;
+  const splitView = panes.length > 0;
 
   const onRetryMachine = useCallback(
     (machineId: number) => {
-      // No per-machine retry endpoint — kick a full refresh. The fan-out
-      // re-tries every enabled machine.
       void invoke("touch_helm_machine_seen", { id: machineId }).catch(() => {});
       refresh();
     },
     [refresh],
   );
+
+  // Build a Set of "open" machineId:agentId so list rows can show whether
+  // they're already in a pane.
+  const openSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const p of panes) s.add(`${p.machineId}:${p.agentId}`);
+    return s;
+  }, [panes]);
 
   const list = (
     <>
@@ -213,9 +273,7 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
           </div>
           <div className="agents-tab__tbody">
             {agents.map((a) => {
-              const isSelected =
-                selected?.agentId === a.id &&
-                selected?.machineId === a.machine_id;
+              const isOpen = openSet.has(`${a.machine_id}:${a.id}`);
               const stateLabel = STATE_LABELS[a.state] ?? a.state;
               const activity = a.last_activity ?? a.task;
               const machineShort = shortMachineLabel(a.machine_label);
@@ -223,22 +281,17 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
                 <div
                   key={`${a.machine_id}:${a.id}`}
                   className={
-                    isSelected
+                    isOpen
                       ? "agents-tab__row agents-tab__row--selected"
                       : "agents-tab__row"
                   }
-                  onClick={() =>
-                    setSelected({ machineId: a.machine_id, agentId: a.id })
-                  }
+                  onClick={() => openAgent(a.machine_id, a.id)}
                   role="row"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      setSelected({
-                        machineId: a.machine_id,
-                        agentId: a.id,
-                      });
+                      openAgent(a.machine_id, a.id);
                     }
                   }}
                 >
@@ -271,23 +324,46 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
           </div>
         </div>
       )}
+
+      {splitView && (
+        <div className="agents-tab__hint">
+          {panes.length} of {MAX_PANES} panes open · click a row to open another
+          · Esc closes the focused pane
+        </div>
+      )}
     </>
   );
 
-  if (!twoPane) {
+  if (!splitView) {
     return <div className="agents-tab">{list}</div>;
   }
 
   return (
-    <div className="agents-tab agents-tab--two-pane">
+    <div className="agents-tab agents-tab--splits">
       <div className="agents-tab__list-pane">{list}</div>
-      <div className="agents-tab__detail-pane">
-        <AgentDetailPane
-          machineId={selected.machineId}
-          agentId={selected.agentId}
-          onClose={closeDetail}
-          onDeleted={closeDetail}
-        />
+      <div className={`agents-tab__panes agents-tab__panes--n${panes.length}`}>
+        {panes.map((p) => {
+          const focused = focusedPaneId === p.paneId;
+          return (
+            <div
+              key={p.paneId}
+              className={
+                focused
+                  ? "agents-tab__pane agents-tab__pane--focused"
+                  : "agents-tab__pane"
+              }
+              onClick={() => setFocusedPaneId(p.paneId)}
+              onFocus={() => setFocusedPaneId(p.paneId)}
+            >
+              <AgentDetailPane
+                machineId={p.machineId}
+                agentId={p.agentId}
+                onClose={() => closePane(p.paneId)}
+                onDeleted={() => closePane(p.paneId)}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

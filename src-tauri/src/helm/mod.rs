@@ -172,7 +172,7 @@ pub fn touch_helm_machine_seen(db: State<'_, AppDb>, id: i64) -> Result<(), Stri
     Ok(())
 }
 
-const PROXY_TIMEOUT: Duration = Duration::from_secs(15);
+const PROXY_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Proxy a JSON request to a registered helm-daemon.
 ///
@@ -226,10 +226,29 @@ pub async fn helm_proxy_request(
         req = req.header("Content-Type", "application/json").body(b);
     }
 
-    let resp = req
-        .send()
-        .await
-        .map_err(|e| format!("Daemon request failed: {}", e))?;
+    let resp = req.send().await.map_err(|e| {
+        // Default reqwest Display hides the underlying cause. Surface the
+        // error kind and chain so the React side can show something
+        // diagnosable instead of "error sending request for url …".
+        let kind = if e.is_timeout() {
+            "timeout"
+        } else if e.is_connect() {
+            "connect"
+        } else if e.is_request() {
+            "request"
+        } else if e.is_body() {
+            "body"
+        } else {
+            "other"
+        };
+        let mut msg = format!("Daemon {} failed [{}]: {}", method, kind, e);
+        let mut src = std::error::Error::source(&e);
+        while let Some(s) = src {
+            msg.push_str(&format!(" → {}", s));
+            src = s.source();
+        }
+        msg
+    })?;
     let status = resp.status();
     let raw = resp
         .text()
