@@ -583,10 +583,10 @@ export function AgentDetailPane({
       <header className="agent-detail__header">
         {detail && (
           <span
-            className={`agent-detail__state-pill agent-detail__state-pill--${detail.state}`}
+            className={`agent-detail__state-tag agent-detail__state-tag--${detail.state}`}
             title={detail.state}
           >
-            {detail.state}
+            [{detail.state}]
           </span>
         )}
         <span className="agent-detail__name" title={detail?.name ?? undefined}>
