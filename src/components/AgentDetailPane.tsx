@@ -9,8 +9,10 @@ import {
 import * as Popover from "@radix-ui/react-popover";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { open as openShell } from "@tauri-apps/plugin-shell";
+import AnsiConvert from "ansi-to-html";
 import { useAgentDetail } from "../hooks/useAgentDetail";
 import { clientFor, type ThreadEvent, type Turn } from "../lib/helm-api";
+import { escapeHtml, getLanguageFromPath, highlightCode } from "../lib/syntax";
 import "../styles/agent-detail.css";
 
 interface AgentDetailPaneProps {
@@ -275,6 +277,187 @@ function MessageItem({
   );
 }
 
+// Highlighted code block — used for Write content, Read result body,
+// and the generic tool args/result panes. `language` from the file
+// path when known, else highlight.js auto-detect.
+function CodeBlock({
+  code,
+  language,
+}: {
+  code: string;
+  language?: string | null;
+}) {
+  const html = useMemo(
+    () => highlightCode(code, language ?? null),
+    [code, language],
+  );
+  return (
+    <pre className="agent-detail__code">
+      <code className="hljs" dangerouslySetInnerHTML={{ __html: html }} />
+    </pre>
+  );
+}
+
+// Edit tool args rendered as a unified-style diff. Old lines red,
+// new lines green, file path + line counts in the header. Falls back
+// to JSON if the args don't look like an Edit shape.
+function EditDiff({ input }: { input: string }) {
+  const obj = asRecord(safeJsonParse(input)) ?? {};
+  const filePath = asString(obj.file_path) || asString(obj.path);
+  const oldStr = asString(obj.old_string);
+  const newStr = asString(obj.new_string);
+  const lang = getLanguageFromPath(filePath);
+
+  if (!filePath || (!oldStr && !newStr)) {
+    return <CodeBlock code={prettyJson(input)} language="json" />;
+  }
+
+  const oldLines = oldStr ? oldStr.split("\n") : [];
+  const newLines = newStr ? newStr.split("\n") : [];
+
+  return (
+    <div className="agent-detail__diff">
+      <div className="agent-detail__diff-file">
+        <span className="agent-detail__diff-path">{filePath}</span>
+        <span className="agent-detail__diff-stats">
+          <span className="agent-detail__diff-stat agent-detail__diff-stat--del">
+            −{oldLines.length}
+          </span>
+          <span className="agent-detail__diff-stat agent-detail__diff-stat--add">
+            +{newLines.length}
+          </span>
+        </span>
+      </div>
+      <div className="agent-detail__diff-body">
+        {oldLines.map((line, i) => (
+          <div
+            key={`o${i}`}
+            className="agent-detail__diff-line agent-detail__diff-line--del"
+          >
+            <span className="agent-detail__diff-marker">−</span>
+            <code
+              className="hljs"
+              dangerouslySetInnerHTML={{ __html: highlightCode(line, lang) }}
+            />
+          </div>
+        ))}
+        {newLines.map((line, i) => (
+          <div
+            key={`n${i}`}
+            className="agent-detail__diff-line agent-detail__diff-line--add"
+          >
+            <span className="agent-detail__diff-marker">+</span>
+            <code
+              className="hljs"
+              dangerouslySetInnerHTML={{ __html: highlightCode(line, lang) }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Write tool args: file path header + the content as highlighted code.
+function WriteCode({ input }: { input: string }) {
+  const obj = asRecord(safeJsonParse(input)) ?? {};
+  const filePath = asString(obj.file_path) || asString(obj.path);
+  const content = asString(obj.content);
+  if (!content) return <CodeBlock code={prettyJson(input)} language="json" />;
+  const lang = getLanguageFromPath(filePath);
+  return (
+    <div className="agent-detail__write">
+      {filePath && <div className="agent-detail__write-file">{filePath}</div>}
+      <CodeBlock code={content} language={lang} />
+    </div>
+  );
+}
+
+// ANSI-to-HTML for Bash results so colored CLI output (rg, eslint,
+// cargo, claude etc.) renders the way it does in a real terminal.
+// The Convert instance is per-render — its only state is across
+// chunks of one stream, which we don't have here.
+function AnsiBlock({ text }: { text: string }) {
+  const html = useMemo(() => {
+    try {
+      const conv = new AnsiConvert({ newline: false, escapeXML: true });
+      return conv.toHtml(text);
+    } catch {
+      return escapeHtml(text);
+    }
+  }, [text]);
+  return (
+    <pre
+      className="agent-detail__code agent-detail__code--ansi"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+}
+
+// Dispatch the args body based on tool name. Edit gets a diff view,
+// Write gets a code-with-file-path view, anything else falls back to
+// JSON pretty-print.
+function ToolArgs({ toolUse }: { toolUse: ToolUseEv }) {
+  const lower = toolUse.tool.toLowerCase();
+  if (lower === "edit") {
+    return (
+      <div className="agent-detail__tool-args">
+        <EditDiff input={toolUse.input} />
+      </div>
+    );
+  }
+  if (lower === "write") {
+    return (
+      <div className="agent-detail__tool-args">
+        <WriteCode input={toolUse.input} />
+      </div>
+    );
+  }
+  return (
+    <div className="agent-detail__tool-args">
+      <CodeBlock code={prettyJson(toolUse.input)} language="json" />
+    </div>
+  );
+}
+
+// Dispatch the result body based on tool name. Bash output gets ANSI
+// parsing; Read result gets language-highlighted from the file_path
+// arg; everything else is plain mono. When trimmed (collapsed view),
+// we render the trimmed text unstyled — coloring a 14-line head/tail
+// snippet adds noise, not signal.
+function ToolResultBody({
+  toolUse,
+  toolResult,
+  expanded,
+  trimmed,
+}: {
+  toolUse: ToolUseEv;
+  toolResult: ToolResultEv;
+  expanded: boolean;
+  trimmed: { display: string; hiddenCount: number };
+}) {
+  const text = expanded ? toolResult.preview : trimmed.display;
+  const lower = toolUse.tool.toLowerCase();
+
+  // Collapsed view: keep it lightweight (no highlighter pass on trimmed).
+  if (!expanded) {
+    return <pre className="agent-detail__code">{text}</pre>;
+  }
+
+  if (lower === "bash" || lower.includes("shell")) {
+    return <AnsiBlock text={text} />;
+  }
+
+  if (lower === "read") {
+    const args = asRecord(safeJsonParse(toolUse.input)) ?? {};
+    const filePath = asString(args.file_path) || asString(args.path);
+    const lang = getLanguageFromPath(filePath);
+    return <CodeBlock code={text} language={lang} />;
+  }
+
+  return <pre className="agent-detail__code">{text}</pre>;
+}
+
 function ToolItem({
   toolUse,
   toolResult,
@@ -322,15 +505,16 @@ function ToolItem({
         {hasError && <span className="agent-detail__tool-err-tag">error</span>}
       </button>
 
-      {expanded && (
-        <div className="agent-detail__tool-args">
-          <pre>{prettyJson(toolUse.input)}</pre>
-        </div>
-      )}
+      {expanded && <ToolArgs toolUse={toolUse} />}
 
       {toolResult && (
         <div className="agent-detail__tool-result">
-          <pre>{expanded ? toolResult.preview : trimmed.display}</pre>
+          <ToolResultBody
+            toolUse={toolUse}
+            toolResult={toolResult}
+            expanded={expanded}
+            trimmed={trimmed}
+          />
           {!expanded && trimmed.hiddenCount > 0 && (
             <button
               type="button"
