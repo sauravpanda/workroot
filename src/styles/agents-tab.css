@@ -25,50 +25,96 @@
   border-right: 1px solid var(--color-border, #2a2a2a);
 }
 
-/* ---- splits container (the right side, holds 1–4 detail panes) ---- */
-
+/* ---- splits container — flex with draggable dividers ----
+ * Was a fixed CSS grid; replaced with flex so each pair of adjacent
+ * panes gets a real visible divider you can grab. Topology is still
+ * hardcoded for n=2/3/4 but the divider lives between the actual flex
+ * children (no more "1px gap" trick that you can't grab). */
 .agents-tab__panes {
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
-  display: grid;
-  gap: 1px;
-  background: var(--color-border, #2a2a2a);
+  display: flex;
+  flex-direction: column; /* outer container stacks rows for n=3/4 */
+  background: var(--bg-pane, #0a0c0f);
   overflow: hidden;
 }
 
-.agents-tab__panes--n1 {
-  grid-template-columns: 1fr;
-}
+/* Single pane and 2-pane layouts run as a single row. */
+.agents-tab__panes--n1,
 .agents-tab__panes--n2 {
-  grid-template-columns: 1fr 1fr;
+  flex-direction: row;
 }
-.agents-tab__panes--n3 {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-}
-.agents-tab__panes--n3 .agents-tab__pane:nth-child(3) {
-  grid-column: 1 / -1; /* third pane spans the full bottom row */
-}
-.agents-tab__panes--n4 {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
+
+/* A row of panes (used inside n=3 / n=4 to split top vs bottom). */
+.agents-tab__split-row {
+  display: flex;
+  flex-direction: row;
+  flex: 0 0 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .agents-tab__pane {
   position: relative;
   display: flex;
   flex-direction: column;
+  flex: 1 1 0;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background: var(--color-bg, #111);
-  outline: 2px solid transparent;
-  outline-offset: -2px;
+  background: var(--bg-pane, #0a0c0f);
 }
 
+/* Focus affordance is a subtle inset 1 px rule, not a 2 px outline ring.
+ * Closer to Ghostty's "the active pane just looks slightly brighter". */
 .agents-tab__pane--focused {
-  outline-color: var(--color-accent, #60a5fa);
+  box-shadow: inset 0 0 0 1px
+    var(--color-accent-muted, rgba(136, 180, 255, 0.3));
+}
+
+/* Draggable divider between two panes. 6 px hit area, 2 px visible bar
+ * centered. Hover/active brighten the bar so you can see what you're
+ * grabbing. */
+.agents-tab__divider {
+  flex: 0 0 6px;
+  position: relative;
+  background: transparent;
+  z-index: 1;
+}
+
+.agents-tab__divider::before {
+  content: "";
+  position: absolute;
+  background: var(--border-strong, #3a4453);
+  transition: background 120ms ease;
+}
+
+.agents-tab__divider--vertical {
+  cursor: col-resize;
+}
+.agents-tab__divider--vertical::before {
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 2px;
+}
+
+.agents-tab__divider--horizontal {
+  flex-basis: 6px;
+  cursor: row-resize;
+}
+.agents-tab__divider--horizontal::before {
+  left: 0;
+  right: 0;
+  top: 2px;
+  height: 2px;
+}
+
+.agents-tab__divider:hover::before,
+.agents-tab__divider:active::before {
+  background: var(--color-accent, #88b4ff);
 }
 
 .agents-tab__hint {

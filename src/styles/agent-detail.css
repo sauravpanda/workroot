@@ -2,15 +2,16 @@
  * scrolls. That's what makes sticky-bottom auto-scroll work — header,
  * usage row, and reply box stay parked while transcript flows below. */
 /* Pane interior is darker than the surrounding chrome so it reads as a
- * "terminal surface". List pane keeps the lighter chrome bg. */
+ * "terminal surface". List pane keeps the lighter chrome bg. Tighter
+ * paddings than v0.3.1 — Ghostty cells start at ~6-8px from the edge. */
 .agent-detail {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 8px;
+  padding: 8px 10px;
   height: 100%;
   overflow: hidden;
-  background: #0a0a0a;
+  background: var(--bg-pane, #0a0c0f);
 }
 
 /* Single-row pane header: state pill · name · repo:branch @ machine · ⋯ · ×.
@@ -20,16 +21,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 6px 6px 6px;
+  padding: 2px 4px 4px 4px;
   border-bottom: 1px solid var(--color-border, #2a2a2a);
   font-size: 12px;
   flex: 0 0 auto;
-  min-height: 28px;
   min-width: 0;
 }
 
+/* Mono on the agent name — it's an identifier, not prose. */
 .agent-detail__name {
-  font-size: 13px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
   font-weight: 600;
   color: var(--color-text, #e4e4e4);
   white-space: nowrap;
@@ -269,16 +271,14 @@
 
 /* ---- messages (user / assistant / thinking) ---- */
 
-/* Chat alignment — user right, assistant left. Bubble chrome is dialed
- * down (smaller radius, tighter padding) and the body uses mono so the
- * transcript reads as terminal output. Alignment + color carry the role. */
+/* Per the Ghostty rethink: assistant messages are bare left-aligned
+ * mono text — no bubble, no chrome — so the transcript reads like
+ * a terminal log. User messages keep a *very* subtle bubble so you
+ * can still tell turn-from-turn at a glance. */
 .agent-detail__msg {
   display: flex;
   flex-direction: column;
-  padding: 6px 10px;
   font-size: 12px;
-  max-width: min(78%, 640px);
-  border-radius: 4px;
   word-break: break-word;
 }
 
@@ -291,28 +291,27 @@
 
 .agent-detail__msg--user {
   align-self: flex-end;
-  background: rgba(96, 165, 250, 0.14);
-  border: 1px solid rgba(96, 165, 250, 0.3);
+  max-width: min(78%, 640px);
+  padding: 4px 8px;
+  background: var(--color-accent-muted, rgba(136, 180, 255, 0.14));
+  border-left: 2px solid var(--color-accent, #88b4ff);
   color: var(--color-text, #e4e4e4);
 }
 
 .agent-detail__msg--assistant {
-  align-self: flex-start;
-  background: var(--color-bg-secondary, #181818);
-  border: 1px solid var(--color-border, #2a2a2a);
+  align-self: stretch;
+  padding: 0 0 0 4px;
+  background: transparent;
+  border: none;
   color: var(--color-text, #e4e4e4);
 }
 
 .agent-detail__msg--thinking {
-  align-self: flex-start;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 2px 0 2px 8px;
-  color: var(--color-text-secondary, #888);
+  align-self: stretch;
+  padding: 0 0 0 4px;
+  color: var(--color-text-muted, #5c5c66);
   font-style: italic;
   font-size: 11px;
-  max-width: 100%;
 }
 
 .agent-detail__msg-toggle {

@@ -57,6 +57,56 @@ function lastSeenPhrase(iso: string | null): string {
   return ` — last seen ${ago} ago`;
 }
 
+// Draggable splitter between two panes. `direction: 'vertical'` means
+// the bar runs vertically — it sits between left/right panes and resizes
+// their widths (cursor: col-resize). `'horizontal'` is the opposite: a
+// horizontal bar between top/bottom panes (cursor: row-resize).
+//
+// `ratio` is the size fraction of the *first* sibling (0..1). The drag
+// computes a new ratio from the parent's current size and forwards it
+// to the parent via onChange.
+function Divider({
+  direction,
+  ratio,
+  onChange,
+}: {
+  direction: "vertical" | "horizontal";
+  ratio: number;
+  onChange: (next: number) => void;
+}) {
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const parent = e.currentTarget.parentElement;
+    if (!parent) return;
+    const total =
+      direction === "vertical" ? parent.offsetWidth : parent.offsetHeight;
+    if (total <= 0) return;
+    const startPos = direction === "vertical" ? e.clientX : e.clientY;
+    const startRatio = ratio;
+    const onMove = (ev: PointerEvent) => {
+      const cur = direction === "vertical" ? ev.clientX : ev.clientY;
+      const delta = cur - startPos;
+      const next = Math.max(0.15, Math.min(0.85, startRatio + delta / total));
+      onChange(next);
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
+  return (
+    <div
+      className={`agents-tab__divider agents-tab__divider--${direction}`}
+      onPointerDown={onPointerDown}
+      role="separator"
+      aria-orientation={direction === "vertical" ? "vertical" : "horizontal"}
+    />
+  );
+}
+
 function OfflineBanner({
   status,
   onOpenMachines,
@@ -98,6 +148,21 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
   const { agents, machines, loading, refresh } = useAllAgents();
   const [panes, setPanes] = useState<Pane[]>([]);
   const [focusedPaneId, setFocusedPaneId] = useState<number | null>(null);
+  // Split ratios (0..1) — first sibling fraction. The fixed-grid model
+  // is gone; layouts are now flex with draggable dividers between any
+  // two adjacent panes. We track three ratios because n=4 has two
+  // horizontal cuts (top row, bottom row) plus one vertical cut.
+  const [ratios, setRatios] = useState({
+    twoCol: 0.5, // n=2: single vertical divider
+    vertical: 0.5, // n=3, n=4: top/bottom horizontal divider
+    topRow: 0.5, // n=3, n=4: vertical divider in top row
+    botRow: 0.5, // n=4: vertical divider in bottom row
+  });
+  const setRatio = useCallback(
+    (key: keyof typeof ratios, value: number) =>
+      setRatios((prev) => ({ ...prev, [key]: value })),
+    [],
+  );
   const [now, setNow] = useState<number>(() => Date.now());
   const paneIdRef = useRef(1);
 
@@ -327,8 +392,8 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
 
       {splitView && (
         <div className="agents-tab__hint">
-          {panes.length} of {MAX_PANES} panes open · click a row to open another
-          · Esc closes the focused pane
+          {panes.length} of {MAX_PANES} · click row to open · drag dividers to
+          resize · Esc closes focused
         </div>
       )}
     </>
@@ -338,32 +403,120 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     return <div className="agents-tab">{list}</div>;
   }
 
+  // Render a leaf pane (the AgentDetailPane wrapped in the focus/click
+  // chrome). Pulled out so the n=1..4 layout code below stays readable.
+  const leaf = (p: Pane, basis?: number) => {
+    const focused = focusedPaneId === p.paneId;
+    return (
+      <div
+        key={p.paneId}
+        className={
+          focused
+            ? "agents-tab__pane agents-tab__pane--focused"
+            : "agents-tab__pane"
+        }
+        style={
+          basis !== undefined ? { flexBasis: `${basis * 100}%` } : undefined
+        }
+        onClick={() => setFocusedPaneId(p.paneId)}
+        onFocus={() => setFocusedPaneId(p.paneId)}
+      >
+        <AgentDetailPane
+          machineId={p.machineId}
+          agentId={p.agentId}
+          onClose={() => closePane(p.paneId)}
+          onDeleted={() => closePane(p.paneId)}
+        />
+      </div>
+    );
+  };
+
+  let panesNode: React.ReactNode;
+  if (panes.length === 1) {
+    panesNode = leaf(panes[0]);
+  } else if (panes.length === 2) {
+    panesNode = (
+      <>
+        {leaf(panes[0], ratios.twoCol)}
+        <Divider
+          direction="vertical"
+          ratio={ratios.twoCol}
+          onChange={(n) => setRatio("twoCol", n)}
+        />
+        {leaf(panes[1], 1 - ratios.twoCol)}
+      </>
+    );
+  } else if (panes.length === 3) {
+    // Top row: panes[0] | panes[1]; bottom row spans: panes[2].
+    panesNode = (
+      <>
+        <div
+          className="agents-tab__split-row"
+          style={{ flexBasis: `${ratios.vertical * 100}%` }}
+        >
+          {leaf(panes[0], ratios.topRow)}
+          <Divider
+            direction="vertical"
+            ratio={ratios.topRow}
+            onChange={(n) => setRatio("topRow", n)}
+          />
+          {leaf(panes[1], 1 - ratios.topRow)}
+        </div>
+        <Divider
+          direction="horizontal"
+          ratio={ratios.vertical}
+          onChange={(n) => setRatio("vertical", n)}
+        />
+        <div
+          className="agents-tab__split-row"
+          style={{ flexBasis: `${(1 - ratios.vertical) * 100}%` }}
+        >
+          {leaf(panes[2], 1)}
+        </div>
+      </>
+    );
+  } else {
+    // 4 panes: 2×2.
+    panesNode = (
+      <>
+        <div
+          className="agents-tab__split-row"
+          style={{ flexBasis: `${ratios.vertical * 100}%` }}
+        >
+          {leaf(panes[0], ratios.topRow)}
+          <Divider
+            direction="vertical"
+            ratio={ratios.topRow}
+            onChange={(n) => setRatio("topRow", n)}
+          />
+          {leaf(panes[1], 1 - ratios.topRow)}
+        </div>
+        <Divider
+          direction="horizontal"
+          ratio={ratios.vertical}
+          onChange={(n) => setRatio("vertical", n)}
+        />
+        <div
+          className="agents-tab__split-row"
+          style={{ flexBasis: `${(1 - ratios.vertical) * 100}%` }}
+        >
+          {leaf(panes[2], ratios.botRow)}
+          <Divider
+            direction="vertical"
+            ratio={ratios.botRow}
+            onChange={(n) => setRatio("botRow", n)}
+          />
+          {leaf(panes[3], 1 - ratios.botRow)}
+        </div>
+      </>
+    );
+  }
+
   return (
     <div className="agents-tab agents-tab--splits">
       <div className="agents-tab__list-pane">{list}</div>
       <div className={`agents-tab__panes agents-tab__panes--n${panes.length}`}>
-        {panes.map((p) => {
-          const focused = focusedPaneId === p.paneId;
-          return (
-            <div
-              key={p.paneId}
-              className={
-                focused
-                  ? "agents-tab__pane agents-tab__pane--focused"
-                  : "agents-tab__pane"
-              }
-              onClick={() => setFocusedPaneId(p.paneId)}
-              onFocus={() => setFocusedPaneId(p.paneId)}
-            >
-              <AgentDetailPane
-                machineId={p.machineId}
-                agentId={p.agentId}
-                onClose={() => closePane(p.paneId)}
-                onDeleted={() => closePane(p.paneId)}
-              />
-            </div>
-          );
-        })}
+        {panesNode}
       </div>
     </div>
   );
