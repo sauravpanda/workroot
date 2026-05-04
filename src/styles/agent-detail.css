@@ -433,6 +433,203 @@
   line-height: 1.45;
 }
 
+/* ---- code blocks (highlight.js) + diff renderer ---- */
+
+.agent-detail__code {
+  margin: 0;
+  padding: 6px 8px;
+  background: var(--color-bg-secondary, #181818);
+  border-radius: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--color-text-secondary, #aaa);
+  max-height: 480px;
+  overflow: auto;
+  line-height: 1.45;
+}
+
+.agent-detail__code--ansi {
+  /* ansi-to-html emits <span style="color: …"> — let those colors win
+   * over our base text color. */
+  color: var(--color-text, #d4d8de);
+}
+
+/* highlight.js theme — desaturated to match the Workroot palette
+ * rather than the saturated "atom-one-dark" defaults. Scoped to .hljs
+ * so we don't bleed into other places that use highlight.js classes. */
+.agent-detail__code .hljs,
+.agent-detail__diff .hljs {
+  color: var(--color-text, #d4d8de);
+  background: transparent;
+}
+
+.agent-detail__code .hljs-keyword,
+.agent-detail__code .hljs-selector-tag,
+.agent-detail__code .hljs-meta-keyword,
+.agent-detail__diff .hljs-keyword,
+.agent-detail__diff .hljs-selector-tag {
+  color: #c89dd6; /* desat purple */
+}
+
+.agent-detail__code .hljs-string,
+.agent-detail__code .hljs-template-variable,
+.agent-detail__diff .hljs-string,
+.agent-detail__diff .hljs-template-variable {
+  color: #a8c285; /* desat green */
+}
+
+.agent-detail__code .hljs-comment,
+.agent-detail__code .hljs-quote,
+.agent-detail__diff .hljs-comment {
+  color: var(--color-text-muted, #5c5c66);
+  font-style: italic;
+}
+
+.agent-detail__code .hljs-number,
+.agent-detail__code .hljs-literal,
+.agent-detail__diff .hljs-number,
+.agent-detail__diff .hljs-literal {
+  color: #d4a76a; /* desat amber */
+}
+
+.agent-detail__code .hljs-function .hljs-title,
+.agent-detail__code .hljs-title.function_,
+.agent-detail__diff .hljs-title.function_ {
+  color: #88b4ff; /* accent periwinkle */
+}
+
+.agent-detail__code .hljs-type,
+.agent-detail__code .hljs-built_in,
+.agent-detail__diff .hljs-type,
+.agent-detail__diff .hljs-built_in {
+  color: #d4c186; /* desat yellow */
+}
+
+.agent-detail__code .hljs-attr,
+.agent-detail__code .hljs-attribute,
+.agent-detail__diff .hljs-attr {
+  color: #d4a76a;
+}
+
+.agent-detail__code .hljs-variable,
+.agent-detail__code .hljs-params,
+.agent-detail__code .hljs-tag,
+.agent-detail__code .hljs-name,
+.agent-detail__diff .hljs-variable,
+.agent-detail__diff .hljs-tag,
+.agent-detail__diff .hljs-name {
+  color: #e0a3a3; /* desat red */
+}
+
+.agent-detail__code .hljs-meta,
+.agent-detail__diff .hljs-meta {
+  color: #88b4ff;
+}
+
+.agent-detail__code .hljs-punctuation,
+.agent-detail__diff .hljs-punctuation {
+  color: var(--color-text-secondary, #888);
+}
+
+/* ---- Edit-as-diff renderer ---- */
+
+.agent-detail__diff {
+  margin: 0;
+  background: var(--color-bg-secondary, #181818);
+  border-radius: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  line-height: 1.45;
+  max-height: 480px;
+  overflow: auto;
+}
+
+.agent-detail__diff-file {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--color-border-subtle, #1f252c);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.agent-detail__diff-path {
+  color: var(--color-text, #d4d8de);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-detail__diff-stats {
+  display: inline-flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.agent-detail__diff-stat--del {
+  color: #e08585;
+}
+.agent-detail__diff-stat--add {
+  color: #7ec699;
+}
+
+.agent-detail__diff-body {
+  padding: 4px 0;
+}
+
+.agent-detail__diff-line {
+  display: flex;
+  gap: 6px;
+  padding: 0 8px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.agent-detail__diff-line--del {
+  background: rgba(224, 133, 133, 0.08);
+}
+.agent-detail__diff-line--add {
+  background: rgba(126, 198, 153, 0.08);
+}
+
+.agent-detail__diff-marker {
+  flex: 0 0 auto;
+  width: 10px;
+  text-align: center;
+  user-select: none;
+}
+
+.agent-detail__diff-line--del .agent-detail__diff-marker {
+  color: #e08585;
+}
+.agent-detail__diff-line--add .agent-detail__diff-marker {
+  color: #7ec699;
+}
+
+.agent-detail__diff-line code {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
+  font: inherit;
+}
+
+/* Write file header */
+.agent-detail__write {
+  display: flex;
+  flex-direction: column;
+}
+
+.agent-detail__write-file {
+  padding: 4px 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--color-text, #d4d8de);
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--color-border-subtle, #1f252c);
+}
+
 .agent-detail__tool.is-error .agent-detail__tool-result pre {
   color: var(--color-danger, #f87171);
 }
