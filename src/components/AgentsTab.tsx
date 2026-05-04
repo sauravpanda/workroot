@@ -12,11 +12,16 @@ interface Pane {
   paneId: number;
   machineId: number;
   agentId: string;
+  /** Pinned panes are never evicted by FIFO when opening a new agent
+   *  at capacity. The user toggles via the ⋯ menu. */
+  pinned: boolean;
 }
 
-// Cap on simultaneously open agent panes. 4 fits a 2×2 grid; beyond
-// that each pane gets too narrow to be useful and the per-pane 3 s
-// poll starts adding up.
+type LayoutSize = 1 | 2 | 3 | 4;
+
+// Hard cap. The layout picker lets the user choose 1..4; we don't
+// allow more because each extra pane gets too narrow to be useful and
+// the per-pane 3 s poll starts adding up.
 const MAX_PANES = 4;
 
 const STATE_LABELS: Record<string, string> = {
@@ -148,6 +153,13 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
   const { agents, machines, loading, refresh } = useAllAgents();
   const [panes, setPanes] = useState<Pane[]>([]);
   const [focusedPaneId, setFocusedPaneId] = useState<number | null>(null);
+  // Layout shape (1-4 cells). Defaults to 1 + auto-grows on open so the
+  // out-of-the-box behavior matches v0.4.0 (click two agents → see two
+  // splits). Once the user explicitly picks a layout via the picker,
+  // userPickedLayout flips to true and auto-grow stops — pick is the
+  // intent, don't fight it.
+  const [layoutSize, setLayoutSize] = useState<LayoutSize>(1);
+  const [userPickedLayout, setUserPickedLayout] = useState(false);
   // Split ratios (0..1) — first sibling fraction. The fixed-grid model
   // is gone; layouts are now flex with draggable dividers between any
   // two adjacent panes. We track three ratios because n=4 has two
@@ -172,30 +184,99 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     return () => window.clearInterval(id);
   }, []);
 
-  // Open an agent in a pane. If it's already open, just focus that pane.
-  // If we're at MAX_PANES, evict the oldest.
-  const openAgent = useCallback((machineId: number, agentId: string) => {
+  // Open an agent. Behavior:
+  //   - already open → focus that pane
+  //   - room left in the layout (panes.length < layoutSize) → append
+  //   - at capacity → replace the focused pane if unpinned;
+  //     else replace the oldest unpinned pane;
+  //     else replace focused anyway (everything pinned, force).
+  // The "pinned never evicted" rule is the whole point of the pin.
+  const openAgent = useCallback(
+    (machineId: number, agentId: string) => {
+      setPanes((prev) => {
+        const existing = prev.find(
+          (p) => p.machineId === machineId && p.agentId === agentId,
+        );
+        if (existing) {
+          setFocusedPaneId(existing.paneId);
+          return prev;
+        }
+        const newPane: Pane = {
+          paneId: paneIdRef.current++,
+          machineId,
+          agentId,
+          pinned: false,
+        };
+        // Room in the current layout? Append.
+        if (prev.length < layoutSize) {
+          setFocusedPaneId(newPane.paneId);
+          return [...prev, newPane];
+        }
+        // Layout's full but auto-grow still active (user hasn't picked
+        // a layout) and there's room within MAX_PANES → grow the
+        // layout by one and append.
+        if (!userPickedLayout && prev.length < MAX_PANES) {
+          setLayoutSize((prev.length + 1) as LayoutSize);
+          setFocusedPaneId(newPane.paneId);
+          return [...prev, newPane];
+        }
+        // Pick a slot to replace.
+        const focusedIdx = prev.findIndex((p) => p.paneId === focusedPaneId);
+        let replaceIdx = -1;
+        if (focusedIdx >= 0 && !prev[focusedIdx].pinned) {
+          replaceIdx = focusedIdx;
+        } else {
+          replaceIdx = prev.findIndex((p) => !p.pinned);
+        }
+        if (replaceIdx === -1) {
+          // Everything pinned — replace focused (or first) anyway.
+          replaceIdx = focusedIdx >= 0 ? focusedIdx : 0;
+        }
+        const next = prev.slice();
+        next[replaceIdx] = newPane;
+        setFocusedPaneId(newPane.paneId);
+        return next;
+      });
+    },
+    [layoutSize, focusedPaneId, userPickedLayout],
+  );
+
+  const togglePin = useCallback((paneId: number) => {
+    setPanes((prev) =>
+      prev.map((p) => (p.paneId === paneId ? { ...p, pinned: !p.pinned } : p)),
+    );
+  }, []);
+
+  // Switch to a different layout size. Marks the user as having picked
+  // explicitly (locks auto-grow). If the new size is smaller than the
+  // current pane count, trim — keep pinned first, drop oldest unpinned.
+  const setLayout = useCallback((size: LayoutSize) => {
+    setUserPickedLayout(true);
+    setLayoutSize(size);
     setPanes((prev) => {
-      const existing = prev.find(
-        (p) => p.machineId === machineId && p.agentId === agentId,
-      );
-      if (existing) {
-        setFocusedPaneId(existing.paneId);
-        return prev;
-      }
-      const newPane: Pane = {
-        paneId: paneIdRef.current++,
-        machineId,
-        agentId,
-      };
-      const next =
-        prev.length >= MAX_PANES
-          ? [...prev.slice(1), newPane]
-          : [...prev, newPane];
-      setFocusedPaneId(newPane.paneId);
-      return next;
+      if (prev.length <= size) return prev;
+      const toDrop = prev.length - size;
+      // Build a list of (idx, p) so we can sort while preserving the
+      // original order for the kept set. Sort dropped-first by:
+      //   1. pinned later (drop unpinned first)
+      //   2. lower idx first (drop older first)
+      const indexed = prev.map((p, idx) => ({ idx, p }));
+      indexed.sort((a, b) => {
+        if (a.p.pinned !== b.p.pinned) return a.p.pinned ? 1 : -1;
+        return a.idx - b.idx;
+      });
+      const dropIds = new Set(indexed.slice(0, toDrop).map((x) => x.p.paneId));
+      return prev.filter((p) => !dropIds.has(p.paneId));
     });
   }, []);
+
+  // If the focused pane gets dropped (close, layout trim, agent
+  // disappears), move focus to the new last pane (or null).
+  useEffect(() => {
+    if (focusedPaneId === null) return;
+    if (panes.some((p) => p.paneId === focusedPaneId)) return;
+    setFocusedPaneId(panes.length > 0 ? panes[panes.length - 1].paneId : null);
+  }, [panes, focusedPaneId]);
 
   const closePane = useCallback((paneId: number) => {
     setPanes((prev) => {
@@ -392,8 +473,34 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
 
       {splitView && (
         <div className="agents-tab__hint">
-          {panes.length} of {MAX_PANES} · click row to open · drag dividers to
-          resize · Esc closes focused
+          <div
+            className="agents-tab__layout-picker"
+            role="radiogroup"
+            aria-label="Layout"
+          >
+            <span className="agents-tab__layout-label">layout:</span>
+            {([1, 2, 3, 4] as LayoutSize[]).map((n) => (
+              <button
+                key={n}
+                type="button"
+                role="radio"
+                aria-checked={layoutSize === n}
+                className={
+                  layoutSize === n
+                    ? "agents-tab__layout-btn agents-tab__layout-btn--active"
+                    : "agents-tab__layout-btn"
+                }
+                onClick={() => setLayout(n)}
+                title={`${n} pane${n > 1 ? "s" : ""}`}
+              >
+                [{n}]
+              </button>
+            ))}
+          </div>
+          <div className="agents-tab__hint-text">
+            {panes.length}/{layoutSize} · click row to open · drag dividers to
+            resize · Esc closes focused
+          </div>
         </div>
       )}
     </>
@@ -403,64 +510,92 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     return <div className="agents-tab">{list}</div>;
   }
 
-  // Render a leaf pane (the AgentDetailPane wrapped in the focus/click
-  // chrome). Pulled out so the n=1..4 layout code below stays readable.
-  const leaf = (p: Pane, basis?: number) => {
-    const focused = focusedPaneId === p.paneId;
+  // Build cells = filled panes padded with nulls up to layoutSize.
+  // Empty cells render as placeholders.
+  const cells: (Pane | null)[] = [];
+  for (let i = 0; i < layoutSize; i++) {
+    cells.push(panes[i] ?? null);
+  }
+
+  // Render a single grid cell — either the AgentDetailPane wrapped in
+  // focus/click chrome, or an empty placeholder telling the user to
+  // click an agent to fill it.
+  const cell = (c: Pane | null, key: string | number, basis?: number) => {
+    if (!c) {
+      return (
+        <div
+          key={`empty-${key}`}
+          className="agents-tab__pane agents-tab__pane--empty"
+          style={
+            basis !== undefined ? { flexBasis: `${basis * 100}%` } : undefined
+          }
+        >
+          <div className="agents-tab__placeholder">
+            click an agent in the list to open here
+          </div>
+        </div>
+      );
+    }
+    const focused = focusedPaneId === c.paneId;
+    const cls = [
+      "agents-tab__pane",
+      focused && "agents-tab__pane--focused",
+      c.pinned && "agents-tab__pane--pinned",
+    ]
+      .filter(Boolean)
+      .join(" ");
     return (
       <div
-        key={p.paneId}
-        className={
-          focused
-            ? "agents-tab__pane agents-tab__pane--focused"
-            : "agents-tab__pane"
-        }
+        key={c.paneId}
+        className={cls}
         style={
           basis !== undefined ? { flexBasis: `${basis * 100}%` } : undefined
         }
-        onClick={() => setFocusedPaneId(p.paneId)}
-        onFocus={() => setFocusedPaneId(p.paneId)}
+        onClick={() => setFocusedPaneId(c.paneId)}
+        onFocus={() => setFocusedPaneId(c.paneId)}
       >
         <AgentDetailPane
-          machineId={p.machineId}
-          agentId={p.agentId}
-          onClose={() => closePane(p.paneId)}
-          onDeleted={() => closePane(p.paneId)}
+          machineId={c.machineId}
+          agentId={c.agentId}
+          onClose={() => closePane(c.paneId)}
+          onDeleted={() => closePane(c.paneId)}
+          pinned={c.pinned}
+          onTogglePin={() => togglePin(c.paneId)}
         />
       </div>
     );
   };
 
   let panesNode: React.ReactNode;
-  if (panes.length === 1) {
-    panesNode = leaf(panes[0]);
-  } else if (panes.length === 2) {
+  if (layoutSize === 1) {
+    panesNode = cell(cells[0], 0);
+  } else if (layoutSize === 2) {
     panesNode = (
       <>
-        {leaf(panes[0], ratios.twoCol)}
+        {cell(cells[0], 0, ratios.twoCol)}
         <Divider
           direction="vertical"
           ratio={ratios.twoCol}
           onChange={(n) => setRatio("twoCol", n)}
         />
-        {leaf(panes[1], 1 - ratios.twoCol)}
+        {cell(cells[1], 1, 1 - ratios.twoCol)}
       </>
     );
-  } else if (panes.length === 3) {
-    // Top row: panes[0] | panes[1]; bottom row spans: panes[2].
+  } else if (layoutSize === 3) {
+    // Top row: cells[0] | cells[1]; bottom row spans: cells[2].
     panesNode = (
       <>
         <div
           className="agents-tab__split-row"
           style={{ flexBasis: `${ratios.vertical * 100}%` }}
         >
-          {leaf(panes[0], ratios.topRow)}
+          {cell(cells[0], 0, ratios.topRow)}
           <Divider
             direction="vertical"
             ratio={ratios.topRow}
             onChange={(n) => setRatio("topRow", n)}
           />
-          {leaf(panes[1], 1 - ratios.topRow)}
+          {cell(cells[1], 1, 1 - ratios.topRow)}
         </div>
         <Divider
           direction="horizontal"
@@ -471,7 +606,7 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
           className="agents-tab__split-row"
           style={{ flexBasis: `${(1 - ratios.vertical) * 100}%` }}
         >
-          {leaf(panes[2], 1)}
+          {cell(cells[2], 2, 1)}
         </div>
       </>
     );
@@ -483,13 +618,13 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
           className="agents-tab__split-row"
           style={{ flexBasis: `${ratios.vertical * 100}%` }}
         >
-          {leaf(panes[0], ratios.topRow)}
+          {cell(cells[0], 0, ratios.topRow)}
           <Divider
             direction="vertical"
             ratio={ratios.topRow}
             onChange={(n) => setRatio("topRow", n)}
           />
-          {leaf(panes[1], 1 - ratios.topRow)}
+          {cell(cells[1], 1, 1 - ratios.topRow)}
         </div>
         <Divider
           direction="horizontal"
@@ -500,13 +635,13 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
           className="agents-tab__split-row"
           style={{ flexBasis: `${(1 - ratios.vertical) * 100}%` }}
         >
-          {leaf(panes[2], ratios.botRow)}
+          {cell(cells[2], 2, ratios.botRow)}
           <Divider
             direction="vertical"
             ratio={ratios.botRow}
             onChange={(n) => setRatio("botRow", n)}
           />
-          {leaf(panes[3], 1 - ratios.botRow)}
+          {cell(cells[3], 3, 1 - ratios.botRow)}
         </div>
       </>
     );
@@ -515,7 +650,7 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
   return (
     <div className="agents-tab agents-tab--splits">
       <div className="agents-tab__list-pane">{list}</div>
-      <div className={`agents-tab__panes agents-tab__panes--n${panes.length}`}>
+      <div className={`agents-tab__panes agents-tab__panes--n${layoutSize}`}>
         {panesNode}
       </div>
     </div>
