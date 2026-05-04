@@ -20,6 +20,11 @@ interface AgentDetailPaneProps {
   /** Called after a successful DELETE so the parent can drop selection
    *  before the next poll catches up. */
   onDeleted?: () => void;
+  /** Pin state, controlled by the parent (AgentsTab). When undefined,
+   *  the Pin menu item + the indicator are hidden — the standalone /
+   *  legacy single-pane usage doesn't need the concept. */
+  pinned?: boolean;
+  onTogglePin?: () => void;
 }
 
 const TERMINAL_STATES = new Set(["done", "failed"]);
@@ -348,6 +353,8 @@ export function AgentDetailPane({
   agentId,
   onClose,
   onDeleted,
+  pinned,
+  onTogglePin,
 }: AgentDetailPaneProps) {
   const { detail, machine, loading, error, refresh } = useAgentDetail(
     machineId,
@@ -608,6 +615,14 @@ export function AgentDetailPane({
             >
               {machine?.label ?? detail.machine_name}
             </span>
+            {pinned && (
+              <span
+                className="agent-detail__pin-tag"
+                title="Pinned — won't be evicted when opening another agent"
+              >
+                [pinned]
+              </span>
+            )}
           </>
         )}
         <span className="agent-detail__spacer" />
@@ -685,6 +700,20 @@ export function AgentDetailPane({
                   </button>
                 )}
                 <div className="agent-detail__menu-sep" />
+                {onTogglePin && (
+                  <button
+                    type="button"
+                    className="agent-detail__menu-item"
+                    onClick={onTogglePin}
+                    title={
+                      pinned
+                        ? "Unpin — pane can be evicted by FIFO again"
+                        : "Pin — pane won't be evicted when opening another agent"
+                    }
+                  >
+                    {pinned ? "Unpin pane" : "Pin pane"}
+                  </button>
+                )}
                 <button
                   type="button"
                   className="agent-detail__menu-item"

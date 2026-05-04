@@ -57,6 +57,16 @@
   min-width: 0;
 }
 
+.agent-detail__pin-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-warning, #d4a76a);
+  flex: 0 0 auto;
+}
+
 .agent-detail__spacer {
   flex: 1 1 auto;
 }

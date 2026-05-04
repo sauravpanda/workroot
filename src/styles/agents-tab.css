@@ -123,6 +123,80 @@
   color: var(--color-text-secondary, #888);
   padding: 6px 8px;
   border-top: 1px solid var(--color-border, #2a2a2a);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Layout picker — small bracketed [1] [2] [3] [4] buttons. Active one
+ * gets the accent color. Stays in the terminal type system. */
+.agents-tab__layout-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+}
+
+.agents-tab__layout-label {
+  color: var(--color-text-muted, #5c5c66);
+  margin-right: 2px;
+}
+
+.agents-tab__layout-btn {
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  font: inherit;
+  color: var(--color-text-secondary, #7c8693);
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.agents-tab__layout-btn:hover {
+  color: var(--color-text, #d4d8de);
+  background: var(--color-bg-hover, #1f252c);
+}
+
+.agents-tab__layout-btn--active {
+  color: var(--color-accent, #88b4ff);
+  font-weight: 600;
+}
+
+.agents-tab__hint-text {
+  font-family: var(--font-mono, monospace);
+}
+
+/* Empty placeholder cell — shown when layoutSize > panes.length. */
+.agents-tab__pane--empty {
+  background: var(--bg-pane, #0a0c0f);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agents-tab__placeholder {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--color-text-muted, #5c5c66);
+  padding: 12px 16px;
+  text-align: center;
+  border: 1px dashed var(--color-border-subtle, #1f252c);
+  border-radius: 4px;
+  max-width: 80%;
+}
+
+/* Pinned pane: subtle accent rule on the left edge so the user can
+ * tell the pane is sticky at a glance. The [pinned] tag in the header
+ * is the explicit signal. */
+.agents-tab__pane--pinned {
+  box-shadow: inset 2px 0 0 0 var(--color-warning, #d4a76a);
+}
+
+.agents-tab__pane--pinned.agents-tab__pane--focused {
+  box-shadow:
+    inset 2px 0 0 0 var(--color-warning, #d4a76a),
+    inset 0 0 0 1px var(--color-accent-muted, rgba(136, 180, 255, 0.3));
 }
 
 .agents-tab__header {
