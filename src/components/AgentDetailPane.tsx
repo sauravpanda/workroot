@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { useAgentDetail } from "../hooks/useAgentDetail";
 import { clientFor, type ThreadEvent, type Turn } from "../lib/helm-api";
 import "../styles/agent-detail.css";
@@ -248,9 +249,6 @@ function MessageItem({
           : "agent-detail__msg agent-detail__msg--assistant"
       }
     >
-      <span className="agent-detail__msg-label">
-        {role === "user" ? "You" : "Assistant"}
-      </span>
       <div className="agent-detail__msg-body">{text}</div>
     </div>
   );
@@ -336,9 +334,6 @@ function TurnItem({ turn }: { turn: Turn }) {
           : "agent-detail__msg agent-detail__msg--assistant"
       }
     >
-      <span className="agent-detail__msg-label">
-        {turn.role === "user" ? "You" : "Assistant"}
-      </span>
       <div className="agent-detail__msg-body">{turn.content}</div>
     </div>
   );
@@ -471,6 +466,26 @@ export function AgentDetailPane({
       </aside>
     );
   }
+
+  // Open the system file picker and append "[attached: <abs path>]" to
+  // the reply text. The daemon's /reply endpoint accepts only a string
+  // body, so we can't actually upload bytes — but inserting the absolute
+  // path is enough for the agent to use its Read tool on the file
+  // (works for code, text, JSON, images Claude can see, etc).
+  const attachFiles = async () => {
+    let picked: string | string[] | null = null;
+    try {
+      picked = await openDialog({ multiple: true });
+    } catch (e) {
+      setActionError(`Attach failed: ${e}`);
+      return;
+    }
+    if (!picked) return;
+    const paths = Array.isArray(picked) ? picked : [picked];
+    if (paths.length === 0) return;
+    const lines = paths.map((p) => `[attached: ${p}]`).join("\n");
+    setReply((prev) => (prev.trim() ? `${prev}\n${lines}\n` : `${lines}\n`));
+  };
 
   const sendReply = async () => {
     if (!machine || !detail || !reply.trim()) return;
@@ -711,13 +726,24 @@ export function AgentDetailPane({
             <span className="agent-detail__reply-hint">
               ⌘/Ctrl + Enter to send
             </span>
-            <button
-              className="agent-detail__action-btn"
-              onClick={() => void sendReply()}
-              disabled={!reply.trim() || busy !== null}
-            >
-              {busy === "reply" ? "Sending…" : "Send"}
-            </button>
+            <div className="agent-detail__reply-actions">
+              <button
+                type="button"
+                className="agent-detail__action-btn agent-detail__attach-btn"
+                onClick={() => void attachFiles()}
+                disabled={busy !== null}
+                title="Attach a file — its absolute path is appended so the agent can Read it"
+              >
+                Attach
+              </button>
+              <button
+                className="agent-detail__action-btn"
+                onClick={() => void sendReply()}
+                disabled={!reply.trim() || busy !== null}
+              >
+                {busy === "reply" ? "Sending…" : "Send"}
+              </button>
+            </div>
           </div>
         </div>
       )}
