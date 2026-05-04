@@ -1,14 +1,16 @@
 /* The aside is a flex column with hidden overflow; only the events list
  * scrolls. That's what makes sticky-bottom auto-scroll work — header,
  * usage row, and reply box stay parked while transcript flows below. */
+/* Pane interior is darker than the surrounding chrome so it reads as a
+ * "terminal surface". List pane keeps the lighter chrome bg. */
 .agent-detail {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 10px;
+  padding: 12px 16px;
   height: 100%;
   overflow: hidden;
-  background: var(--color-bg, #111);
+  background: #0a0a0a;
 }
 
 /* Single-row pane header: state pill · name · repo:branch @ machine · ⋯ · ×.
@@ -119,29 +121,27 @@
   margin: 4px 0;
 }
 
-.agent-detail__state-pill {
-  display: inline-block;
-  padding: 2px 8px;
-  font-size: 10px;
+/* Bracketed state tag in the collapsed header — pure text, no chrome.
+ * The agents-table still uses the rounded color pill (better for color
+ * scanning across many rows). */
+.agent-detail__state-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-weight: 600;
-  border-radius: 999px;
-  background: var(--color-bg-secondary, #181818);
-  border: 1px solid var(--color-border, #2a2a2a);
+  color: var(--color-text-secondary, #888);
+  flex: 0 0 auto;
 }
 
-.agent-detail__state-pill--waiting_input {
+.agent-detail__state-tag--waiting_input {
   color: var(--color-warning, #fbbf24);
-  border-color: var(--color-warning, #fbbf24);
 }
-.agent-detail__state-pill--working {
+.agent-detail__state-tag--working {
   color: var(--color-success, #4ade80);
-  border-color: var(--color-success, #4ade80);
 }
-.agent-detail__state-pill--failed {
+.agent-detail__state-tag--failed {
   color: var(--color-danger, #f87171);
-  border-color: var(--color-danger, #f87171);
 }
 
 .agent-detail__pending {
@@ -188,7 +188,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px; /* logfile density — was 6px (Slack density) */
   padding-right: 4px;
 }
 
@@ -269,31 +269,31 @@
 
 /* ---- messages (user / assistant / thinking) ---- */
 
-/* Chat-bubble alignment — user right, assistant left, like iMessage.
- * Alignment + color carry the role; the "You / Assistant" labels were
- * dropped from JSX so the bubble itself reads as the speaker. */
+/* Chat alignment — user right, assistant left. Bubble chrome is dialed
+ * down (smaller radius, tighter padding) and the body uses mono so the
+ * transcript reads as terminal output. Alignment + color carry the role. */
 .agent-detail__msg {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: 6px 10px;
+  font-size: 12px;
   max-width: min(78%, 640px);
-  border-radius: 14px;
+  border-radius: 4px;
   word-break: break-word;
 }
 
 .agent-detail__msg-body {
   white-space: pre-wrap;
   word-break: break-word;
+  font-family: var(--font-mono, monospace);
+  line-height: 1.45;
 }
 
 .agent-detail__msg--user {
   align-self: flex-end;
-  background: rgba(96, 165, 250, 0.18);
-  border: 1px solid rgba(96, 165, 250, 0.35);
+  background: rgba(96, 165, 250, 0.14);
+  border: 1px solid rgba(96, 165, 250, 0.3);
   color: var(--color-text, #e4e4e4);
-  border-bottom-right-radius: 4px; /* iMessage-style "tail corner" */
 }
 
 .agent-detail__msg--assistant {
@@ -301,7 +301,6 @@
   background: var(--color-bg-secondary, #181818);
   border: 1px solid var(--color-border, #2a2a2a);
   color: var(--color-text, #e4e4e4);
-  border-bottom-left-radius: 4px;
 }
 
 .agent-detail__msg--thinking {
@@ -309,10 +308,10 @@
   background: transparent;
   border: none;
   border-radius: 0;
-  padding: 4px 0 4px 8px;
+  padding: 2px 0 2px 8px;
   color: var(--color-text-secondary, #888);
   font-style: italic;
-  font-size: 12px;
+  font-size: 11px;
   max-width: 100%;
 }
 
@@ -416,12 +415,13 @@
   margin: 0;
   padding: 6px 8px;
   background: var(--color-bg-secondary, #181818);
-  border-radius: 4px;
+  border-radius: 0; /* terminal aesthetic — square corners on data blocks */
   white-space: pre-wrap;
   word-break: break-word;
   color: var(--color-text-secondary, #aaa);
   max-height: 480px;
   overflow: auto;
+  line-height: 1.45;
 }
 
 .agent-detail__tool.is-error .agent-detail__tool-result pre {
