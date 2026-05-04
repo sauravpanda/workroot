@@ -357,6 +357,21 @@ export function AgentDetailPane({
   const [busy, setBusy] = useState<"reply" | "kill" | "delete" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  // Auto-grow the reply textarea: starts at one line, grows to fit
+  // content up to a 160 px ceiling, then scrolls inside. Avoids the
+  // ~80 px reply box dominating each pane at the 4-pane grid.
+  const replyRef = useRef<HTMLTextAreaElement>(null);
+  const autoGrowReply = useCallback(() => {
+    const el = replyRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(160, el.scrollHeight)}px`;
+  }, []);
+
+  useEffect(() => {
+    autoGrowReply();
+  }, [reply, autoGrowReply]);
+
   // Per-item expansion state. Keyed by the stable RenderItem.key so a 3 s
   // poll re-render doesn't wipe what the user has open.
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
@@ -798,7 +813,9 @@ export function AgentDetailPane({
       {canReply && (
         <div className="agent-detail__reply">
           <textarea
+            ref={replyRef}
             value={reply}
+            rows={1}
             onChange={(e) => setReply(e.target.value)}
             onKeyDown={(e) => {
               if (
@@ -811,33 +828,24 @@ export function AgentDetailPane({
               }
             }}
             placeholder={
-              isTerminal ? "Reply to resume the agent…" : "Reply to the agent…"
+              busy === "reply"
+                ? "Sending…"
+                : isTerminal
+                  ? "Reply to resume the agent…  (⌘↵)"
+                  : "Reply to the agent…  (⌘↵)"
             }
             disabled={busy !== null}
           />
-          <div className="agent-detail__reply-row">
-            <span className="agent-detail__reply-hint">
-              ⌘/Ctrl + Enter to send
-            </span>
-            <div className="agent-detail__reply-actions">
-              <button
-                type="button"
-                className="agent-detail__action-btn agent-detail__attach-btn"
-                onClick={() => void attachFiles()}
-                disabled={busy !== null}
-                title="Attach a file — its absolute path is appended so the agent can Read it"
-              >
-                Attach
-              </button>
-              <button
-                className="agent-detail__action-btn"
-                onClick={() => void sendReply()}
-                disabled={!reply.trim() || busy !== null}
-              >
-                {busy === "reply" ? "Sending…" : "Send"}
-              </button>
-            </div>
-          </div>
+          <button
+            type="button"
+            className="agent-detail__attach-icon"
+            onClick={() => void attachFiles()}
+            disabled={busy !== null}
+            aria-label="Attach a file"
+            title="Attach a file — its absolute path is appended so the agent can Read it"
+          >
+            +
+          </button>
         </div>
       )}
     </aside>

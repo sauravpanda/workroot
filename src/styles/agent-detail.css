@@ -486,10 +486,12 @@
   border-color: var(--color-danger, #f87171);
 }
 
+/* Single-line auto-growing reply. The textarea starts at one line,
+ * grows to fit content up to 160 px (set inline by autoGrowReply),
+ * then scrolls inside. The "+" attach button sits inline in the
+ * bottom-right corner — no separate Send button (⌘+Enter sends). */
 .agent-detail__reply {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  position: relative;
   padding-top: 8px;
   border-top: 1px solid var(--color-border, #2a2a2a);
   flex: 0 0 auto;
@@ -497,38 +499,55 @@
 
 .agent-detail__reply textarea {
   width: 100%;
-  min-height: 64px;
-  resize: vertical;
-  padding: 8px 10px;
+  min-height: 28px;
+  max-height: 160px;
+  resize: none;
+  padding: 6px 36px 6px 10px; /* right padding leaves room for the + */
   font-size: 13px;
   font-family: inherit;
+  line-height: 1.4;
   border: 1px solid var(--color-border, #2a2a2a);
   border-radius: 4px;
   background: var(--color-bg-secondary, #181818);
   color: var(--color-text, #e4e4e4);
   box-sizing: border-box;
+  overflow-y: auto;
+  display: block;
 }
 
-.agent-detail__reply-row {
-  display: flex;
-  justify-content: space-between;
+.agent-detail__reply textarea:focus {
+  outline: none;
+  border-color: var(--color-accent, #60a5fa);
+}
+
+.agent-detail__attach-icon {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--color-border, #2a2a2a);
+  border-radius: 4px;
+  color: var(--color-text-secondary, #aaa);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0;
 }
 
-.agent-detail__reply-hint {
-  font-size: 11px;
-  color: var(--color-text-secondary, #888);
+.agent-detail__attach-icon:hover:not(:disabled) {
+  background: var(--color-bg-hover, #222);
+  color: var(--color-text, #e4e4e4);
 }
 
-.agent-detail__reply-actions {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.agent-detail__attach-btn {
-  font-size: 12px;
+.agent-detail__attach-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .agent-detail__loading,
