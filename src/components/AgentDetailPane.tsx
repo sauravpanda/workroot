@@ -794,26 +794,32 @@ export function AgentDetailPane({
     return Date.now() - updated < WORKING_STALE_MS;
   })();
 
-  // Cumulative tokens across the session vs the assumed 200 k Claude
-  // Sonnet context. Not the *current* prompt size (daemon doesn't
-  // expose per-call usage), but a useful "how full has this conversation
-  // gotten" number. Cache reads count too — they're still in the prompt.
-  const contextPct = detail?.usage
-    ? Math.min(
-        999,
-        Math.round(
-          ((detail.usage.input_tokens +
-            detail.usage.output_tokens +
-            detail.usage.cache_read_tokens) /
-            CONTEXT_WINDOW_TOKENS) *
-            100,
-        ),
+  // Estimate "current per-turn context size" from the cumulative
+  // session tokens. The daemon only gives totals (no per-call
+  // breakdown), so we approximate: cumulative input grows by roughly
+  // the full prompt size each turn, so dividing by the number of
+  // assistant turns gives the average input per call ≈ current
+  // context size. v0.4.2 forgot this and summed cumulative input +
+  // output + cache_read directly, which doubled-counted every turn
+  // and showed 200%+ on long sessions.
+  //
+  // Cache reads count toward context too — they're still part of the
+  // prompt that the model has to "read."
+  // Plain expression (no useMemo) — this block runs after early returns,
+  // and a one-pass filter on the events array is cheap.
+  const assistantTurns =
+    detail?.thread_events?.filter((e) => e.kind === "assistant").length ?? 0;
+  const perTurnInputTokens = detail?.usage
+    ? Math.round(
+        (detail.usage.input_tokens + detail.usage.cache_read_tokens) /
+          Math.max(1, assistantTurns),
       )
     : 0;
-  const totalCtxTokens = detail?.usage
-    ? detail.usage.input_tokens +
-      detail.usage.output_tokens +
-      detail.usage.cache_read_tokens
+  const contextPct = detail?.usage
+    ? Math.min(
+        99,
+        Math.round((perTurnInputTokens / CONTEXT_WINDOW_TOKENS) * 100),
+      )
     : 0;
 
   return (
@@ -1064,7 +1070,7 @@ export function AgentDetailPane({
                 ? "agent-detail__ctx agent-detail__ctx--hot"
                 : "agent-detail__ctx"
             }
-            title={`${formatTokens(totalCtxTokens)} of ${formatTokens(CONTEXT_WINDOW_TOKENS)} (assumes Claude Sonnet 200 k context — daemon doesn't expose actual model)`}
+            title={`~${formatTokens(perTurnInputTokens)} per turn of ${formatTokens(CONTEXT_WINDOW_TOKENS)} (estimate: cumulative input ÷ ${assistantTurns} turns; assumes Claude Sonnet 200 k. Real per-call usage needs a daemon API change.)`}
           >
             ctx {contextPct}%
           </span>
