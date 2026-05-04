@@ -10,30 +10,41 @@
    ========================================================== */
 
 @theme {
-  --color-bg-base: #0c0c0e;
-  --color-bg-surface: #131316;
-  --color-bg-elevated: #1b1b1f;
-  --color-bg-hover: #242429;
+  /* Desaturated dark palette (Ghostty-inspired). Cooler grays with a
+   * subtle blue tint, accents pulled back from full Tailwind saturation
+   * so the UI reads calm instead of alarmed. */
+  --color-bg-base: #0d1014;
+  --color-bg-surface: #14181d;
+  --color-bg-elevated: #1a1f25;
+  --color-bg-hover: #1f252c;
+  --color-bg-pane: #0a0c0f; /* pane interior — darker than surrounding chrome */
 
-  --color-border-subtle: #1f1f24;
-  --color-border-default: #2a2a30;
-  --color-border-strong: #3a3a42;
+  --color-border-subtle: #1f252c;
+  --color-border-default: #2b333c;
+  --color-border-strong: #3a4453; /* visible dividers between panes */
 
-  --color-text-primary: #ededef;
-  --color-text-secondary: #8e8e96;
-  --color-text-muted: #5c5c66;
+  --color-text-primary: #d4d8de; /* warm gray, not pure white */
+  --color-text-secondary: #7c8693;
+  --color-text-muted: #4a525c;
 
-  --color-accent: #10b981;
-  --color-accent-hover: #34d399;
-  --color-accent-muted: rgba(16, 185, 129, 0.12);
+  --color-accent: #88b4ff; /* desat periwinkle, was emerald */
+  --color-accent-hover: #a5c4ff;
+  --color-accent-muted: rgba(136, 180, 255, 0.14);
 
-  --color-danger: #ef4444;
-  --color-danger-muted: rgba(239, 68, 68, 0.12);
-  --color-warning: #f59e0b;
-  --color-success: #22c55e;
+  --color-danger: #e08585;
+  --color-danger-muted: rgba(224, 133, 133, 0.14);
+  --color-warning: #d4a76a;
+  --color-success: #7ec699;
 
-  --font-sans: "Geist", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", "Menlo", "Monaco", monospace;
+  /* Aliases the agent surfaces have been using via fallback — make them
+   * real so they pick up the desaturated palette. */
+  --color-bg: var(--color-bg-base);
+  --color-text: var(--color-text-primary);
+  --color-border: var(--color-border-default);
+  --color-link: var(--color-accent);
+
+  --font-sans: "Inter", "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Menlo", "Cascadia Code", monospace;
 
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -41,37 +52,40 @@
 }
 
 :root {
-  /* Background layers (darkest → lightest) */
-  --bg-base: #0c0c0e;
-  --bg-surface: #131316;
-  --bg-elevated: #1b1b1f;
-  --bg-hover: #242429;
+  /* Background layers (darkest → lightest) — kept in sync with @theme.
+   * The duplicate exists because Tailwind 4's @theme block isn't visible
+   * to plain CSS files; non-utility surfaces read from these. */
+  --bg-base: #0d1014;
+  --bg-surface: #14181d;
+  --bg-elevated: #1a1f25;
+  --bg-hover: #1f252c;
+  --bg-pane: #0a0c0f;
 
   /* Borders */
-  --border-subtle: #1f1f24;
-  --border: #2a2a30;
-  --border-strong: #3a3a42;
+  --border-subtle: #1f252c;
+  --border: #2b333c;
+  --border-strong: #3a4453;
 
   /* Text */
-  --text-primary: #ededef;
-  --text-secondary: #8e8e96;
-  --text-muted: #5c5c66;
+  --text-primary: #d4d8de;
+  --text-secondary: #7c8693;
+  --text-muted: #4a525c;
 
   /* Accent */
-  --accent: #10b981;
-  --accent-hover: #34d399;
-  --accent-muted: rgba(16, 185, 129, 0.12);
-  --accent-glow: rgba(16, 185, 129, 0.25);
+  --accent: #88b4ff;
+  --accent-hover: #a5c4ff;
+  --accent-muted: rgba(136, 180, 255, 0.14);
+  --accent-glow: rgba(136, 180, 255, 0.22);
 
   /* Semantic */
-  --danger: #ef4444;
-  --danger-muted: rgba(239, 68, 68, 0.12);
-  --warning: #f59e0b;
-  --success: #22c55e;
+  --danger: #e08585;
+  --danger-muted: rgba(224, 133, 133, 0.14);
+  --warning: #d4a76a;
+  --success: #7ec699;
 
   /* Typography */
-  --font-sans: "Geist", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", "Menlo", "Monaco", monospace;
+  --font-sans: "Inter", "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Menlo", "Cascadia Code", monospace;
 
   /* Radii */
   --radius-sm: 4px;

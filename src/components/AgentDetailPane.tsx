@@ -619,7 +619,7 @@ export function AgentDetailPane({
                 aria-label="More actions"
                 title="More actions"
               >
-                ⋯
+                [&hellip;]
               </button>
             </Popover.Trigger>
             <Popover.Portal>
@@ -702,7 +702,7 @@ export function AgentDetailPane({
           aria-label="Close pane"
           title="Close pane"
         >
-          ×
+          [x]
         </button>
       </header>
 
