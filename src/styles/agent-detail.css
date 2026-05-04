@@ -454,15 +454,28 @@
 /* ---- footer (usage + reply) ---- */
 
 .agent-detail__usage {
-  padding-top: 12px;
+  padding-top: 8px;
   border-top: 1px solid var(--color-border, #2a2a2a);
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
+  gap: 4px 14px;
   font-size: 11px;
   color: var(--color-text-secondary, #888);
   font-family: var(--font-mono, monospace);
   flex: 0 0 auto;
+}
+
+.agent-detail__ctx {
+  color: var(--color-text-secondary, #888);
+}
+
+.agent-detail__ctx--hot {
+  color: var(--color-warning, #d4a76a);
+  font-weight: 600;
+}
+
+.agent-detail__rate {
+  color: var(--color-text-muted, #5c5c66);
 }
 
 .agent-detail__actions {

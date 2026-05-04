@@ -28,9 +28,23 @@ interface AgentDetailPaneProps {
 }
 
 const TERMINAL_STATES = new Set(["done", "failed"]);
-// States where the agent is actively doing something — used to surface a
-// "thinking" / typing-bubble at the bottom of the events list.
+// States where the agent is *supposed* to be doing something — used to
+// surface the typing-bubble at the bottom of the events list. The bubble
+// is *also* gated on recent activity (see WORKING_STALE_MS): if the
+// daemon's state says working but updated_at hasn't moved in a while,
+// the state is stale and we suppress the bubble.
 const ACTIVE_STATES = new Set(["working", "planning", "queued"]);
+
+// If updated_at hasn't advanced in this long, treat the active state
+// as stale and hide the bubble. Polling is 3 s, so a real working agent
+// refreshes well within this window.
+const WORKING_STALE_MS = 60_000;
+
+// Assumed context window for the % display. Claude Sonnet defaults to
+// 200 k; Sonnet 1M-context users will see lower %, Opus users similar.
+// The daemon doesn't currently expose the model so we have to assume.
+// See follow-up issue for exposing model + rate-limit % per minute.
+const CONTEXT_WINDOW_TOKENS = 200_000;
 
 const ACTIVE_STATE_LABEL: Record<string, string> = {
   working: "Agent is working",
@@ -585,6 +599,39 @@ export function AgentDetailPane({
   const canReply = !!detail && detail.backend === "claude";
   const hasTranscript = items.length > 0;
 
+  // Show the "Agent is working" bubble only when state is active AND
+  // updated_at is fresh. The state alone lies — daemons sometimes leave
+  // an agent in `working` after it goes idle, leaving the bubble
+  // spinning forever. Recheck on every poll re-render.
+  const isActive = (() => {
+    if (!detail || !ACTIVE_STATES.has(detail.state)) return false;
+    const updated = Date.parse(detail.updated_at);
+    if (Number.isNaN(updated)) return true; // can't tell, assume active
+    return Date.now() - updated < WORKING_STALE_MS;
+  })();
+
+  // Cumulative tokens across the session vs the assumed 200 k Claude
+  // Sonnet context. Not the *current* prompt size (daemon doesn't
+  // expose per-call usage), but a useful "how full has this conversation
+  // gotten" number. Cache reads count too — they're still in the prompt.
+  const contextPct = detail?.usage
+    ? Math.min(
+        999,
+        Math.round(
+          ((detail.usage.input_tokens +
+            detail.usage.output_tokens +
+            detail.usage.cache_read_tokens) /
+            CONTEXT_WINDOW_TOKENS) *
+            100,
+        ),
+      )
+    : 0;
+  const totalCtxTokens = detail?.usage
+    ? detail.usage.input_tokens +
+      detail.usage.output_tokens +
+      detail.usage.cache_read_tokens
+    : 0;
+
   return (
     <aside className="agent-detail">
       <header className="agent-detail__header">
@@ -795,7 +842,7 @@ export function AgentDetailPane({
               );
             })
           )}
-          {detail && ACTIVE_STATES.has(detail.state) && (
+          {isActive && detail && (
             <div
               className="agent-detail__working"
               aria-live="polite"
@@ -827,13 +874,21 @@ export function AgentDetailPane({
 
       {detail?.usage && (
         <div className="agent-detail__usage">
-          <span>
-            in {formatTokens(detail.usage.input_tokens)} · out{" "}
-            {formatTokens(detail.usage.output_tokens)}
+          <span
+            className={
+              contextPct >= 80
+                ? "agent-detail__ctx agent-detail__ctx--hot"
+                : "agent-detail__ctx"
+            }
+            title={`${formatTokens(totalCtxTokens)} of ${formatTokens(CONTEXT_WINDOW_TOKENS)} (assumes Claude Sonnet 200 k context — daemon doesn't expose actual model)`}
+          >
+            ctx {contextPct}%
           </span>
-          <span>
-            cache w {formatTokens(detail.usage.cache_write_tokens)} · r{" "}
-            {formatTokens(detail.usage.cache_read_tokens)}
+          <span
+            className="agent-detail__rate"
+            title="Rate-limit % needs daemon API exposing per-minute usage — not available yet"
+          >
+            rate —
           </span>
           <span>{formatCost(detail.usage.cost_usd)}</span>
         </div>
