@@ -42,6 +42,25 @@ function shortMachineLabel(label: string): string {
     .trim();
 }
 
+// 6 desaturated colors used as a per-machine left-rule on rows when
+// the list pane gets narrow enough that the Machine column collapses.
+// Picked from the Workroot palette (periwinkle / amber / sage / coral
+// / lavender / teal) — saturation matched so no one machine pops more
+// than another.
+const MACHINE_COLORS = [
+  "#88b4ff",
+  "#d4a76a",
+  "#7ec699",
+  "#e08585",
+  "#c89dd6",
+  "#7ec0c6",
+];
+
+function machineColor(machineId: number): string {
+  const idx = Math.abs(machineId) % MACHINE_COLORS.length;
+  return MACHINE_COLORS[idx];
+}
+
 // Compact "time ago" — 1m / 2h / 3d / "now". Driven by a 30 s tick;
 // resolution coarser than 1 m doesn't matter for an agent log.
 function ageSince(iso: string, now: number): string {
@@ -449,6 +468,7 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
               const stateLabel = STATE_LABELS[a.state] ?? a.state;
               const activity = a.last_activity ?? a.task;
               const machineShort = shortMachineLabel(a.machine_label);
+              const ageStr = ageSince(a.updated_at, now);
               return (
                 <div
                   key={`${a.machine_id}:${a.id}`}
@@ -456,6 +476,15 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
                     isOpen
                       ? "agents-tab__row agents-tab__row--selected"
                       : "agents-tab__row"
+                  }
+                  // CSS variable used by container queries when the
+                  // Machine column is hidden — becomes the 6 px left
+                  // rule on each row, encoding machine identity
+                  // spatially when label text isn't available.
+                  style={
+                    {
+                      "--row-machine-color": machineColor(a.machine_id),
+                    } as React.CSSProperties
                   }
                   onClick={() => openAgent(a.machine_id, a.id)}
                   role="row"
@@ -487,8 +516,11 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
                   >
                     {machineShort}
                   </span>
-                  <span className="agents-tab__cell-age">
-                    {ageSince(a.updated_at, now)}
+                  <span
+                    className="agents-tab__cell-age"
+                    title={`updated ${ageStr} ago — on ${a.machine_label}`}
+                  >
+                    {ageStr}
                   </span>
                 </div>
               );
