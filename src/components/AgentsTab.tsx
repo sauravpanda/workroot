@@ -33,12 +33,12 @@ const STATE_LABELS: Record<string, string> = {
   failed: "Failed",
 };
 
-// "Office Mac" → "Office", "personal-mac" → "personal". The "-mac"
-// suffix is the same on every machine and is wasted column width.
+// Strip common suffixes — "Office Mac" → "Office", "build-server" →
+// "build", etc. The suffix is rarely useful in the column and just
+// eats width.
 function shortMachineLabel(label: string): string {
   return label
-    .replace(/[\s_-]?mac$/i, "")
-    .replace(/[\s_-]?macbook$/i, "")
+    .replace(/[\s_-]?(?:mac|macbook|linux|server|host|machine)$/i, "")
     .trim();
 }
 
@@ -291,15 +291,24 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     });
   }, []);
 
-  // Drop any pane whose underlying agent has disappeared (deleted
-  // remotely, or its machine went offline).
+  // Drop a pane only when its machine is online AND the agent is no
+  // longer in the list (deleted remotely or kill+wipe). If the machine
+  // failed its latest poll (transient network blip on Tailscale, daemon
+  // restart), keep the pane — closing it under the user is catastrophic
+  // when 3 panes are open and wifi hiccups for one cycle.
   useEffect(() => {
-    setPanes((prev) =>
-      prev.filter((p) =>
-        agents.some((a) => a.id === p.agentId && a.machine_id === p.machineId),
-      ),
+    const onlineMachineIds = new Set(
+      machines.filter((m) => m.error === null).map((m) => m.machine.id),
     );
-  }, [agents]);
+    setPanes((prev) =>
+      prev.filter((p) => {
+        if (!onlineMachineIds.has(p.machineId)) return true; // keep — machine offline, can't tell
+        return agents.some(
+          (a) => a.id === p.agentId && a.machine_id === p.machineId,
+        );
+      }),
+    );
+  }, [agents, machines]);
 
   // Esc closes the focused pane.
   useEffect(() => {
@@ -536,6 +545,10 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
         </div>
       );
     }
+    // Resolve the machine once here so the pane (and useAgentDetail
+    // inside it) doesn't have to do a per-pane lookup every poll.
+    const paneMachine =
+      machines.find((m) => m.machine.id === c.machineId)?.machine ?? null;
     const focused = focusedPaneId === c.paneId;
     const cls = [
       "agents-tab__pane",
@@ -555,7 +568,7 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
         onFocus={() => setFocusedPaneId(c.paneId)}
       >
         <AgentDetailPane
-          machineId={c.machineId}
+          machine={paneMachine}
           agentId={c.agentId}
           onClose={() => closePane(c.paneId)}
           onDeleted={() => closePane(c.paneId)}

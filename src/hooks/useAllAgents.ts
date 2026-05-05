@@ -130,10 +130,37 @@ export function useAllAgents(): AllAgentsResult {
   useEffect(() => {
     cancelledRef.current = false;
     void fetchOnce();
-    const id = window.setInterval(() => void fetchOnce(), POLL_INTERVAL_MS);
+
+    // Pause polling while the document is hidden — saves daemon
+    // round-trips and battery when the window is minimised. Catch
+    // up on visibility-change so the user doesn't see stale data
+    // when they come back.
+    let id: number | null = null;
+    const start = () => {
+      if (id !== null) return;
+      id = window.setInterval(() => void fetchOnce(), POLL_INTERVAL_MS);
+    };
+    const stop = () => {
+      if (id !== null) {
+        window.clearInterval(id);
+        id = null;
+      }
+    };
+    if (!document.hidden) start();
+    const onVisibility = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        void fetchOnce();
+        start();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
       cancelledRef.current = true;
-      window.clearInterval(id);
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [fetchOnce]);
 
