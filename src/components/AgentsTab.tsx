@@ -79,9 +79,12 @@ function Divider({
   ratio: number;
   onChange: (next: number) => void;
 }) {
+  const dragging = useRef(false);
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Use mouse button 0 only — Tauri's window-drag region listener
+    // can interfere with right-click / middle-click on some surfaces.
+    if (e.button !== 0) return;
     e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
     const parent = e.currentTarget.parentElement;
     if (!parent) return;
     const total =
@@ -89,18 +92,32 @@ function Divider({
     if (total <= 0) return;
     const startPos = direction === "vertical" ? e.clientX : e.clientY;
     const startRatio = ratio;
+    dragging.current = true;
+    document.body.style.cursor =
+      direction === "vertical" ? "col-resize" : "row-resize";
+    document.body.style.userSelect = "none";
+
     const onMove = (ev: PointerEvent) => {
+      if (!dragging.current) return;
       const cur = direction === "vertical" ? ev.clientX : ev.clientY;
       const delta = cur - startPos;
       const next = Math.max(0.15, Math.min(0.85, startRatio + delta / total));
       onChange(next);
     };
-    const onUp = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+    const cleanup = () => {
+      dragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", cleanup);
+      document.removeEventListener("pointercancel", cleanup);
     };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+    // Document listeners (not window): they catch the events even if
+    // some inner element calls stopPropagation, and document.body
+    // bubbling is reliable across the whole webview.
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", cleanup);
+    document.addEventListener("pointercancel", cleanup);
   };
   return (
     <div
