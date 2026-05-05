@@ -305,7 +305,7 @@
 .agent-detail__msg {
   display: flex;
   flex-direction: column;
-  font-size: 12px;
+  font-size: 13px;
   word-break: break-word;
 }
 
@@ -313,7 +313,17 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--font-mono, monospace);
-  line-height: 1.45;
+  line-height: 1.5;
+  /* Body text is the primary read surface — use --color-text, not
+   * the dim secondary fallback that bled in from the v0.4.0 swap. */
+  color: var(--color-text, #d4d8de);
+}
+
+/* Inline code blocks parsed from ```lang fences in assistant
+ * messages. Sit snug inside the bubble with a slight margin. */
+.agent-detail__msg-body .agent-detail__code {
+  margin: 6px 0;
+  font-size: 12px;
 }
 
 .agent-detail__msg--user {
@@ -460,11 +470,13 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  color: var(--color-text-secondary, #aaa);
+  font-size: 12px;
+  /* Use primary text — this is the actual content, not secondary
+   * meta. hljs-* spans override per-token; this is the fallback. */
+  color: var(--color-text, #d4d8de);
   max-height: 480px;
   overflow: auto;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .agent-detail__code--ansi {
