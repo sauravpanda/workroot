@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { getVersion } from "@tauri-apps/api/app";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { open as openShell } from "@tauri-apps/plugin-shell";
 import "../styles/settings.css";
 
 interface SettingField {
@@ -26,52 +27,6 @@ const GITHUB_FIELDS: SettingField[] = [
   },
 ];
 
-const TERMINAL_FIELDS: SettingField[] = [
-  {
-    key: "terminal_shell",
-    label: "Default Shell",
-    placeholder: "/bin/zsh",
-    helpText:
-      "Path to the shell executable. Defaults to /bin/zsh on macOS/Linux or powershell.exe on Windows.",
-    type: "text",
-  },
-  {
-    key: "terminal_init_command",
-    label: "Startup Commands",
-    placeholder: "source ~/.nvm/nvm.sh\nclear",
-    helpText:
-      "Commands to run automatically when a new terminal opens. One command per line.",
-    type: "textarea",
-  },
-];
-
-const PORT_FIELDS: SettingField[] = [
-  {
-    key: "proxy_port",
-    label: "Reverse Proxy Port",
-    placeholder: "3000",
-    helpText:
-      "Port for the reverse proxy that routes to your running processes. Requires restart.",
-    type: "number",
-  },
-  {
-    key: "forward_proxy_port",
-    label: "HTTP Proxy Port",
-    placeholder: "8888",
-    helpText:
-      "Port for the HTTP forward proxy that intercepts outgoing traffic. Requires restart.",
-    type: "number",
-  },
-  {
-    key: "mcp_port",
-    label: "MCP Server Port",
-    placeholder: "4444",
-    helpText:
-      "Port for the MCP server that Claude and other AI tools connect to. Requires restart.",
-    type: "number",
-  },
-];
-
 type UpdateStatus =
   | { state: "idle" }
   | { state: "checking" }
@@ -86,9 +41,16 @@ type UpdateStatus =
 
 interface SettingsTabProps {
   onClose?: () => void;
+  /** Callback to open the Helm Machines management panel — invoked
+   *  from the "Manage helm machines" button in this tab. The actual
+   *  panel lives in PanelHost; this is the bridge. */
+  onOpenHelmMachines?: () => void;
 }
 
-export function SettingsTab({ onClose }: SettingsTabProps = {}) {
+export function SettingsTab({
+  onClose,
+  onOpenHelmMachines,
+}: SettingsTabProps = {}) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
@@ -312,12 +274,20 @@ export function SettingsTab({ onClose }: SettingsTabProps = {}) {
       <hr className="settings-divider" />
 
       <section className="settings-section">
-        <h3 className="settings-section-title">Terminal</h3>
+        <h3 className="settings-section-title">Helm Machines</h3>
         <p className="settings-section-desc">
-          Configure the default shell and commands that run when a new terminal
-          tab opens.
+          Workroot connects to one or more helm-daemon machines (local or
+          tailnet) to spawn and watch agents. Add, remove, or rotate tokens
+          here.
         </p>
-        {TERMINAL_FIELDS.map(renderField)}
+        <button
+          type="button"
+          className="settings-save-btn"
+          onClick={() => onOpenHelmMachines?.()}
+          disabled={!onOpenHelmMachines}
+        >
+          Manage helm machines
+        </button>
       </section>
 
       <hr className="settings-divider" />
@@ -395,38 +365,41 @@ export function SettingsTab({ onClose }: SettingsTabProps = {}) {
       <hr className="settings-divider" />
 
       <section className="settings-section settings-info">
-        <h3 className="settings-section-title">Service Ports</h3>
+        <h3 className="settings-section-title">About</h3>
         <p className="settings-section-desc">
-          The following services run locally when Workroot starts. Change ports
-          only if there are conflicts. Changes require restarting Workroot.
+          Workroot{appVersion ? ` v${appVersion}` : ""} — a desktop console for
+          helm agents.
         </p>
-        {PORT_FIELDS.map(renderField)}
-        <table className="settings-port-table">
-          <thead>
-            <tr>
-              <th>Service</th>
-              <th>Default</th>
-              <th>Current</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Reverse Proxy</td>
-              <td>3000</td>
-              <td>{values["proxy_port"] || "3000"}</td>
-            </tr>
-            <tr>
-              <td>HTTP Forward Proxy</td>
-              <td>8888</td>
-              <td>{values["forward_proxy_port"] || "8888"}</td>
-            </tr>
-            <tr>
-              <td>MCP Server</td>
-              <td>4444</td>
-              <td>{values["mcp_port"] || "4444"}</td>
-            </tr>
-          </tbody>
-        </table>
+        <ul className="settings-about-list">
+          <li>
+            Source:{" "}
+            <a
+              href="https://github.com/sauravpanda/workroot"
+              onClick={(e) => {
+                e.preventDefault();
+                void openShell("https://github.com/sauravpanda/workroot").catch(
+                  () => {},
+                );
+              }}
+            >
+              github.com/sauravpanda/workroot
+            </a>
+          </li>
+          <li>
+            Issues:{" "}
+            <a
+              href="https://github.com/sauravpanda/workroot/issues"
+              onClick={(e) => {
+                e.preventDefault();
+                void openShell(
+                  "https://github.com/sauravpanda/workroot/issues",
+                ).catch(() => {});
+              }}
+            >
+              github.com/sauravpanda/workroot/issues
+            </a>
+          </li>
+        </ul>
       </section>
     </div>
   );

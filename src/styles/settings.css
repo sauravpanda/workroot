@@ -242,10 +242,31 @@
   background: var(--bg-hover, var(--bg-elevated));
 }
 
-/* ── Port Table ── */
+/* ── About list ── */
 
 .settings-info {
   margin-top: 0;
+}
+
+.settings-about-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5em 0 0;
+  font-size: 0.85em;
+}
+
+.settings-about-list li {
+  padding: 0.25em 0;
+  color: var(--text-secondary);
+}
+
+.settings-about-list a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.settings-about-list a:hover {
+  text-decoration: underline;
 }
 
 .settings-port-table {

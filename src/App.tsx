@@ -522,11 +522,11 @@ function AppContent({
         action: () => openPanel("unifiedSearch"),
       },
       {
-        id: "nav:settings-page",
-        label: "All Settings",
+        id: "nav:settings",
+        label: "Settings",
         category: "Navigation",
         icon: "\u2699",
-        action: () => openPanel("settingsPage"),
+        action: () => setShowSettings(true),
       },
       {
         id: "terminal:recording",
@@ -912,7 +912,7 @@ function AppContent({
     openAiChat: () => openPanel("aiChat"),
     openNotifications: () => openPanel("notifications"),
     openSettings: () => {
-      openPanel("settingsPage");
+      setShowSettings(true);
     },
   };
 
@@ -961,7 +961,10 @@ function AppContent({
     <Suspense fallback={null}>
       {showSettings ? (
         <PanelBoundary name="Settings">
-          <SettingsTab onClose={() => setShowSettings(false)} />
+          <SettingsTab
+            onClose={() => setShowSettings(false)}
+            onOpenHelmMachines={() => openPanel("helmMachines")}
+          />
         </PanelBoundary>
       ) : !selectedWorktreePath ? (
         <PanelBoundary name="AgentsTab">
