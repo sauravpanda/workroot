@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
@@ -118,6 +119,74 @@ function prettyJson(s: string): string {
   } catch {
     return s;
   }
+}
+
+// ---- linkify helpers ----
+//
+// Auto-detect URLs in transcript text and tool output so the user can
+// click them. We use two separate paths because some text reaches React
+// as plain strings (assistant/user messages) and some reaches the DOM
+// already as HTML (highlight.js output, ANSI-converted Bash output).
+//
+// Plain-text path: split into React nodes, anchors get a real onClick
+// that routes to openShell. HTML path: regex-rewrite URLs into anchors
+// tagged with data-external; a single onClick handler on the events
+// container catches their bubbled clicks (event delegation).
+
+const URL_RE = /\bhttps?:\/\/[^\s<>"'`)\]]+/g;
+
+// Strip trailing punctuation that shouldn't be part of the URL
+// ("see https://x.com." or "(https://x.com)" — common in prose).
+function stripTrailingPunct(url: string): { url: string; trailing: string } {
+  const m = url.match(/[.,;:!?)]+$/);
+  if (!m) return { url, trailing: "" };
+  return { url: url.slice(0, -m[0].length), trailing: m[0] };
+}
+
+function openExternal(href: string): void {
+  void openShell(href).catch(() => {});
+}
+
+function linkifyText(text: string): ReactNode {
+  if (!text || text.indexOf("http") === -1) return text;
+  const parts: ReactNode[] = [];
+  let lastIdx = 0;
+  let key = 0;
+  for (const match of text.matchAll(URL_RE)) {
+    const start = match.index!;
+    const { url, trailing } = stripTrailingPunct(match[0]);
+    if (start > lastIdx) parts.push(text.slice(lastIdx, start));
+    parts.push(
+      <a
+        key={key++}
+        href={url}
+        className="agent-detail__link"
+        onClick={(e) => {
+          e.preventDefault();
+          openExternal(url);
+        }}
+      >
+        {url}
+      </a>,
+    );
+    if (trailing) parts.push(trailing);
+    lastIdx = start + match[0].length;
+  }
+  if (lastIdx < text.length) parts.push(text.slice(lastIdx));
+  return parts;
+}
+
+// Wrap bare URLs in HTML with anchor tags. Skip URLs already inside an
+// attribute value (e.g. `href="..."` from highlight.js output) by
+// requiring a non-attribute character right before the URL.
+function linkifyHtml(html: string): string {
+  return html.replace(
+    /(^|[^="'`>])\b(https?:\/\/[^\s<>"'`)\]]+)/g,
+    (_, lead: string, raw: string) => {
+      const { url, trailing } = stripTrailingPunct(raw);
+      return `${lead}<a href="${url}" class="agent-detail__link" data-external="true">${url}</a>${trailing}`;
+    },
+  );
 }
 
 function buildItems(detail: {
@@ -260,7 +329,9 @@ function MessageItem({
           <span className="agent-detail__chevron">{expanded ? "▾" : "▸"}</span>
           thinking ({wordCount} words)
         </button>
-        {expanded && <div className="agent-detail__msg-body">{text}</div>}
+        {expanded && (
+          <div className="agent-detail__msg-body">{linkifyText(text)}</div>
+        )}
       </div>
     );
   }
@@ -272,7 +343,7 @@ function MessageItem({
           : "agent-detail__msg agent-detail__msg--assistant"
       }
     >
-      <div className="agent-detail__msg-body">{text}</div>
+      <div className="agent-detail__msg-body">{linkifyText(text)}</div>
     </div>
   );
 }
@@ -288,7 +359,7 @@ function CodeBlock({
   language?: string | null;
 }) {
   const html = useMemo(
-    () => highlightCode(code, language ?? null),
+    () => linkifyHtml(highlightCode(code, language ?? null)),
     [code, language],
   );
   return (
@@ -381,9 +452,9 @@ function AnsiBlock({ text }: { text: string }) {
   const html = useMemo(() => {
     try {
       const conv = new AnsiConvert({ newline: false, escapeXML: true });
-      return conv.toHtml(text);
+      return linkifyHtml(conv.toHtml(text));
     } catch {
-      return escapeHtml(text);
+      return linkifyHtml(escapeHtml(text));
     }
   }, [text]);
   return (
@@ -539,7 +610,7 @@ function TurnItem({ turn }: { turn: Turn }) {
           : "agent-detail__msg agent-detail__msg--assistant"
       }
     >
-      <div className="agent-detail__msg-body">{turn.content}</div>
+      <div className="agent-detail__msg-body">{linkifyText(turn.content)}</div>
     </div>
   );
 }
@@ -986,8 +1057,10 @@ export function AgentDetailPane({
         <a
           className="agent-detail__pr"
           href={detail.pr_url}
-          target="_blank"
-          rel="noreferrer"
+          onClick={(e) => {
+            e.preventDefault();
+            openExternal(detail.pr_url!);
+          }}
         >
           {detail.pr_url}
         </a>
@@ -998,6 +1071,20 @@ export function AgentDetailPane({
           className="agent-detail__events"
           ref={eventsRef}
           onScroll={onEventsScroll}
+          onClick={(e) => {
+            // Event delegation for HTML-injected anchors (linkifyHtml).
+            // The React-rendered ones in MessageItem use their own
+            // onClick handlers; this catches the rest.
+            const target = e.target as HTMLElement;
+            const anchor = target.closest(
+              'a[data-external="true"]',
+            ) as HTMLAnchorElement | null;
+            if (anchor) {
+              e.preventDefault();
+              const href = anchor.getAttribute("href");
+              if (href) openExternal(href);
+            }
+          }}
         >
           {loading && !detail ? (
             <p className="agent-detail__loading">Loading…</p>
