@@ -185,6 +185,23 @@
   text-decoration: underline;
 }
 
+/* Auto-detected links inside the transcript (messages, code blocks,
+ * ANSI Bash output). Click handler routes to openShell so they open
+ * in the system browser instead of trying to navigate the webview. */
+.agent-detail__link,
+.agent-detail__link:visited {
+  color: var(--color-accent, #88b4ff);
+  text-decoration: underline;
+  text-decoration-color: rgba(136, 180, 255, 0.4);
+  text-underline-offset: 2px;
+  cursor: pointer;
+  word-break: break-all;
+}
+
+.agent-detail__link:hover {
+  text-decoration-color: var(--color-accent, #88b4ff);
+}
+
 /* The events wrapper claims the remaining vertical space; the inner
  * .agent-detail__events is the actual scroll container so the floating
  * "↓ N new" pill can sit in the wrapper without being scrolled away. */
