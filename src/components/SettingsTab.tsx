@@ -4,6 +4,16 @@ import { getVersion } from "@tauri-apps/api/app";
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openShell } from "@tauri-apps/plugin-shell";
+import {
+  type Appearance,
+  BODY_SIZE_OPTIONS,
+  DEFAULT_APPEARANCE,
+  MONO_FONT_OPTIONS,
+  applyAppearance,
+  loadAppearance,
+  persistBodySize,
+  persistMonoFont,
+} from "../lib/appearance";
 import "../styles/settings.css";
 
 interface SettingField {
@@ -82,6 +92,29 @@ export function SettingsTab({
     getVersion()
       .then(setAppVersion)
       .catch(() => setAppVersion("unknown"));
+  }, []);
+
+  const [appearance, setAppearance] = useState<Appearance>(DEFAULT_APPEARANCE);
+  useEffect(() => {
+    void loadAppearance().then(setAppearance);
+  }, []);
+
+  const handleMonoFontChange = useCallback((id: string) => {
+    setAppearance((prev) => {
+      const next = { ...prev, monoFontId: id };
+      applyAppearance(next);
+      void persistMonoFont(id);
+      return next;
+    });
+  }, []);
+
+  const handleBodySizeChange = useCallback((px: number) => {
+    setAppearance((prev) => {
+      const next = { ...prev, bodySize: px };
+      applyAppearance(next);
+      void persistBodySize(px);
+      return next;
+    });
   }, []);
 
   // Esc closes the settings tab. Doesn't fire inside text inputs
@@ -165,14 +198,22 @@ export function SettingsTab({
             aria-label="Close settings"
             title="Close settings (Esc)"
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 14 14"
+              fill="none"
+              aria-hidden="true"
+            >
               <path
-                d="M3 3L11 11M11 3L3 11"
+                d="M9 3L4 7L9 11"
                 stroke="currentColor"
                 strokeWidth="1.5"
                 strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </svg>
+            <span>Back</span>
           </button>
         )}
         <p className="settings-loading">Loading settings...</p>
@@ -291,6 +332,66 @@ export function SettingsTab({
           <li>Copy the Client ID and paste it below</li>
         </ol>
         {GITHUB_FIELDS.map(renderField)}
+      </section>
+
+      <hr className="settings-divider" />
+
+      <section className="settings-section">
+        <h3 className="settings-section-title">Appearance</h3>
+        <p className="settings-section-desc">
+          Tune the agent transcript font and size. Changes apply immediately and
+          persist across launches.
+        </p>
+
+        <div className="settings-field">
+          <label
+            className="settings-label"
+            htmlFor="setting-appearance-mono-font"
+          >
+            Mono Font
+          </label>
+          <select
+            id="setting-appearance-mono-font"
+            className="settings-input"
+            value={appearance.monoFontId}
+            onChange={(e) => handleMonoFontChange(e.target.value)}
+          >
+            {MONO_FONT_OPTIONS.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <p className="settings-help">
+            Used everywhere mono renders — chat body, tool args, code blocks,
+            diff viewer.
+          </p>
+        </div>
+
+        <div className="settings-field">
+          <label
+            className="settings-label"
+            htmlFor="setting-appearance-font-size"
+          >
+            Transcript Font Size
+          </label>
+          <select
+            id="setting-appearance-font-size"
+            className="settings-input"
+            value={appearance.bodySize}
+            onChange={(e) => handleBodySizeChange(parseInt(e.target.value, 10))}
+          >
+            {BODY_SIZE_OPTIONS.map((px) => (
+              <option key={px} value={px}>
+                {px}px
+              </option>
+            ))}
+          </select>
+          <p className="settings-help">
+            Sets the body size for assistant + user messages. Code blocks size
+            relative to this.
+          </p>
+        </div>
       </section>
 
       <hr className="settings-divider" />

@@ -313,6 +313,9 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--font-mono, monospace);
+  /* User-tunable transcript body size — see Settings → Appearance.
+   * Defaults to 13px when no preference is stored. */
+  font-size: var(--app-msg-size, 13px);
   line-height: 1.5;
   /* Body text is the primary read surface — use --color-text, not
    * the dim secondary fallback that bled in from the v0.4.0 swap. */

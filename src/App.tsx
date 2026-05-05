@@ -11,6 +11,7 @@ import { ErrorProvider } from "./contexts/ErrorContext";
 import { ErrorBoundary, PanelBoundary } from "./components/ErrorBoundary";
 import { GlobalErrorToast } from "./components/GlobalErrorToast";
 import { invoke } from "@tauri-apps/api/core";
+import { applyAppearance, loadAppearance } from "./lib/appearance";
 import { MainLayout } from "./layouts/MainLayout";
 import { QuickActions } from "./components/QuickActions";
 import { StatusBar } from "./components/StatusBar";
@@ -77,6 +78,13 @@ function AppContent({
     markAgentRunning,
     clearAgentRunning,
   } = useUiStore();
+
+  // Apply the user's saved appearance (mono font + transcript body
+  // size) on first paint. SettingsTab updates the same CSS vars on
+  // change, so this is just the cold-start path.
+  useEffect(() => {
+    void loadAppearance().then(applyAppearance);
+  }, []);
 
   const [isGitHubConnected, setIsGitHubConnected] = useState(false);
   useEffect(() => {
