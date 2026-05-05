@@ -23,6 +23,11 @@
   padding: 16px 20px;
   overflow: auto;
   border-right: 1px solid var(--color-border, #2a2a2a);
+  /* Establish a containment context so the table can drop columns
+   * based on its own width, not the viewport's. Triggers when the
+   * panes container expands and squeezes us. */
+  container-type: inline-size;
+  container-name: agents-list;
 }
 
 /* ---- splits container — flex with draggable dividers ----
@@ -444,6 +449,57 @@
   font-size: 11px;
   color: var(--color-text-secondary, #888);
   text-align: right;
+}
+
+/* ---- responsive list — drop columns as the list pane gets squeezed
+ * (4 panes open clamps the list to ~280-320 px). At narrow widths the
+ * Machine column collapses into a 6 px colored left rule (per-machine
+ * via the inline --row-machine-color CSS variable). At very narrow
+ * widths the Age column disappears — it's still in the row's title
+ * tooltip on hover. State pill / Name / Activity always visible. */
+
+@container agents-list (max-width: 360px) {
+  /* Drop Machine + Repo header cells */
+  .agents-tab__thead > [role="columnheader"]:nth-child(4),
+  .agents-tab__thead > [role="columnheader"]:nth-child(5) {
+    display: none;
+  }
+  /* Drop Machine + Repo row cells */
+  .agents-tab__cell-repo,
+  .agents-tab__cell-machine {
+    display: none;
+  }
+  /* Reflow grid to 4 visible cells: state · name · activity · age */
+  .agents-tab__thead,
+  .agents-tab__row {
+    grid-template-columns:
+      72px /* state */
+      minmax(80px, 1.4fr) /* name */
+      minmax(90px, 2fr) /* activity */
+      44px; /* age */
+  }
+  /* Replace machine-label column with a 6 px colored left rule keyed
+   * to the row's machineId hash. Selected-row accent rule is on the
+   * border-left, so we keep them on different visual layers. */
+  .agents-tab__row {
+    box-shadow: inset 6px 0 0 0
+      var(--row-machine-color, var(--color-border-subtle, transparent));
+    padding-left: 14px;
+  }
+}
+
+@container agents-list (max-width: 300px) {
+  .agents-tab__thead > [role="columnheader"]:nth-child(6),
+  .agents-tab__cell-age {
+    display: none;
+  }
+  .agents-tab__thead,
+  .agents-tab__row {
+    grid-template-columns:
+      72px /* state */
+      minmax(70px, 1fr) /* name */
+      minmax(80px, 2fr); /* activity */
+  }
 }
 
 /* ---- empty / loading ---- */
