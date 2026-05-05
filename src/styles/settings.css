@@ -10,20 +10,26 @@
   position: relative;
 }
 
+/* Top-left so it reads as "back to where I came from" rather than
+ * "dismiss this dialog". Labeled, not just a tiny X — many users
+ * told us it was hard to find. Matches the Esc key behavior. */
 .settings-close-btn {
   position: absolute;
   top: 1em;
-  right: 1em;
+  left: 1em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
+  gap: 6px;
   height: 28px;
+  padding: 0 12px 0 10px;
   background: transparent;
-  border: 1px solid transparent;
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
+  font-size: 12px;
+  font-family: var(--font-mono);
   transition:
     background-color 0.15s ease,
     color 0.15s ease,
@@ -44,7 +50,8 @@
 .settings-title {
   font-size: 1.15em;
   font-weight: 600;
-  margin: 0 0 1.5em;
+  /* Top margin clears the absolute "Back" button at top-left. */
+  margin: 2.5em 0 1.5em;
   letter-spacing: -0.01em;
 }
 

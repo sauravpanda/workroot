@@ -84,6 +84,20 @@ export function SettingsTab({
       .catch(() => setAppVersion("unknown"));
   }, []);
 
+  // Esc closes the settings tab. Doesn't fire inside text inputs
+  // (where Esc is sometimes used to clear/blur the field).
+  useEffect(() => {
+    if (!onClose) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+      onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const handleCheckForUpdate = useCallback(async () => {
     setUpdateStatus({ state: "checking" });
     try {
@@ -229,14 +243,22 @@ export function SettingsTab({
           aria-label="Close settings"
           title="Close settings (Esc)"
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 14 14"
+            fill="none"
+            aria-hidden="true"
+          >
             <path
-              d="M3 3L11 11M11 3L3 11"
+              d="M9 3L4 7L9 11"
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </svg>
+          <span>Back</span>
         </button>
       )}
       <h2 className="settings-title">Settings</h2>
