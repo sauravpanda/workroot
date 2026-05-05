@@ -136,7 +136,6 @@ const UnifiedSearch = namedLazy(
   () => import("./UnifiedSearch"),
   "UnifiedSearch",
 );
-const SettingsPage = namedLazy(() => import("./SettingsPage"), "SettingsPage");
 const TerminalRecording = namedLazy(
   () => import("./TerminalRecording"),
   "TerminalRecording",
@@ -561,15 +560,12 @@ export function PanelHost({
           onNavigate={(type: string, _data: string) => {
             closePanel("unifiedSearch");
             if (type === "bookmark") openPanel("bookmarks");
-            else if (type === "setting") openPanel("settingsPage");
+            // "setting" results no-op now — old SettingsPage was deleted
+            // in v0.4.8. The new SettingsTab opens via setShowSettings
+            // in App.tsx, not via the panel registry.
           }}
         />
       </PanelBoundary>
-      {panels.has("settingsPage") && (
-        <PanelBoundary name="SettingsPage">
-          <SettingsPage onClose={() => closePanel("settingsPage")} />
-        </PanelBoundary>
-      )}
       {panels.has("terminalRecording") && selectedWorktreeId !== null && (
         <PanelBoundary name="TerminalRecording">
           <TerminalRecording

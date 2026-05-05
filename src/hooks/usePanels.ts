@@ -35,7 +35,6 @@ export type PanelKey =
   | "analyticsDashboard"
   | "aiChat"
   | "unifiedSearch"
-  | "settingsPage"
   | "terminalRecording"
   | "doraMetrics"
   | "webhookEvents"
