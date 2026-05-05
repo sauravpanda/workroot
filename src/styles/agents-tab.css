@@ -74,14 +74,17 @@
     var(--color-accent-muted, rgba(136, 180, 255, 0.3));
 }
 
-/* Draggable divider between two panes. 6 px hit area, 2 px visible bar
- * centered. Hover/active brighten the bar so you can see what you're
- * grabbing. */
+/* Draggable divider between two panes. 10 px hit area (was 6 — too
+ * narrow to grab reliably), 2 px visible bar centered. Hover/active
+ * brighten the bar so you can see what you're grabbing. touch-action:
+ * none stops the OS from interpreting the drag as a scroll. */
 .agents-tab__divider {
-  flex: 0 0 6px;
+  flex: 0 0 10px;
   position: relative;
   background: transparent;
-  z-index: 1;
+  z-index: 2;
+  touch-action: none;
+  user-select: none;
 }
 
 .agents-tab__divider::before {
@@ -97,18 +100,18 @@
 .agents-tab__divider--vertical::before {
   top: 0;
   bottom: 0;
-  left: 2px;
+  left: 4px;
   width: 2px;
 }
 
 .agents-tab__divider--horizontal {
-  flex-basis: 6px;
+  flex-basis: 10px;
   cursor: row-resize;
 }
 .agents-tab__divider--horizontal::before {
   left: 0;
   right: 0;
-  top: 2px;
+  top: 4px;
   height: 2px;
 }
 
@@ -240,7 +243,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--color-success, #4ade80);
+  background: var(--color-success, #7ec699);
 }
 
 .agents-tab__machine-pill--err .agents-tab__machine-pill-dot {
@@ -387,8 +390,8 @@
   border-color: var(--color-warning, #fbbf24);
 }
 .agents-tab__state-pill--working {
-  color: var(--color-success, #4ade80);
-  border-color: var(--color-success, #4ade80);
+  color: var(--color-success, #7ec699);
+  border-color: var(--color-success, #7ec699);
 }
 .agents-tab__state-pill--failed {
   color: var(--color-danger, #f87171);

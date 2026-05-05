@@ -100,7 +100,8 @@
   --shadow-lg:
     0 12px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   --shadow-accent:
-    0 4px 16px rgba(16, 185, 129, 0.2), 0 0 0 1px rgba(16, 185, 129, 0.15) inset;
+    0 4px 16px rgba(136, 180, 255, 0.2),
+    0 0 0 1px rgba(136, 180, 255, 0.15) inset;
 
   /* Transitions */
   --transition-fast: 0.12s;
@@ -481,8 +482,15 @@ button:disabled {
    Selection
    ========================================================== */
 
+/* Explicit colors so the system-default selection (which on macOS can
+ * be green/orange/etc. depending on the user's accent setting) doesn't
+ * leak through. Periwinkle 22 % opacity over inherited text. */
 ::selection {
-  background: var(--accent-muted);
+  background: rgba(136, 180, 255, 0.28);
+  color: var(--text-primary);
+}
+::-moz-selection {
+  background: rgba(136, 180, 255, 0.28);
   color: var(--text-primary);
 }
 
