@@ -12,12 +12,20 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { open as openShell } from "@tauri-apps/plugin-shell";
 import AnsiConvert from "ansi-to-html";
 import { useAgentDetail } from "../hooks/useAgentDetail";
-import { clientFor, type ThreadEvent, type Turn } from "../lib/helm-api";
+import {
+  clientFor,
+  type HelmMachine,
+  type ThreadEvent,
+  type Turn,
+} from "../lib/helm-api";
 import { escapeHtml, getLanguageFromPath, highlightCode } from "../lib/syntax";
 import "../styles/agent-detail.css";
 
 interface AgentDetailPaneProps {
-  machineId: number | null;
+  /** Resolved machine the agent runs on. Parent (AgentsTab) does the
+   *  lookup once from the shared machines list and passes it in —
+   *  saves an N+1 list_helm_machines invoke per pane per poll. */
+  machine: HelmMachine | null;
   agentId: string | null;
   onClose: () => void;
   /** Called after a successful DELETE so the parent can drop selection
@@ -42,12 +50,6 @@ const ACTIVE_STATES = new Set(["working", "planning", "queued"]);
 // as stale and hide the bubble. Polling is 3 s, so a real working agent
 // refreshes well within this window.
 const WORKING_STALE_MS = 60_000;
-
-// Assumed context window for the % display. Claude Sonnet defaults to
-// 200 k; Sonnet 1M-context users will see lower %, Opus users similar.
-// The daemon doesn't currently expose the model so we have to assume.
-// See follow-up issue for exposing model + rate-limit % per minute.
-const CONTEXT_WINDOW_TOKENS = 200_000;
 
 const ACTIVE_STATE_LABEL: Record<string, string> = {
   working: "Agent is working",
@@ -618,17 +620,14 @@ function TurnItem({ turn }: { turn: Turn }) {
 // ----- main component -----
 
 export function AgentDetailPane({
-  machineId,
+  machine,
   agentId,
   onClose,
   onDeleted,
   pinned,
   onTogglePin,
 }: AgentDetailPaneProps) {
-  const { detail, machine, loading, error, refresh } = useAgentDetail(
-    machineId,
-    agentId,
-  );
+  const { detail, loading, error, refresh } = useAgentDetail(machine, agentId);
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState<"reply" | "kill" | "delete" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -713,7 +712,7 @@ export function AgentDetailPane({
     userAtBottomRef.current = true;
     setUnseen(0);
     setExpanded(new Set());
-  }, [machineId, agentId]);
+  }, [machine?.id, agentId]);
 
   // After every render that changes items: scroll if at bottom, else count
   // the new ones into `unseen`. Runs in useLayoutEffect so we measure the
@@ -752,7 +751,41 @@ export function AgentDetailPane({
     // clicks the pill.
   }, [items, fingerprint, unseen]);
 
-  if (machineId === null || agentId === null) {
+  // Two-click confirm for destructive actions. Replaces window.confirm
+  // (which yanked focus across all panes via a system-modal sheet on
+  // macOS). The popover stays open after the first click and shows
+  // "Click again to confirm". Auto-resets after 4 s if the user
+  // wanders off. Defined above the early return so the hooks always
+  // run in the same order.
+  const [confirming, setConfirming] = useState<"kill" | "delete" | null>(null);
+  const confirmTimeoutRef = useRef<number | null>(null);
+  const armConfirm = useCallback((action: "kill" | "delete") => {
+    if (confirmTimeoutRef.current !== null) {
+      window.clearTimeout(confirmTimeoutRef.current);
+    }
+    setConfirming(action);
+    confirmTimeoutRef.current = window.setTimeout(() => {
+      setConfirming(null);
+      confirmTimeoutRef.current = null;
+    }, 4_000);
+  }, []);
+  const clearConfirm = useCallback(() => {
+    if (confirmTimeoutRef.current !== null) {
+      window.clearTimeout(confirmTimeoutRef.current);
+      confirmTimeoutRef.current = null;
+    }
+    setConfirming(null);
+  }, []);
+  useEffect(
+    () => () => {
+      if (confirmTimeoutRef.current !== null) {
+        window.clearTimeout(confirmTimeoutRef.current);
+      }
+    },
+    [],
+  );
+
+  if (!machine || agentId === null) {
     return (
       <aside className="agent-detail">
         <p className="agent-detail__empty">Select an agent to inspect.</p>
@@ -797,7 +830,7 @@ export function AgentDetailPane({
 
   const kill = async () => {
     if (!machine || !detail) return;
-    if (!window.confirm(`Kill agent "${detail.name}"?`)) return;
+    clearConfirm();
     setBusy("kill");
     setActionError(null);
     try {
@@ -828,12 +861,7 @@ export function AgentDetailPane({
 
   const remove = async () => {
     if (!machine || !detail) return;
-    if (
-      !window.confirm(
-        `Delete agent "${detail.name}"? This removes the worktree, logs, and DB row.`,
-      )
-    )
-      return;
+    clearConfirm();
     setBusy("delete");
     setActionError(null);
     try {
@@ -884,12 +912,6 @@ export function AgentDetailPane({
     ? Math.round(
         (detail.usage.input_tokens + detail.usage.cache_read_tokens) /
           Math.max(1, assistantTurns),
-      )
-    : 0;
-  const contextPct = detail?.usage
-    ? Math.min(
-        99,
-        Math.round((perTurnInputTokens / CONTEXT_WINDOW_TOKENS) * 100),
       )
     : 0;
 
@@ -953,24 +975,42 @@ export function AgentDetailPane({
               >
                 <button
                   type="button"
-                  className="agent-detail__menu-item"
-                  onClick={() => void kill()}
+                  className={
+                    confirming === "kill"
+                      ? "agent-detail__menu-item agent-detail__menu-item--danger"
+                      : "agent-detail__menu-item"
+                  }
+                  onClick={() => {
+                    if (confirming === "kill") void kill();
+                    else armConfirm("kill");
+                  }}
                   disabled={isTerminal || busy !== null}
                 >
-                  {busy === "kill" ? "Killing…" : "Kill"}
+                  {busy === "kill"
+                    ? "Killing…"
+                    : confirming === "kill"
+                      ? "Click again to confirm"
+                      : "Kill"}
                 </button>
                 <button
                   type="button"
                   className="agent-detail__menu-item agent-detail__menu-item--danger"
-                  onClick={() => void remove()}
+                  onClick={() => {
+                    if (confirming === "delete") void remove();
+                    else armConfirm("delete");
+                  }}
                   disabled={!isTerminal || busy !== null}
                   title={
                     isTerminal
-                      ? "Delete agent"
+                      ? "Delete the worktree, logs, and DB row"
                       : "Kill the agent before deleting"
                   }
                 >
-                  {busy === "delete" ? "Deleting…" : "Delete"}
+                  {busy === "delete"
+                    ? "Deleting…"
+                    : confirming === "delete"
+                      ? "Click again to confirm"
+                      : "Delete"}
                 </button>
                 <div className="agent-detail__menu-sep" />
                 <button
@@ -1152,20 +1192,10 @@ export function AgentDetailPane({
       {detail?.usage && (
         <div className="agent-detail__usage">
           <span
-            className={
-              contextPct >= 80
-                ? "agent-detail__ctx agent-detail__ctx--hot"
-                : "agent-detail__ctx"
-            }
-            title={`~${formatTokens(perTurnInputTokens)} per turn of ${formatTokens(CONTEXT_WINDOW_TOKENS)} (estimate: cumulative input ÷ ${assistantTurns} turns; assumes Claude Sonnet 200 k. Real per-call usage needs a daemon API change.)`}
+            className="agent-detail__ctx"
+            title={`Estimated current prompt size, computed as cumulative input ÷ ${assistantTurns || 1} turns. Real per-call tokens need a daemon API change. Sonnet context = 200 k; Sonnet 1M = 1 M.`}
           >
-            ctx {contextPct}%
-          </span>
-          <span
-            className="agent-detail__rate"
-            title="Rate-limit % needs daemon API exposing per-minute usage — not available yet"
-          >
-            rate —
+            ctx ~{formatTokens(perTurnInputTokens)}/turn
           </span>
           <span>{formatCost(detail.usage.cost_usd)}</span>
         </div>
