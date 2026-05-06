@@ -59,6 +59,16 @@
     color-mix(in srgb, var(--border-subtle) 70%, transparent);
 }
 
+/* Fleet summary — first item in the left zone, ambient health
+ * line. Goes amber when at least one agent needs the user. */
+.status-bar-fleet {
+  font-family: var(--font-mono);
+}
+
+.status-bar-fleet--alert {
+  color: var(--warning, #d4a76a);
+}
+
 .status-bar-right .status-bar-item:first-child {
   border-left: 1px solid
     color-mix(in srgb, var(--border-subtle) 70%, transparent);

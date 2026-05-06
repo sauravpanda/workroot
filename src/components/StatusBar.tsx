@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useFleetSnapshot } from "../hooks/useAllAgents";
 import "../styles/status-bar.css";
 
 /* ------------------------------------------------------------------ */
@@ -17,6 +18,49 @@ interface StatusBarProps {
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Fleet summary — left-most status zone                              */
+/* ------------------------------------------------------------------ */
+
+// One-line ambient answer to "is anything on fire across the fleet."
+// Renders nothing when the user hasn't registered any helm machines
+// yet; otherwise: "N machines online · M agents (K need you)".
+// "K need you" goes amber when > 0.
+function FleetSummary() {
+  const { machines, agents } = useFleetSnapshot();
+  const summary = useMemo(() => {
+    if (machines.length === 0) return null;
+    const online = machines.filter((m) => m.error === null).length;
+    const needsYou = agents.filter((a) => a.state === "waiting_input").length;
+    return { online, total: machines.length, agents: agents.length, needsYou };
+  }, [machines, agents]);
+  if (!summary) return null;
+
+  const machineLabel =
+    summary.total === summary.online
+      ? `${summary.online} machine${summary.online === 1 ? "" : "s"}`
+      : `${summary.online}/${summary.total} machines`;
+  const agentLabel = `${summary.agents} agent${summary.agents === 1 ? "" : "s"}`;
+
+  return (
+    <span
+      className={
+        summary.needsYou > 0
+          ? "status-bar-item status-bar-fleet status-bar-fleet--alert"
+          : "status-bar-item status-bar-fleet"
+      }
+      title={
+        summary.online < summary.total
+          ? `${summary.total - summary.online} machine(s) unreachable`
+          : undefined
+      }
+    >
+      {machineLabel} · {agentLabel}
+      {summary.needsYou > 0 && ` (${summary.needsYou} need you)`}
+    </span>
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -53,6 +97,7 @@ export function StatusBar({
     <div className="status-bar">
       {/* -- Left side -- */}
       <div className="status-bar-left">
+        <FleetSummary />
         <span className="status-bar-item">
           {projectName ?? "No project selected"}
         </span>

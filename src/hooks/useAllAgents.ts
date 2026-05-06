@@ -58,6 +58,48 @@ function sortByAttention(a: MergedAgent, b: MergedAgent): number {
 
 const POLL_INTERVAL_MS = 5_000;
 
+// Module-level snapshot of the latest fleet poll so other surfaces
+// (StatusBar, future fleet widgets) can read without spinning up
+// their own polling instance. Updated by useAllAgents on each
+// successful fetch and broadcast via a CustomEvent.
+let cachedFleet: AllAgentsResult = {
+  agents: [],
+  machines: [],
+  loading: true,
+  refresh: () => {},
+};
+
+function publishFleet(next: Omit<AllAgentsResult, "refresh">): void {
+  cachedFleet = { ...next, refresh: cachedFleet.refresh };
+  window.dispatchEvent(new CustomEvent("workroot:fleet"));
+}
+
+/** Read-only view of the latest fleet snapshot. Subscribes to the
+ *  same updates useAllAgents broadcasts — no separate polling. */
+export function useFleetSnapshot(): {
+  agents: MergedAgent[];
+  machines: MachineStatus[];
+  loading: boolean;
+} {
+  const [snap, setSnap] = useState(() => ({
+    agents: cachedFleet.agents,
+    machines: cachedFleet.machines,
+    loading: cachedFleet.loading,
+  }));
+  useEffect(() => {
+    const sync = () =>
+      setSnap({
+        agents: cachedFleet.agents,
+        machines: cachedFleet.machines,
+        loading: cachedFleet.loading,
+      });
+    window.addEventListener("workroot:fleet", sync);
+    sync(); // pick up any updates that happened between mount + subscribe
+    return () => window.removeEventListener("workroot:fleet", sync);
+  }, []);
+  return snap;
+}
+
 export function useAllAgents(): AllAgentsResult {
   const [agents, setAgents] = useState<MergedAgent[]>([]);
   const [machines, setMachines] = useState<MachineStatus[]>([]);
@@ -116,15 +158,19 @@ export function useAllAgents(): AllAgentsResult {
       .filter((a) => !a.archived)
       .sort(sortByAttention);
 
+    const machineStatuses = results.map(({ machine, error, agent_count }) => ({
+      machine,
+      error,
+      agent_count,
+    }));
     setAgents(merged);
-    setMachines(
-      results.map(({ machine, error, agent_count }) => ({
-        machine,
-        error,
-        agent_count,
-      })),
-    );
+    setMachines(machineStatuses);
     setLoading(false);
+    publishFleet({
+      agents: merged,
+      machines: machineStatuses,
+      loading: false,
+    });
   }, []);
 
   useEffect(() => {

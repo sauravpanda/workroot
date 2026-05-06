@@ -59,10 +59,7 @@
 
 .agent-detail__pin-tag {
   font-family: var(--font-mono, monospace);
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 11px;
   color: var(--color-warning, #d4a76a);
   flex: 0 0 auto;
 }
@@ -133,15 +130,12 @@
   margin: 4px 0;
 }
 
-/* Bracketed state tag in the collapsed header — pure text, no chrome.
- * The agents-table still uses the rounded color pill (better for color
- * scanning across many rows). */
+/* State tag in the collapsed header — pure text, no chrome, no
+ * uppercase. Color encodes state, weight separates from prose. */
 .agent-detail__state-tag {
   font-family: var(--font-mono, monospace);
   font-size: 11px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   color: var(--color-text-secondary, #888);
   flex: 0 0 auto;
 }
@@ -331,10 +325,12 @@
 
 .agent-detail__msg--user {
   align-self: flex-end;
-  max-width: min(78%, 640px);
+  /* Tighter than 78 % — single-line user replies were reading like
+   * quoted blocks at the wider cap. The bg tint + right alignment
+   * carry the "user message" signal; the left rule was redundant. */
+  max-width: min(62%, 520px);
   padding: 4px 8px;
   background: var(--color-accent-muted, rgba(136, 180, 255, 0.14));
-  border-left: 2px solid var(--color-accent, #88b4ff);
   color: var(--color-text, #e4e4e4);
 }
 
@@ -388,8 +384,11 @@
   border-left-color: var(--color-danger, #f87171);
 }
 
+/* Running tool — accent (not green). Green is reserved for diff-add
+ * + successful completion. A pending tool that looks like a finished
+ * one was a real "it lies to me" complaint. */
 .agent-detail__tool.is-pending {
-  border-left-color: var(--color-success, #7ec699);
+  border-left-color: var(--color-accent, #88b4ff);
 }
 
 .agent-detail__tool-head {
@@ -428,9 +427,9 @@
 
 .agent-detail__tool-pending {
   font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--color-success, #7ec699);
+  letter-spacing: 0.3px;
+  /* Accent, not green — see is-pending rule above for the reason. */
+  color: var(--color-accent, #88b4ff);
   flex: 0 0 auto;
 }
 

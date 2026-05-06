@@ -969,7 +969,7 @@ export function AgentDetailPane({
             className={`agent-detail__state-tag agent-detail__state-tag--${detail.state}`}
             title={detail.state}
           >
-            [{detail.state}]
+            {detail.state}
           </span>
         )}
         <span className="agent-detail__name" title={detail?.name ?? undefined}>
@@ -996,7 +996,7 @@ export function AgentDetailPane({
                 className="agent-detail__pin-tag"
                 title="Pinned — won't be evicted when opening another agent"
               >
-                [pinned]
+                pinned
               </span>
             )}
           </>
