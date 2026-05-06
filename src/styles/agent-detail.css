@@ -326,10 +326,11 @@
 }
 
 /* Inline code blocks parsed from ```lang fences in assistant
- * messages. Sit snug inside the bubble with a slight margin. */
+ * messages. Sit snug inside the bubble with a slight margin. Font
+ * size inherits from the base .agent-detail__code rule (which scales
+ * with --app-msg-size). */
 .agent-detail__msg-body .agent-detail__code {
   margin: 6px 0;
-  font-size: 12px;
 }
 
 .agent-detail__msg--user {
@@ -481,7 +482,10 @@
   white-space: pre-wrap;
   word-break: break-word;
   font-family: var(--font-mono, monospace);
-  font-size: 12px;
+  /* Scale code blocks with the user-tunable body size — see
+   * Settings → Appearance. Without this, bumping body to 15 px left
+   * code blocks stuck at 12 px and looking cramped. */
+  font-size: var(--app-msg-size, 13px);
   /* Use primary text — this is the actual content, not secondary
    * meta. hljs-* spans override per-token; this is the fallback. */
   color: var(--color-text, #d4d8de);
@@ -583,7 +587,8 @@
   background: var(--color-bg-secondary, #181818);
   border-radius: 0;
   font-family: var(--font-mono, monospace);
-  font-size: 11px;
+  /* Diffs scale with the user-tunable body size too. */
+  font-size: var(--app-msg-size, 13px);
   line-height: 1.45;
   max-height: 480px;
   overflow: auto;

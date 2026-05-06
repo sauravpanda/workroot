@@ -946,26 +946,25 @@ export function AgentDetailPane({
     return Date.now() - updated < WORKING_STALE_MS;
   })();
 
-  // Estimate "current per-turn context size" from the cumulative
-  // session tokens. The daemon only gives totals (no per-call
-  // breakdown), so we approximate: cumulative input grows by roughly
-  // the full prompt size each turn, so dividing by the number of
-  // assistant turns gives the average input per call ≈ current
-  // context size. v0.4.2 forgot this and summed cumulative input +
-  // output + cache_read directly, which doubled-counted every turn
-  // and showed 200%+ on long sessions.
-  //
-  // Cache reads count toward context too — they're still part of the
-  // prompt that the model has to "read."
-  // Plain expression (no useMemo) — this block runs after early returns,
-  // and a one-pass filter on the events array is cheap.
-  const assistantTurns =
-    detail?.thread_events?.filter((e) => e.kind === "assistant").length ?? 0;
-  const perTurnInputTokens = detail?.usage
-    ? Math.round(
-        (detail.usage.input_tokens + detail.usage.cache_read_tokens) /
-          Math.max(1, assistantTurns),
-      )
+  // Estimate current context-window utilization from the cumulative
+  // session tokens. The daemon only exposes session totals (no per-call
+  // breakdown), so we sum the *unique* content added to the
+  // conversation:
+  //   input_tokens       — non-cached prompt portion of every call
+  //   cache_write_tokens — content written into prompt cache
+  //   output_tokens      — every assistant response
+  // We deliberately exclude cache_read_tokens: a cache read is a
+  // re-read of content that was already counted in cache_write, and
+  // it accumulates as O(N²) over N turns (each turn re-reads
+  // everything cached so far), so any formula that includes it pegs
+  // ctx % at the 99 % clamp even on agents that have plenty of head-
+  // room. This still over-estimates somewhat because cache writes
+  // refresh on the 5-minute TTL, but it's a much closer floor than
+  // the prior "per-turn average" approach.
+  const sessionCtxTokens = detail?.usage
+    ? detail.usage.input_tokens +
+      detail.usage.cache_write_tokens +
+      detail.usage.output_tokens
     : 0;
 
   return (
@@ -1273,7 +1272,7 @@ export function AgentDetailPane({
           })();
           const pct = Math.min(
             99,
-            Math.round((perTurnInputTokens / ctxWin) * 100),
+            Math.round((sessionCtxTokens / ctxWin) * 100),
           );
           const ctxClass =
             pct >= 80
@@ -1283,7 +1282,7 @@ export function AgentDetailPane({
             <div className="agent-detail__usage">
               <span
                 className={ctxClass}
-                title={`~${formatTokens(perTurnInputTokens)} per turn of ${formatTokens(ctxWin)} (${pct}%). Estimate: cumulative input ÷ ${assistantTurns || 1} turns. Set the model's context window in Settings → Appearance. Real per-call usage needs a daemon API change.`}
+                title={`~${formatTokens(sessionCtxTokens)} of ${formatTokens(ctxWin)} (${pct}%). Estimate: input + cache_write + output (cache reads excluded — they re-read already-counted content). Set the model's context window in Settings → Appearance. Real per-call usage needs a daemon API change.`}
               >
                 ctx {pct}%
               </span>
