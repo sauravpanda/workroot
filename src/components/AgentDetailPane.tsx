@@ -36,6 +36,11 @@ interface AgentDetailPaneProps {
    *  legacy single-pane usage doesn't need the concept. */
   pinned?: boolean;
   onTogglePin?: () => void;
+  /** Zoom state + handler for the visible zoom button in the header.
+   *  When undefined, the button is hidden (single-pane usage doesn't
+   *  need it). */
+  zoomed?: boolean;
+  onToggleZoom?: () => void;
 }
 
 const TERMINAL_STATES = new Set(["done", "failed"]);
@@ -672,6 +677,8 @@ export function AgentDetailPane({
   onDeleted,
   pinned,
   onTogglePin,
+  zoomed,
+  onToggleZoom,
 }: AgentDetailPaneProps) {
   const { detail, loading, error, refresh } = useAgentDetail(machine, agentId);
   const [reply, setReply] = useState("");
@@ -1118,6 +1125,22 @@ export function AgentDetailPane({
               </Popover.Content>
             </Popover.Portal>
           </Popover.Root>
+        )}
+        {onToggleZoom && (
+          <button
+            className={
+              zoomed
+                ? "agent-detail__icon-btn agent-detail__icon-btn--zoomed"
+                : "agent-detail__icon-btn"
+            }
+            onClick={onToggleZoom}
+            aria-label={zoomed ? "Unzoom pane" : "Zoom pane"}
+            title={
+              zoomed ? "Restore pane (⌘⇧Z or Esc)" : "Zoom pane to fill (⌘⇧Z)"
+            }
+          >
+            {zoomed ? "⤡" : "⤢"}
+          </button>
         )}
         <button
           className="agent-detail__icon-btn"

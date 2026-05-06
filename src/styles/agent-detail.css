@@ -85,6 +85,15 @@
   color: var(--color-text, #e4e4e4);
 }
 
+/* Zoom button when its pane is currently zoomed — accent color so
+ * the user can see at a glance which icon is the "active" one. */
+.agent-detail__icon-btn--zoomed {
+  color: var(--color-accent, #88b4ff);
+}
+.agent-detail__icon-btn--zoomed:hover {
+  color: var(--color-accent-hover, #a5c4ff);
+}
+
 /* ---- ⋯ popover menu ---- */
 
 .agent-detail__menu {

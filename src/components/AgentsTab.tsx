@@ -671,6 +671,11 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
           onDeleted={() => closePane(c.paneId)}
           pinned={c.pinned}
           onTogglePin={() => togglePin(c.paneId)}
+          zoomed={zoomedPaneId === c.paneId}
+          onToggleZoom={() => {
+            setZoomedPaneId((cur) => (cur === c.paneId ? null : c.paneId));
+            setFocusedPaneId(c.paneId);
+          }}
         />
       </div>
     );
