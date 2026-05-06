@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { open as openShell } from "@tauri-apps/plugin-shell";
 import { useAllAgents, type MachineStatus } from "../hooks/useAllAgents";
 import { AgentDetailPane } from "./AgentDetailPane";
 import "../styles/agents-tab.css";
@@ -40,25 +41,6 @@ function shortMachineLabel(label: string): string {
   return label
     .replace(/[\s_-]?(?:mac|macbook|linux|server|host|machine)$/i, "")
     .trim();
-}
-
-// 6 desaturated colors used as a per-machine left-rule on rows when
-// the list pane gets narrow enough that the Machine column collapses.
-// Picked from the Workroot palette (periwinkle / amber / sage / coral
-// / lavender / teal) — saturation matched so no one machine pops more
-// than another.
-const MACHINE_COLORS = [
-  "#88b4ff",
-  "#d4a76a",
-  "#7ec699",
-  "#e08585",
-  "#c89dd6",
-  "#7ec0c6",
-];
-
-function machineColor(machineId: number): string {
-  const idx = Math.abs(machineId) % MACHINE_COLORS.length;
-  return MACHINE_COLORS[idx];
 }
 
 // Compact "time ago" — 1m / 2h / 3d / "now". Driven by a 30 s tick;
@@ -433,29 +415,58 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
 
       {noMachines ? (
         <div className="agents-tab__empty">
-          <p>No helm machines registered.</p>
-          <p style={{ fontSize: 12, marginTop: 8 }}>
-            Add a daemon endpoint to start watching agents.
+          <h3 className="agents-tab__empty-title">
+            Workroot watches AI agents running on your machines.
+          </h3>
+          <p>
+            Connect a helm-daemon — local, remote over SSH, or Tailscale — to
+            see what your agents are doing right now.
           </p>
-          <button className="agents-tab__empty-cta" onClick={onOpenMachines}>
-            Add machine
-          </button>
+          <div className="agents-tab__empty-actions">
+            <button
+              className="agents-tab__empty-cta agents-tab__empty-cta--primary"
+              onClick={onOpenMachines}
+            >
+              Add a machine
+            </button>
+            <button
+              type="button"
+              className="agents-tab__empty-cta"
+              onClick={() => {
+                void openShell(
+                  "https://github.com/sauravpanda/workroot#readme",
+                ).catch(() => {});
+              }}
+            >
+              Read the setup docs
+            </button>
+          </div>
         </div>
       ) : loading ? (
         <div className="agents-tab__empty">Loading agents…</div>
       ) : agents.length === 0 ? (
         <div className="agents-tab__empty">
-          <p>No active agents.</p>
-          <p style={{ fontSize: 12, marginTop: 8 }}>
-            Spawn one from the helm CLI or phone app — it'll show up here.
-          </p>
+          <h3 className="agents-tab__empty-title">No active agents yet.</h3>
+          <p>Spawn one from the helm CLI:</p>
+          <pre className="agents-tab__empty-code">
+            helm spawn &lt;repo&gt; "&lt;task&gt;"
+          </pre>
+          <p>It'll show up here within a few seconds of starting.</p>
         </div>
       ) : (
-        <div className="agents-tab__table" role="table" aria-label="Agents">
+        <div
+          className={
+            machines.length <= 1
+              ? "agents-tab__table agents-tab__table--solo-machine"
+              : "agents-tab__table"
+          }
+          role="table"
+          aria-label="Agents"
+        >
           <div className="agents-tab__thead" role="row">
             <span role="columnheader">State</span>
             <span role="columnheader">Name</span>
-            <span role="columnheader">Activity</span>
+            <span role="columnheader">Doing</span>
             <span role="columnheader">Repo</span>
             <span role="columnheader">Machine</span>
             <span role="columnheader" className="agents-tab__col-age">
@@ -476,15 +487,6 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
                     isOpen
                       ? "agents-tab__row agents-tab__row--selected"
                       : "agents-tab__row"
-                  }
-                  // CSS variable used by container queries when the
-                  // Machine column is hidden — becomes the 6 px left
-                  // rule on each row, encoding machine identity
-                  // spatially when label text isn't available.
-                  style={
-                    {
-                      "--row-machine-color": machineColor(a.machine_id),
-                    } as React.CSSProperties
                   }
                   onClick={() => openAgent(a.machine_id, a.id)}
                   role="row"

@@ -178,6 +178,41 @@ function linkifyText(text: string): ReactNode {
   return parts;
 }
 
+// Markdown ```lang\n...\n``` code fences. Assistant messages routinely
+// wrap code/diffs/configs this way; rendering them as plain mono
+// dropped all the syntax color the user expected. Parser is regex —
+// nested fences aren't a real concern in agent transcripts.
+const FENCE_RE = /```([a-zA-Z0-9_+-]*)\n([\s\S]*?)```/g;
+
+type MdSegment =
+  | { type: "text"; body: string }
+  | { type: "code"; lang: string | null; body: string };
+
+function splitMarkdownFences(text: string): MdSegment[] {
+  if (!text || text.indexOf("```") === -1) {
+    return [{ type: "text", body: text }];
+  }
+  const out: MdSegment[] = [];
+  let lastIdx = 0;
+  // matchAll preserves indexes across iterations (regex /g).
+  for (const m of text.matchAll(FENCE_RE)) {
+    const start = m.index!;
+    if (start > lastIdx) {
+      out.push({ type: "text", body: text.slice(lastIdx, start) });
+    }
+    out.push({
+      type: "code",
+      lang: m[1] || null,
+      body: m[2].replace(/\n$/, ""),
+    });
+    lastIdx = start + m[0].length;
+  }
+  if (lastIdx < text.length) {
+    out.push({ type: "text", body: text.slice(lastIdx) });
+  }
+  return out.length > 0 ? out : [{ type: "text", body: text }];
+}
+
 // Wrap bare URLs in HTML with anchor tags. Skip URLs already inside an
 // attribute value (e.g. `href="..."` from highlight.js output) by
 // requiring a non-attribute character right before the URL.
@@ -337,6 +372,11 @@ function MessageItem({
       </div>
     );
   }
+  // Assistant messages routinely wrap code in ```lang fences; parse
+  // them out and render each fenced block as a CodeBlock so syntax
+  // highlighting fires inside the message body. Plain prose between
+  // fences still gets linkifyText for clickable URLs.
+  const segments = splitMarkdownFences(text);
   return (
     <div
       className={
@@ -345,7 +385,15 @@ function MessageItem({
           : "agent-detail__msg agent-detail__msg--assistant"
       }
     >
-      <div className="agent-detail__msg-body">{linkifyText(text)}</div>
+      <div className="agent-detail__msg-body">
+        {segments.map((seg, i) =>
+          seg.type === "code" ? (
+            <CodeBlock key={i} code={seg.body} language={seg.lang} />
+          ) : (
+            <span key={i}>{linkifyText(seg.body)}</span>
+          ),
+        )}
+      </div>
     </div>
   );
 }
@@ -495,9 +543,12 @@ function ToolArgs({ toolUse }: { toolUse: ToolUseEv }) {
 
 // Dispatch the result body based on tool name. Bash output gets ANSI
 // parsing; Read result gets language-highlighted from the file_path
-// arg; everything else is plain mono. When trimmed (collapsed view),
-// we render the trimmed text unstyled — coloring a 14-line head/tail
-// snippet adds noise, not signal.
+// arg; everything else uses CodeBlock with auto-detect so even
+// arbitrary stdout gets a pass at colorization. v0.4.10 dropped the
+// "plain text in collapsed mode" early return — the user couldn't
+// see any highlighting on tool results because they were collapsed
+// by default. Highlighting a 14-line trimmed snippet is fine; the
+// overhead is negligible.
 function ToolResultBody({
   toolUse,
   toolResult,
@@ -512,11 +563,6 @@ function ToolResultBody({
   const text = expanded ? toolResult.preview : trimmed.display;
   const lower = toolUse.tool.toLowerCase();
 
-  // Collapsed view: keep it lightweight (no highlighter pass on trimmed).
-  if (!expanded) {
-    return <pre className="agent-detail__code">{text}</pre>;
-  }
-
   if (lower === "bash" || lower.includes("shell")) {
     return <AnsiBlock text={text} />;
   }
@@ -528,7 +574,7 @@ function ToolResultBody({
     return <CodeBlock code={text} language={lang} />;
   }
 
-  return <pre className="agent-detail__code">{text}</pre>;
+  return <CodeBlock code={text} />;
 }
 
 function ToolItem({
@@ -923,7 +969,7 @@ export function AgentDetailPane({
             className={`agent-detail__state-tag agent-detail__state-tag--${detail.state}`}
             title={detail.state}
           >
-            [{detail.state}]
+            {detail.state}
           </span>
         )}
         <span className="agent-detail__name" title={detail?.name ?? undefined}>
@@ -950,7 +996,7 @@ export function AgentDetailPane({
                 className="agent-detail__pin-tag"
                 title="Pinned — won't be evicted when opening another agent"
               >
-                [pinned]
+                pinned
               </span>
             )}
           </>

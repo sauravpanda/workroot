@@ -478,14 +478,6 @@
       minmax(90px, 2fr) /* activity */
       44px; /* age */
   }
-  /* Replace machine-label column with a 6 px colored left rule keyed
-   * to the row's machineId hash. Selected-row accent rule is on the
-   * border-left, so we keep them on different visual layers. */
-  .agents-tab__row {
-    box-shadow: inset 6px 0 0 0
-      var(--row-machine-color, var(--color-border-subtle, transparent));
-    padding-left: 14px;
-  }
 }
 
 @container agents-list (max-width: 300px) {
@@ -502,20 +494,74 @@
   }
 }
 
+/* Solo-machine mode — when only one helm machine is registered the
+ * Machine column is dead pixels (every cell shows the same string).
+ * The .agents-tab__table--solo-machine class added by AgentsTab.tsx
+ * collapses it for both header + rows. */
+.agents-tab__table--solo-machine
+  .agents-tab__thead
+  > [role="columnheader"]:nth-child(5),
+.agents-tab__table--solo-machine .agents-tab__cell-machine {
+  display: none;
+}
+.agents-tab__table--solo-machine .agents-tab__thead,
+.agents-tab__table--solo-machine .agents-tab__row {
+  grid-template-columns:
+    72px /* state */
+    minmax(120px, 1.4fr) /* name */
+    minmax(140px, 2.4fr) /* activity */
+    minmax(96px, 1fr) /* repo */
+    44px; /* age */
+}
+
+/* "Needs you" rows shout — bold name + subtle amber wash. The state
+ * pill alone wasn't loud enough to grab attention across a full
+ * screen of working/done agents. */
+.agents-tab__row:has(.agents-tab__state-pill--waiting_input) {
+  background: rgba(212, 167, 106, 0.06);
+}
+.agents-tab__row:has(.agents-tab__state-pill--waiting_input)
+  .agents-tab__cell-name {
+  font-weight: 600;
+}
+
 /* ---- empty / loading ---- */
 
 .agents-tab__empty {
-  margin-top: 32px;
-  padding: 32px;
+  margin: 48px auto 0;
+  max-width: 520px;
+  padding: 28px 32px;
   text-align: center;
   border: 1px dashed var(--color-border, #2a2a2a);
   border-radius: 6px;
   color: var(--color-text-secondary, #888);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.agents-tab__empty-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text, #d4d8de);
+  letter-spacing: -0.005em;
+}
+
+.agents-tab__empty p {
+  margin: 8px 0;
+}
+
+.agents-tab__empty-actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .agents-tab__empty-cta {
   margin-top: 12px;
-  padding: 6px 12px;
+  padding: 6px 14px;
   font-size: 12px;
   border: 1px solid var(--color-border, #2a2a2a);
   border-radius: 4px;
@@ -526,4 +572,29 @@
 
 .agents-tab__empty-cta:hover {
   background: var(--color-bg-hover, #222);
+}
+
+.agents-tab__empty-cta--primary {
+  border-color: var(--color-accent, #88b4ff);
+  color: var(--color-accent, #88b4ff);
+}
+
+.agents-tab__empty-cta--primary:hover {
+  background: var(--color-accent-muted, rgba(136, 180, 255, 0.14));
+}
+
+/* "helm spawn …" code line — copyable look. Inherits the mono +
+ * surface bg from the rest of the design. */
+.agents-tab__empty-code {
+  margin: 12px auto;
+  padding: 8px 12px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  background: var(--color-bg-elevated, #1a1f25);
+  border: 1px solid var(--color-border-subtle, #1f252c);
+  border-radius: 4px;
+  color: var(--color-text, #d4d8de);
+  text-align: left;
+  display: inline-block;
+  white-space: pre;
 }
