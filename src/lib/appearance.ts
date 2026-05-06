@@ -4,7 +4,9 @@
 // document root:
 //   --font-mono       (overrides the @theme default → cascades
 //                       everywhere mono is used)
-//   --app-msg-size    (consumed only by .agent-detail__msg-body)
+//   --app-msg-size    (consumed by .agent-detail__msg-body,
+//                       .agent-detail__code, .agent-detail__diff —
+//                       i.e. all the readable transcript surfaces)
 //
 // Kept tiny and pure — no React state. Callers (App.tsx for the
 // initial paint, SettingsTab for the controls) own their own state
