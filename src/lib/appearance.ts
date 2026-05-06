@@ -48,14 +48,35 @@ export const MONO_FONT_OPTIONS: MonoFontOption[] = [
 
 export const BODY_SIZE_OPTIONS = [12, 13, 14, 15, 16] as const;
 
+// Claude model context windows. The helm-daemon doesn't expose which
+// model an agent is on, so we let the user pick the cap manually for
+// the ctx % display. Real per-call usage from Claude's own session
+// state needs a daemon API change.
+export const CONTEXT_WINDOW_OPTIONS = [
+  { id: "sonnet", label: "Sonnet (200K)", tokens: 200_000 },
+  { id: "sonnet-1m", label: "Sonnet 1M", tokens: 1_000_000 },
+  { id: "opus", label: "Opus (200K)", tokens: 200_000 },
+  { id: "haiku", label: "Haiku (200K)", tokens: 200_000 },
+];
+
+export function contextTokensFor(id: string): number {
+  return (
+    CONTEXT_WINDOW_OPTIONS.find((o) => o.id === id)?.tokens ??
+    CONTEXT_WINDOW_OPTIONS[0].tokens
+  );
+}
+
 export interface Appearance {
   monoFontId: string;
   bodySize: number;
+  /** Claude context window the user is on. Drives the ctx % calc. */
+  contextWindowId: string;
 }
 
 export const DEFAULT_APPEARANCE: Appearance = {
   monoFontId: "jetbrains",
   bodySize: 13,
+  contextWindowId: "sonnet",
 };
 
 export function fontStackFor(id: string): string {
@@ -69,6 +90,10 @@ export function applyAppearance(a: Appearance): void {
   const root = document.documentElement;
   root.style.setProperty("--font-mono", fontStackFor(a.monoFontId));
   root.style.setProperty("--app-msg-size", `${a.bodySize}px`);
+  root.style.setProperty(
+    "--app-context-window",
+    String(contextTokensFor(a.contextWindowId)),
+  );
 }
 
 /** Load the persisted appearance from the settings table. Returns
@@ -82,6 +107,8 @@ export async function loadAppearance(): Promise<Appearance> {
     const fontId = map.appearance_mono_font || DEFAULT_APPEARANCE.monoFontId;
     const sizeRaw = map.appearance_font_size;
     const size = sizeRaw ? parseInt(sizeRaw, 10) : DEFAULT_APPEARANCE.bodySize;
+    const ctxId =
+      map.appearance_context_window || DEFAULT_APPEARANCE.contextWindowId;
     return {
       monoFontId: MONO_FONT_OPTIONS.some((o) => o.id === fontId)
         ? fontId
@@ -91,6 +118,9 @@ export async function loadAppearance(): Promise<Appearance> {
         (BODY_SIZE_OPTIONS as readonly number[]).includes(size)
           ? size
           : DEFAULT_APPEARANCE.bodySize,
+      contextWindowId: CONTEXT_WINDOW_OPTIONS.some((o) => o.id === ctxId)
+        ? ctxId
+        : DEFAULT_APPEARANCE.contextWindowId,
     };
   } catch {
     return DEFAULT_APPEARANCE;
@@ -110,6 +140,17 @@ export async function persistBodySize(px: number): Promise<void> {
     await invoke("set_setting", {
       key: "appearance_font_size",
       value: String(px),
+    });
+  } catch {
+    // ignore
+  }
+}
+
+export async function persistContextWindow(id: string): Promise<void> {
+  try {
+    await invoke("set_setting", {
+      key: "appearance_context_window",
+      value: id,
     });
   } catch {
     // ignore

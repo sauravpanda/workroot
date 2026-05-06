@@ -7,11 +7,13 @@ import { open as openShell } from "@tauri-apps/plugin-shell";
 import {
   type Appearance,
   BODY_SIZE_OPTIONS,
+  CONTEXT_WINDOW_OPTIONS,
   DEFAULT_APPEARANCE,
   MONO_FONT_OPTIONS,
   applyAppearance,
   loadAppearance,
   persistBodySize,
+  persistContextWindow,
   persistMonoFont,
 } from "../lib/appearance";
 import "../styles/settings.css";
@@ -113,6 +115,15 @@ export function SettingsTab({
       const next = { ...prev, bodySize: px };
       applyAppearance(next);
       void persistBodySize(px);
+      return next;
+    });
+  }, []);
+
+  const handleContextWindowChange = useCallback((id: string) => {
+    setAppearance((prev) => {
+      const next = { ...prev, contextWindowId: id };
+      applyAppearance(next);
+      void persistContextWindow(id);
       return next;
     });
   }, []);
@@ -390,6 +401,33 @@ export function SettingsTab({
           <p className="settings-help">
             Sets the body size for assistant + user messages. Code blocks size
             relative to this.
+          </p>
+        </div>
+
+        <div className="settings-field">
+          <label
+            className="settings-label"
+            htmlFor="setting-appearance-context-window"
+          >
+            Claude Context Window
+          </label>
+          <select
+            id="setting-appearance-context-window"
+            className="settings-input"
+            value={appearance.contextWindowId}
+            onChange={(e) => handleContextWindowChange(e.target.value)}
+          >
+            {CONTEXT_WINDOW_OPTIONS.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <p className="settings-help">
+            Controls the denominator for the &ldquo;ctx&nbsp;%&rdquo; display in
+            the agent footer. The daemon doesn&apos;t know which Claude model an
+            agent is running, so pick yours here. (Real per-call tracking — like
+            Claude&apos;s own statusline shows — needs a daemon API change.)
           </p>
         </div>
       </section>
