@@ -207,6 +207,39 @@
     inset 0 0 0 1px var(--color-accent-muted, rgba(136, 180, 255, 0.3));
 }
 
+/* Zoom mode (Zed-style ⌘⇧Z). The zoomed pane takes the entire splits
+ * area; sibling panes stay mounted (their polls keep going) but are
+ * removed from the visual flow. A subtle inset accent ring + small
+ * margin gives the "boundaries" the user asked for so the zoomed
+ * pane doesn't feel like it's bleeding to the edges. */
+.agents-tab__panes--zoomed {
+  /* Override the n=2/3/4 grid layout — only one child renders. */
+  flex-direction: row;
+  padding: 6px;
+  gap: 0;
+}
+
+.agents-tab__pane--zoomed {
+  flex: 1 1 100%;
+  min-width: 0;
+  min-height: 0;
+  outline: 1px solid var(--color-accent-muted, rgba(136, 180, 255, 0.4));
+  outline-offset: -1px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.agents-tab__pane--zoom-hidden {
+  display: none;
+}
+
+/* Hide split-row containers when zoom is active — they're empty
+ * shells once their pane children are display:none. */
+.agents-tab__panes--zoomed .agents-tab__split-row,
+.agents-tab__panes--zoomed .agents-tab__divider {
+  display: none;
+}
+
 .agents-tab__header {
   display: flex;
   justify-content: space-between;

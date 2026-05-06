@@ -1235,17 +1235,39 @@ export function AgentDetailPane({
         )}
       </div>
 
-      {detail?.usage && (
-        <div className="agent-detail__usage">
-          <span
-            className="agent-detail__ctx"
-            title={`Estimated current prompt size, computed as cumulative input ÷ ${assistantTurns || 1} turns. Real per-call tokens need a daemon API change. Sonnet context = 200 k; Sonnet 1M = 1 M.`}
-          >
-            ctx ~{formatTokens(perTurnInputTokens)}/turn
-          </span>
-          <span>{formatCost(detail.usage.cost_usd)}</span>
-        </div>
-      )}
+      {detail?.usage &&
+        (() => {
+          // Pull the user-chosen context window from the CSS variable
+          // applyAppearance writes to root. Defaults to 200 k Sonnet
+          // when not set.
+          const ctxWin = (() => {
+            const raw =
+              getComputedStyle(document.documentElement).getPropertyValue(
+                "--app-context-window",
+              ) || "200000";
+            const n = parseInt(raw.trim(), 10);
+            return Number.isFinite(n) && n > 0 ? n : 200_000;
+          })();
+          const pct = Math.min(
+            99,
+            Math.round((perTurnInputTokens / ctxWin) * 100),
+          );
+          const ctxClass =
+            pct >= 80
+              ? "agent-detail__ctx agent-detail__ctx--hot"
+              : "agent-detail__ctx";
+          return (
+            <div className="agent-detail__usage">
+              <span
+                className={ctxClass}
+                title={`~${formatTokens(perTurnInputTokens)} per turn of ${formatTokens(ctxWin)} (${pct}%). Estimate: cumulative input ÷ ${assistantTurns || 1} turns. Set the model's context window in Settings → Appearance. Real per-call usage needs a daemon API change.`}
+              >
+                ctx {pct}%
+              </span>
+              <span>{formatCost(detail.usage.cost_usd)}</span>
+            </div>
+          );
+        })()}
 
       {canReply && (
         <div className="agent-detail__reply">

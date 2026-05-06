@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open as openShell } from "@tauri-apps/plugin-shell";
 import { useAllAgents, type MachineStatus } from "../hooks/useAllAgents";
@@ -171,6 +178,12 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
   const { agents, machines, loading, refresh } = useAllAgents();
   const [panes, setPanes] = useState<Pane[]>([]);
   const [focusedPaneId, setFocusedPaneId] = useState<number | null>(null);
+  // Zed-style "zoom the focused pane" — when set, only this pane is
+  // visible inside the panes container (others stay mounted so polls
+  // and scroll positions survive). The list pane stays put; only the
+  // splits area collapses to one full-size pane. ⌘⇧Z toggles; Esc
+  // unzooms.
+  const [zoomedPaneId, setZoomedPaneId] = useState<number | null>(null);
   // Layout shape (1-4 cells). Defaults to 1 + auto-grows on open so the
   // out-of-the-box behavior matches v0.4.0 (click two agents → see two
   // splits). Once the user explicitly picks a layout via the picker,
@@ -328,17 +341,38 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     );
   }, [agents, machines]);
 
-  // Esc closes the focused pane.
+  // Keyboard:
+  //   Esc       — unzoom if zoomed, else close the focused pane
+  //   ⌘⇧Z       — toggle zoom on the focused pane (Zed parity)
+  // Both no-op inside text inputs so they don't fight Cancel/blur.
   useEffect(() => {
     if (panes.length === 0) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
       const target = e.target as HTMLElement | null;
-      // Don't intercept Esc inside text inputs (clears the input).
+      const inInput =
+        target && (target.tagName === "TEXTAREA" || target.tagName === "INPUT");
+
+      // ⌘⇧Z toggles zoom on the focused pane.
       if (
-        target &&
-        (target.tagName === "TEXTAREA" || target.tagName === "INPUT")
+        e.key.toLowerCase() === "z" &&
+        (e.metaKey || e.ctrlKey) &&
+        e.shiftKey &&
+        !inInput
       ) {
+        e.preventDefault();
+        setZoomedPaneId((cur) => {
+          if (cur !== null) return null; // unzoom
+          return focusedPaneId ?? panes[panes.length - 1].paneId;
+        });
+        return;
+      }
+
+      if (e.key !== "Escape") return;
+      if (inInput) return;
+      // Esc unzooms first (don't close the pane while we're zoomed —
+      // the user expects "back to multi-pane view").
+      if (zoomedPaneId !== null) {
+        setZoomedPaneId(null);
         return;
       }
       const id =
@@ -348,7 +382,16 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [panes, focusedPaneId, closePane]);
+  }, [panes, focusedPaneId, zoomedPaneId, closePane]);
+
+  // If the zoomed pane goes away (closed elsewhere, agent deleted),
+  // unzoom so the layout doesn't end up stuck on a phantom pane.
+  useEffect(() => {
+    if (zoomedPaneId === null) return;
+    if (!panes.some((p) => p.paneId === zoomedPaneId)) {
+      setZoomedPaneId(null);
+    }
+  }, [panes, zoomedPaneId]);
 
   const offlineMachines = useMemo(
     () => machines.filter((m) => m.error !== null),
@@ -558,8 +601,8 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
             ))}
           </div>
           <div className="agents-tab__hint-text">
-            {panes.length}/{layoutSize} · click row to open · drag dividers to
-            resize · Esc closes focused
+            {panes.length}/{layoutSize} · click row to open · drag dividers ·
+            ⌘⇧Z zoom · Esc closes focused
           </div>
         </div>
       )}
@@ -601,10 +644,13 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     const paneMachine =
       machines.find((m) => m.machine.id === c.machineId)?.machine ?? null;
     const focused = focusedPaneId === c.paneId;
+    const isZoomed = zoomedPaneId === c.paneId;
     const cls = [
       "agents-tab__pane",
       focused && "agents-tab__pane--focused",
       c.pinned && "agents-tab__pane--pinned",
+      isZoomed && "agents-tab__pane--zoomed",
+      zoomedPaneId !== null && !isZoomed && "agents-tab__pane--zoom-hidden",
     ]
       .filter(Boolean)
       .join(" ");
@@ -631,7 +677,15 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
   };
 
   let panesNode: React.ReactNode;
-  if (layoutSize === 1) {
+  if (zoomedPaneId !== null) {
+    // Zoom mode: skip split-row wrappers entirely so the zoomed cell
+    // can fill the panes container directly. Other cells still render
+    // (cell() applies --zoom-hidden) so their state — scroll, expand,
+    // unread counter — survives across zoom toggles.
+    panesNode = cells.map((c, i) => (
+      <Fragment key={`zcell-${i}`}>{cell(c, i)}</Fragment>
+    ));
+  } else if (layoutSize === 1) {
     panesNode = cell(cells[0], 0);
   } else if (layoutSize === 2) {
     panesNode = (
@@ -714,7 +768,13 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
   return (
     <div className="agents-tab agents-tab--splits">
       <div className="agents-tab__list-pane">{list}</div>
-      <div className={`agents-tab__panes agents-tab__panes--n${layoutSize}`}>
+      <div
+        className={
+          zoomedPaneId !== null
+            ? `agents-tab__panes agents-tab__panes--n${layoutSize} agents-tab__panes--zoomed`
+            : `agents-tab__panes agents-tab__panes--n${layoutSize}`
+        }
+      >
         {panesNode}
       </div>
     </div>
