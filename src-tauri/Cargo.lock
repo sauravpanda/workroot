@@ -6118,7 +6118,7 @@ dependencies = [
 
 [[package]]
 name = "workroot"
-version = "0.4.14"
+version = "0.4.15"
 dependencies = [
  "aes-gcm",
  "axum",
