@@ -769,7 +769,8 @@
   min-height: 28px;
   max-height: 160px;
   resize: none;
-  padding: 6px 36px 6px 10px; /* right padding leaves room for the + */
+  /* right padding leaves room for the attach (+) and send (↑) icons */
+  padding: 6px 66px 6px 10px;
   font-size: 13px;
   font-family: inherit;
   line-height: 1.4;
@@ -789,7 +790,7 @@
 
 .agent-detail__attach-icon {
   position: absolute;
-  right: 6px;
+  right: 36px;
   bottom: 6px;
   width: 24px;
   height: 24px;
@@ -814,6 +815,39 @@
 
 .agent-detail__attach-icon:disabled {
   opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Primary send button — accent-filled so it reads as the main action,
+ * sits to the right of the attach (+). Disabled until the textarea has
+ * non-whitespace content. */
+.agent-detail__send-icon {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent, #60a5fa);
+  border: 1px solid var(--color-accent, #60a5fa);
+  border-radius: 4px;
+  color: var(--color-bg, #0d0d0d);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0;
+}
+
+.agent-detail__send-icon:hover:not(:disabled) {
+  background: var(--color-accent-hover, #88b4ff);
+  border-color: var(--color-accent-hover, #88b4ff);
+}
+
+.agent-detail__send-icon:disabled {
+  opacity: 0.35;
   cursor: not-allowed;
 }
 

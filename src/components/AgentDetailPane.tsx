@@ -1327,6 +1327,16 @@ export function AgentDetailPane({
           >
             +
           </button>
+          <button
+            type="button"
+            className="agent-detail__send-icon"
+            onClick={() => void sendReply()}
+            disabled={busy !== null || !reply.trim()}
+            aria-label="Send reply"
+            title="Send (⌘↵)"
+          >
+            ↑
+          </button>
         </div>
       )}
     </aside>
