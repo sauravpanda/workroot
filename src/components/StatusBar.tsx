@@ -143,8 +143,21 @@ export function StatusBar({
         <span className="status-bar-item">
           <span className="status-bar-time">{time}</span>
         </span>
-        <span className="status-bar-item">
+        {/* Honest keymap hint \u2014 only the shortcuts that are actually
+         *  wired today (#467). Once the keyboard layer (#466) lands,
+         *  this becomes context-aware (list / pane / zoomed). */}
+        <span
+          className="status-bar-item status-bar-hints"
+          title="Keyboard shortcuts"
+        >
           <kbd className="status-bar-kbd">{"\u2318K"}</kbd>
+          <span className="status-bar-hint-label">palette</span>
+          <span className="status-bar-hint-sep">\u00b7</span>
+          <kbd className="status-bar-kbd">{"\u2318\u21e7Z"}</kbd>
+          <span className="status-bar-hint-label">zoom</span>
+          <span className="status-bar-hint-sep">\u00b7</span>
+          <kbd className="status-bar-kbd">Esc</kbd>
+          <span className="status-bar-hint-label">unzoom</span>
         </span>
       </div>
     </div>
