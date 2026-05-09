@@ -147,3 +147,22 @@
   color: var(--text-muted);
   line-height: 1.3;
 }
+
+/* Multi-shortcut hint group — kbd + label, repeated, with thin
+ * separators. Each kbd uses the .status-bar-kbd styling above. */
+.status-bar-hints {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.status-bar-hint-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: -1px;
+}
+.status-bar-hint-sep {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.5;
+  margin: 0 2px;
+}
