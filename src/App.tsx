@@ -26,6 +26,8 @@ import { usePanels } from "./hooks/usePanels";
 import { useTerminalSettings } from "./hooks/useTerminalSettings";
 import { useAppTheme } from "./hooks/useAppTheme";
 import { useShellData } from "./hooks/useShellData";
+import { useFleetSnapshot } from "./hooks/useAllAgents";
+import { requestOpenAgent } from "./lib/openAgent";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const namedLazy = <K extends string>(
@@ -219,6 +221,10 @@ function AppContent({
   } = useAppTheme();
   const { allProjects, allWorktrees, selectedProjectName, selectWorktree } =
     useShellData(openPanel);
+  // Read-only fleet snapshot — no extra polling, just shares whatever
+  // the AgentsTab is already fetching. Used to register each agent as
+  // a command in the Cmd+P palette so users can jump by name.
+  const { agents: fleetAgents } = useFleetSnapshot();
 
   // Build commands from current app state
   const commands: Command[] = useMemo(() => {
@@ -444,6 +450,45 @@ function AppContent({
       });
     }
 
+    // Add agents from the helm fleet \u2014 each becomes an "Open Agent"
+    // command in Cmd+P. Pre-sort by attention so empty-palette and
+    // generic-query results put waiting_input/working at the top.
+    // (#469)
+    const AGENT_RANK: Record<string, number> = {
+      waiting_input: 0,
+      working: 1,
+      planning: 2,
+      queued: 3,
+      done: 4,
+      failed: 5,
+    };
+    const sortedAgents = [...fleetAgents].sort((a, b) => {
+      const ra = AGENT_RANK[a.state] ?? 99;
+      const rb = AGENT_RANK[b.state] ?? 99;
+      if (ra !== rb) return ra - rb;
+      return a.name.localeCompare(b.name);
+    });
+    for (const a of sortedAgents) {
+      const repo = a.repo?.split("/").pop() ?? "";
+      const meta = repo ? `${a.state} \u00b7 ${repo}` : a.state;
+      cmds.push({
+        id: `agent:${a.machine_id}:${a.id}`,
+        label: `${a.name} \u2014 ${meta}`,
+        category: "Open Agent",
+        icon: "\u25c6",
+        action: () => {
+          // Navigate to AgentsTab (same as Go Home) and request the
+          // pane open. Latched in openAgent.ts so it survives the
+          // mount race.
+          setShowSettings(false);
+          setSelectedWorktreeId(null);
+          setSelectedWorktreePath(null);
+          setSelectedWorktreeName(null);
+          requestOpenAgent(a.machine_id, a.id);
+        },
+      });
+    }
+
     return cmds;
   }, [
     showSettings,
@@ -460,6 +505,7 @@ function AppContent({
     setSelectedWorktreeName,
     openPanel,
     togglePanel,
+    fleetAgents,
   ]);
 
   // Register commands whenever they change

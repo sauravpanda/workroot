@@ -10,6 +10,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open as openShell } from "@tauri-apps/plugin-shell";
 import { useAllAgents, type MachineStatus } from "../hooks/useAllAgents";
 import { AgentDetailPane } from "./AgentDetailPane";
+import { consumePendingOpen } from "../lib/openAgent";
 import "../styles/agents-tab.css";
 
 interface AgentsTabProps {
@@ -277,6 +278,22 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
       prev.map((p) => (p.paneId === paneId ? { ...p, pinned: !p.pinned } : p)),
     );
   }, []);
+
+  // Bridge for the Cmd+P palette → "Open Agent" commands. Two paths:
+  //   1. AgentsTab was already mounted and the user picked an agent
+  //      from the palette — the CustomEvent fires and we open it.
+  //   2. App-level navigation just mounted us as a side effect of the
+  //      same palette command — drain any latched request now.
+  useEffect(() => {
+    const pending = consumePendingOpen();
+    if (pending) openAgent(pending.machineId, pending.agentId);
+    const onOpen = () => {
+      const p = consumePendingOpen();
+      if (p) openAgent(p.machineId, p.agentId);
+    };
+    window.addEventListener("workroot:open-agent", onOpen);
+    return () => window.removeEventListener("workroot:open-agent", onOpen);
+  }, [openAgent]);
 
   // Switch to a different layout size. Marks the user as having picked
   // explicitly (locks auto-grow). If the new size is smaller than the
