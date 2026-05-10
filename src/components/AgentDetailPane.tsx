@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import * as Popover from "@radix-ui/react-popover";
+import { invoke } from "@tauri-apps/api/core";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { open as openShell } from "@tauri-apps/plugin-shell";
 import AnsiConvert from "ansi-to-html";
@@ -846,11 +847,19 @@ export function AgentDetailPane({
     );
   }
 
-  // Open the system file picker and append "[attached: <abs path>]" to
-  // the reply text. The daemon's /reply endpoint accepts only a string
-  // body, so we can't actually upload bytes — but inserting the absolute
-  // path is enough for the agent to use its Read tool on the file
-  // (works for code, text, JSON, images Claude can see, etc).
+  // Append "[attached: <abs path>]" lines to the reply text. The
+  // daemon's /reply endpoint accepts only a string body, so we can't
+  // upload bytes directly — but inserting the absolute path is enough
+  // for the agent to use its Read tool on the file (works for code,
+  // text, JSON, images Claude can see — on a *local* helm where the
+  // path resolves on the agent side).
+  const appendAttachments = (paths: string[]): void => {
+    if (paths.length === 0) return;
+    const lines = paths.map((p) => `[attached: ${p}]`).join("\n");
+    setReply((prev) => (prev.trim() ? `${prev}\n${lines}\n` : `${lines}\n`));
+  };
+
+  // Open the system file picker and append the chosen file paths.
   const attachFiles = async () => {
     let picked: string | string[] | null = null;
     try {
@@ -860,10 +869,76 @@ export function AgentDetailPane({
       return;
     }
     if (!picked) return;
-    const paths = Array.isArray(picked) ? picked : [picked];
-    if (paths.length === 0) return;
-    const lines = paths.map((p) => `[attached: ${p}]`).join("\n");
-    setReply((prev) => (prev.trim() ? `${prev}\n${lines}\n` : `${lines}\n`));
+    appendAttachments(Array.isArray(picked) ? picked : [picked]);
+  };
+
+  // Save a Blob (from clipboard paste or file drop) to a Tauri temp
+  // file and return its absolute path so it can be attached. Reuses
+  // the existing `save_dropped_image` command (terminal/drop_image.rs).
+  const saveBlobAsTemp = async (blob: Blob, ext: string): Promise<string> => {
+    const buf = new Uint8Array(await blob.arrayBuffer());
+    return await invoke<string>("save_dropped_image", {
+      data: Array.from(buf),
+      extension: ext,
+    });
+  };
+
+  // Pulls image bytes off the clipboard. When the clipboard has at
+  // least one image, we handle it ourselves and prevent the textarea's
+  // default text-paste so the user doesn't get a stray data-URL line.
+  const handlePaste = async (
+    e: React.ClipboardEvent<HTMLTextAreaElement>,
+  ): Promise<void> => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const imageItems = Array.from(items).filter((it) =>
+      it.type.startsWith("image/"),
+    );
+    if (imageItems.length === 0) return;
+    e.preventDefault();
+    const paths: string[] = [];
+    for (const it of imageItems) {
+      const blob = it.getAsFile();
+      if (!blob) continue;
+      const ext = it.type.split("/")[1] || "png";
+      try {
+        paths.push(await saveBlobAsTemp(blob, ext));
+      } catch (err) {
+        setActionError(`Paste failed: ${err}`);
+        return;
+      }
+    }
+    appendAttachments(paths);
+  };
+
+  // Drag-drop handler. Uses the path directly when the OS exposes one
+  // (typical for files dragged from Finder/Explorer); falls back to
+  // saving the bytes for synthetic drops (e.g. dragging an image out
+  // of a browser tab, where File.path is empty).
+  const handleDrop = async (
+    e: React.DragEvent<HTMLDivElement>,
+  ): Promise<void> => {
+    if (!e.dataTransfer || e.dataTransfer.files.length === 0) return;
+    e.preventDefault();
+    const paths: string[] = [];
+    for (const file of Array.from(e.dataTransfer.files)) {
+      // Tauri exposes File.path for OS-level drops. When present, use
+      // it directly — no need to copy bytes through a temp file.
+      const filePath = (file as File & { path?: string }).path;
+      if (filePath) {
+        paths.push(filePath);
+        continue;
+      }
+      const ext =
+        file.name.split(".").pop() || file.type.split("/")[1] || "bin";
+      try {
+        paths.push(await saveBlobAsTemp(file, ext));
+      } catch (err) {
+        setActionError(`Drop failed: ${err}`);
+        return;
+      }
+    }
+    appendAttachments(paths);
   };
 
   const sendReply = async () => {
@@ -1292,12 +1367,22 @@ export function AgentDetailPane({
         })()}
 
       {canReply && (
-        <div className="agent-detail__reply">
+        <div
+          className="agent-detail__reply"
+          onDragOver={(e) => {
+            // Required for onDrop to fire on a div.
+            if (e.dataTransfer?.types.includes("Files")) {
+              e.preventDefault();
+            }
+          }}
+          onDrop={(e) => void handleDrop(e)}
+        >
           <textarea
             ref={replyRef}
             value={reply}
             rows={1}
             onChange={(e) => setReply(e.target.value)}
+            onPaste={(e) => void handlePaste(e)}
             onKeyDown={(e) => {
               if (
                 (e.metaKey || e.ctrlKey) &&
