@@ -1,8 +1,14 @@
 use tauri::{
     menu::{Menu, MenuItem},
-    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager,
+    tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
+    Manager, State,
 };
+
+/// Wrapper so we can `app.manage()` the tray handle and update its
+/// title/tooltip from a Tauri command. The constant id ("main") lets
+/// us look it up later via `app.tray_by_id` as a fallback, but holding
+/// the handle directly is more reliable.
+pub struct TrayHandle(pub TrayIcon);
 
 /// Sets up the system tray icon with a context menu.
 ///
@@ -19,7 +25,7 @@ pub fn setup_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
 
     let menu = Menu::with_items(app, &[&show_i, &separator, &quit_i])?;
 
-    let _tray = TrayIconBuilder::new()
+    let tray = TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .icon_as_template(true)
         .menu(&menu)
@@ -46,6 +52,36 @@ pub fn setup_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         })
         .build(app)?;
 
+    app.manage(TrayHandle(tray));
+    Ok(())
+}
+
+/// Update the tray badge from the frontend's fleet snapshot.
+/// `needs_you` is the number of agents in `waiting_input` state.
+///
+/// macOS shows the title text next to the tray icon — natural badge.
+/// Linux/Windows update the tooltip only (no inline badge support).
+#[tauri::command]
+pub fn update_tray_badge(needs_you: u32, tray: State<'_, TrayHandle>) -> Result<(), String> {
+    let title = if needs_you > 0 {
+        Some(format!("{needs_you}"))
+    } else {
+        None
+    };
+    let tooltip = if needs_you > 0 {
+        format!(
+            "Workroot — {needs_you} agent{} need you",
+            if needs_you == 1 { "" } else { "s" }
+        )
+    } else {
+        "Workroot".to_string()
+    };
+    tray.0
+        .set_title(title)
+        .map_err(|e| format!("set_title failed: {e}"))?;
+    tray.0
+        .set_tooltip(Some(&tooltip))
+        .map_err(|e| format!("set_tooltip failed: {e}"))?;
     Ok(())
 }
 
