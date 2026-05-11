@@ -410,20 +410,37 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
   // Keyboard:
   //   Esc       — unzoom if zoomed, else close the focused pane
   //   ⌘⇧Z       — toggle zoom on the focused pane (Zed parity)
-  // Both no-op inside text inputs so they don't fight Cancel/blur.
+  //   ⌘1..⌘4    — switch layout to N panes (#466)
+  // All no-op inside text inputs so they don't fight Cancel/blur or
+  // the user's reply composition.
   useEffect(() => {
-    if (panes.length === 0) return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const inInput =
         target && (target.tagName === "TEXTAREA" || target.tagName === "INPUT");
+      if (inInput) return;
+
+      // ⌘1..⌘4 → setLayout(N). Works with 0 panes too — the user can
+      // pre-set the layout before opening agents. Shift required by
+      // ⌘⇧Z below is excluded here so the two don't collide.
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        !e.shiftKey &&
+        !e.altKey &&
+        ["1", "2", "3", "4"].includes(e.key)
+      ) {
+        e.preventDefault();
+        setLayout(parseInt(e.key, 10) as LayoutSize);
+        return;
+      }
+
+      if (panes.length === 0) return;
 
       // ⌘⇧Z toggles zoom on the focused pane.
       if (
         e.key.toLowerCase() === "z" &&
         (e.metaKey || e.ctrlKey) &&
-        e.shiftKey &&
-        !inInput
+        e.shiftKey
       ) {
         e.preventDefault();
         setZoomedPaneId((cur) => {
@@ -434,7 +451,6 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
       }
 
       if (e.key !== "Escape") return;
-      if (inInput) return;
       // Esc unzooms first (don't close the pane while we're zoomed —
       // the user expects "back to multi-pane view").
       if (zoomedPaneId !== null) {
@@ -448,7 +464,7 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [panes, focusedPaneId, zoomedPaneId, closePane]);
+  }, [panes, focusedPaneId, zoomedPaneId, closePane, setLayout]);
 
   // If the zoomed pane goes away (closed elsewhere, agent deleted),
   // unzoom so the layout doesn't end up stuck on a phantom pane.
