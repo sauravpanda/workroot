@@ -69,9 +69,22 @@ let cachedFleet: AllAgentsResult = {
   refresh: () => {},
 };
 
+// Last value we pushed to the tray, so we don't IPC every poll when
+// the count hasn't changed. Module-scoped: matches cachedFleet.
+let lastTrayCount = -1;
+
 function publishFleet(next: Omit<AllAgentsResult, "refresh">): void {
   cachedFleet = { ...next, refresh: cachedFleet.refresh };
   window.dispatchEvent(new CustomEvent("workroot:fleet"));
+  const needsYou = next.agents.filter(
+    (a) => a.state === "waiting_input",
+  ).length;
+  if (needsYou !== lastTrayCount) {
+    lastTrayCount = needsYou;
+    void invoke("update_tray_badge", { needsYou }).catch(() => {
+      // Older builds before #436 don't have this command — ignore.
+    });
+  }
 }
 
 /** Read-only view of the latest fleet snapshot. Subscribes to the

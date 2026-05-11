@@ -348,6 +348,7 @@ pub fn run() {
             agents::pipeline::run_agent_task,
             agents::pipeline::run_agent_task_streaming,
             agents::pipeline::save_text_file,
+            tray::update_tray_badge,
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
