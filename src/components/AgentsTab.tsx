@@ -12,6 +12,7 @@ import { useAllAgents, type MachineStatus } from "../hooks/useAllAgents";
 import type { AgentState } from "../lib/helm-api";
 import { AgentDetailPane } from "./AgentDetailPane";
 import { consumePendingOpen } from "../lib/openAgent";
+import { consumePendingFilter } from "../lib/agentFilter";
 import "../styles/agents-tab.css";
 
 interface AgentsTabProps {
@@ -324,6 +325,20 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     window.addEventListener("workroot:open-agent", onOpen);
     return () => window.removeEventListener("workroot:open-agent", onOpen);
   }, [openAgent]);
+
+  // Same pattern for the StatusBar's clickable "N need you" → filter
+  // the list. AgentsTab is the source of truth for `stateFilter`, so
+  // we let other surfaces broadcast intents through this latch.
+  useEffect(() => {
+    const pending = consumePendingFilter();
+    if (pending) setStateFilter(pending);
+    const onFilter = () => {
+      const p = consumePendingFilter();
+      if (p) setStateFilter(p);
+    };
+    window.addEventListener("workroot:agent-filter", onFilter);
+    return () => window.removeEventListener("workroot:agent-filter", onFilter);
+  }, []);
 
   // Switch to a different layout size. Marks the user as having picked
   // explicitly (locks auto-grow). If the new size is smaller than the

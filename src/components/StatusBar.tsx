@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useFleetSnapshot } from "../hooks/useAllAgents";
+import { requestAgentFilter } from "../lib/agentFilter";
 import "../styles/status-bar.css";
 
 /* ------------------------------------------------------------------ */
@@ -58,7 +59,20 @@ function FleetSummary() {
       }
     >
       {machineLabel} · {agentLabel}
-      {summary.needsYou > 0 && ` (${summary.needsYou} need you)`}
+      {summary.needsYou > 0 && (
+        <>
+          {" ("}
+          <button
+            type="button"
+            className="status-bar-fleet-link"
+            onClick={() => requestAgentFilter("waiting_input")}
+            title="Filter agents to waiting-on-you"
+          >
+            {summary.needsYou} need you
+          </button>
+          {")"}
+        </>
+      )}
     </span>
   );
 }
