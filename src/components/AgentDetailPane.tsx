@@ -13,6 +13,7 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { open as openShell } from "@tauri-apps/plugin-shell";
 import AnsiConvert from "ansi-to-html";
 import { useAgentDetail } from "../hooks/useAgentDetail";
+import { useAgentPane } from "../hooks/useAgentPane";
 import {
   clientFor,
   type HelmMachine,
@@ -404,6 +405,84 @@ function MessageItem({
   );
 }
 
+// Live tmux capture — renders the raw `tmux capture-pane` output so
+// users can see and respond to TUI modals the cleaned chat thread
+// strips (Claude's /monitor, /resume picker, bash-tool approval).
+function PaneView({
+  text,
+  loading,
+  error,
+}: {
+  text: string;
+  loading: boolean;
+  error: string | null;
+}) {
+  if (error) {
+    return <p className="agent-detail__error">Pane fetch failed: {error}</p>;
+  }
+  return (
+    <div className="agent-detail__pane">
+      <div className="agent-detail__pane-header">
+        <span className="agent-detail__pane-dot" />
+        LIVE PANE
+      </div>
+      <pre className="agent-detail__pane-body">
+        {loading && !text ? "Loading pane…" : text || "(empty)"}
+      </pre>
+    </div>
+  );
+}
+
+// Keypad row shown below the events container when pane mode is on.
+// Sends literal tmux send-keys tokens — see helm-daemon's /keys
+// handler.
+function PaneKeypad({
+  onSend,
+  disabled,
+}: {
+  onSend: (keys: string) => void;
+  disabled: boolean;
+}) {
+  const keys: Array<{ label: string; keys: string; title?: string }> = [
+    { label: "Esc", keys: "Escape" },
+    { label: "↑", keys: "Up" },
+    { label: "↓", keys: "Down" },
+    { label: "←", keys: "Left" },
+    { label: "→", keys: "Right" },
+    { label: "↵", keys: "Enter" },
+    { label: "Tab", keys: "Tab" },
+    { label: "⇧Tab", keys: "BTab" },
+    { label: "y", keys: "y", title: "Yes (approve)" },
+    { label: "n", keys: "n", title: "No (deny)" },
+    {
+      label: "Clear",
+      keys: "Escape Escape",
+      title: "Two Escapes — dismiss modals",
+    },
+    {
+      label: "Ctrl+C",
+      keys: "C-c",
+      title: "Send Ctrl-C to the foreground job",
+    },
+  ];
+  return (
+    <div className="agent-detail__keypad" role="toolbar" aria-label="Keypad">
+      {keys.map((k) => (
+        <button
+          key={k.label}
+          type="button"
+          className="agent-detail__keypad-key"
+          onClick={() => onSend(k.keys)}
+          disabled={disabled}
+          title={k.title ?? `Send ${k.label}`}
+        >
+          {k.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // Highlighted code block — used for Write content, Read result body,
 // and the generic tool args/result panes. `language` from the file
 // path when known, else highlight.js auto-detect.
@@ -685,6 +764,13 @@ export function AgentDetailPane({
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState<"reply" | "kill" | "delete" | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  // Pane mode toggle — when on, the right side of the pane swaps the
+  // cleaned chat thread for the raw tmux capture (live terminal).
+  // Lets the user see + interact with TUI modals the chat view
+  // strips: Claude's /monitor, the /resume picker, the bash-tool
+  // approval prompt.
+  const [paneMode, setPaneMode] = useState(false);
+  const paneFetch = useAgentPane(machine, agentId, paneMode);
 
   // Auto-grow the reply textarea: starts at one line, grows to fit
   // content up to a 160 px ceiling, then scrolls inside. Avoids the
@@ -971,6 +1057,19 @@ export function AgentDetailPane({
     }
   };
 
+  // Send a tmux send-keys token (e.g. "Escape", "Up", "C-c") to the
+  // agent's pane. Fire-and-forget — the pane poll picks up the result
+  // within ~500 ms so visual feedback is automatic. Errors land in the
+  // action-error banner.
+  const sendKeysToPane = async (keys: string): Promise<void> => {
+    if (!machine || !detail) return;
+    try {
+      await clientFor(machine).sendKeys(detail.id, keys);
+    } catch (e) {
+      setActionError(`sendKeys failed: ${e}`);
+    }
+  };
+
   const copyText = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -1200,6 +1299,23 @@ export function AgentDetailPane({
             </Popover.Portal>
           </Popover.Root>
         )}
+        <button
+          className={
+            paneMode
+              ? "agent-detail__icon-btn agent-detail__icon-btn--zoomed"
+              : "agent-detail__icon-btn"
+          }
+          onClick={() => setPaneMode((v) => !v)}
+          aria-label={paneMode ? "Hide live tmux pane" : "Show live tmux pane"}
+          aria-pressed={paneMode}
+          title={
+            paneMode
+              ? "Hide live tmux pane — back to the chat thread"
+              : "Show live tmux pane — what `tmux attach` would show"
+          }
+        >
+          ▥
+        </button>
         {onToggleZoom && (
           <button
             className={
@@ -1269,7 +1385,13 @@ export function AgentDetailPane({
             }
           }}
         >
-          {loading && !detail ? (
+          {paneMode ? (
+            <PaneView
+              text={paneFetch.text}
+              loading={paneFetch.loading}
+              error={paneFetch.error}
+            />
+          ) : loading && !detail ? (
             <p className="agent-detail__loading">Loading…</p>
           ) : !hasTranscript && detail ? (
             <p className="agent-detail__empty">
@@ -1302,7 +1424,7 @@ export function AgentDetailPane({
               );
             })
           )}
-          {isActive && detail && (
+          {!paneMode && isActive && detail && (
             <div
               className="agent-detail__working"
               aria-live="polite"
@@ -1320,7 +1442,7 @@ export function AgentDetailPane({
           )}
         </div>
 
-        {unseen > 0 && (
+        {unseen > 0 && !paneMode && (
           <button
             type="button"
             className="agent-detail__new-pill"
@@ -1331,6 +1453,10 @@ export function AgentDetailPane({
           </button>
         )}
       </div>
+
+      {paneMode && (
+        <PaneKeypad onSend={(k) => void sendKeysToPane(k)} disabled={!detail} />
+      )}
 
       {detail?.usage &&
         (() => {

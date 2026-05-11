@@ -167,6 +167,25 @@ export class DaemonClient {
   deleteAgent(id: string): Promise<{ ok: boolean }> {
     return this.request<{ ok: boolean }>("DELETE", `/agents/${id}`);
   }
+
+  /** Raw current tmux pane — what `tmux attach` would show. The
+   *  daemon returns plain text; the Tauri proxy wraps it as
+   *  `{ text: "..." }` (see helm/mod.rs::helm_proxy_request). */
+  async agentPane(id: string): Promise<string> {
+    const v = await this.request<{ text?: string } | null>(
+      "GET",
+      `/agents/${id}/pane`,
+    );
+    return v && typeof v.text === "string" ? v.text : "";
+  }
+
+  /** Forward a key sequence into the agent's tmux pane. Used to
+   *  navigate TUI modals (Esc / arrows / Enter / Tab / Ctrl-C). */
+  sendKeys(id: string, keys: string): Promise<{ ok: boolean }> {
+    return this.request<{ ok: boolean }>("POST", `/agents/${id}/keys`, {
+      keys,
+    });
+  }
 }
 
 export function clientFor(m: HelmMachine): DaemonClient {
