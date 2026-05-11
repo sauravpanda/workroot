@@ -9,6 +9,7 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { open as openShell } from "@tauri-apps/plugin-shell";
 import { useAllAgents, type MachineStatus } from "../hooks/useAllAgents";
+import type { AgentState } from "../lib/helm-api";
 import { AgentDetailPane } from "./AgentDetailPane";
 import { consumePendingOpen } from "../lib/openAgent";
 import "../styles/agents-tab.css";
@@ -175,10 +176,39 @@ function OfflineBanner({
   );
 }
 
+type StateFilter = "all" | AgentState;
+
+// Order the filter chips appear in. "all" first, then by attention
+// priority (waiting_input → ... → failed). Matches the same ranking
+// the list uses internally.
+const FILTER_ORDER: StateFilter[] = [
+  "all",
+  "waiting_input",
+  "working",
+  "planning",
+  "queued",
+  "done",
+  "failed",
+];
+
+const FILTER_LABELS: Record<StateFilter, string> = {
+  all: "All",
+  waiting_input: "Needs you",
+  working: "Working",
+  planning: "Planning",
+  queued: "Queued",
+  done: "Done",
+  failed: "Failed",
+};
+
 export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
   const { agents, machines, loading, refresh } = useAllAgents();
   const [panes, setPanes] = useState<Pane[]>([]);
   const [focusedPaneId, setFocusedPaneId] = useState<number | null>(null);
+  // Active state filter for the list. "all" passes everything through.
+  // Counts per chip are computed from the unfiltered list so the user
+  // can see "Done 12" even when looking at "Needs you 2".
+  const [stateFilter, setStateFilter] = useState<StateFilter>("all");
   // Zed-style "zoom the focused pane" — when set, only this pane is
   // visible inside the panes container (others stay mounted so polls
   // and scroll positions survive). The list pane stays put; only the
@@ -434,6 +464,25 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     return s;
   }, [panes]);
 
+  // Per-state counts for the filter chips, computed once from the
+  // unfiltered list so a chip's number stays meaningful even when the
+  // filter narrows what the user sees.
+  const stateCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: agents.length };
+    for (const a of agents) {
+      counts[a.state] = (counts[a.state] ?? 0) + 1;
+    }
+    return counts;
+  }, [agents]);
+
+  const filteredAgents = useMemo(
+    () =>
+      stateFilter === "all"
+        ? agents
+        : agents.filter((a) => a.state === stateFilter),
+    [agents, stateFilter],
+  );
+
   const list = (
     <>
       <div className="agents-tab__header">
@@ -462,6 +511,38 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
             Manage machines
           </button>
         </div>
+        {agents.length > 0 && (
+          <div
+            className="agents-tab__filters"
+            role="tablist"
+            aria-label="Filter by state"
+          >
+            {FILTER_ORDER.map((f) => {
+              const count = stateCounts[f] ?? 0;
+              // Hide state chips that have zero matches so we don't
+              // show "Failed 0 · Queued 0" noise. "All" is always
+              // visible.
+              if (f !== "all" && count === 0) return null;
+              const active = stateFilter === f;
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  className={
+                    active
+                      ? "agents-tab__filter-chip agents-tab__filter-chip--active"
+                      : "agents-tab__filter-chip"
+                  }
+                  onClick={() => setStateFilter(f)}
+                >
+                  {FILTER_LABELS[f]} {count}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {offlineMachines.map((m) => (
@@ -534,7 +615,19 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
             </span>
           </div>
           <div className="agents-tab__tbody">
-            {agents.map((a) => {
+            {filteredAgents.length === 0 && stateFilter !== "all" && (
+              <div className="agents-tab__filter-empty">
+                No agents in <strong>{FILTER_LABELS[stateFilter]}</strong>.{" "}
+                <button
+                  type="button"
+                  className="agents-tab__filter-reset"
+                  onClick={() => setStateFilter("all")}
+                >
+                  Show all
+                </button>
+              </div>
+            )}
+            {filteredAgents.map((a) => {
               const isOpen = openSet.has(`${a.machine_id}:${a.id}`);
               const stateLabel = STATE_LABELS[a.state] ?? a.state;
               const activity = a.last_activity ?? a.task;

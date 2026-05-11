@@ -288,6 +288,65 @@
   background: var(--color-danger, #f87171);
 }
 
+/* ---- state-filter chips (row below the machines bar) ---- */
+
+.agents-tab__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.agents-tab__filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--color-text-secondary, #aaa);
+  background: transparent;
+  border: 1px solid var(--color-border, #2a2a2a);
+  border-radius: 999px;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.agents-tab__filter-chip:hover {
+  color: var(--color-text, #e4e4e4);
+  border-color: var(--color-text-secondary, #aaa);
+}
+
+.agents-tab__filter-chip--active {
+  color: var(--color-bg, #0d0d0d);
+  background: var(--color-accent, #88b4ff);
+  border-color: var(--color-accent, #88b4ff);
+}
+
+.agents-tab__filter-chip--active:hover {
+  color: var(--color-bg, #0d0d0d);
+  background: var(--color-accent-hover, #a5c4ff);
+  border-color: var(--color-accent-hover, #a5c4ff);
+}
+
+.agents-tab__filter-empty {
+  padding: 16px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-secondary, #aaa);
+}
+
+.agents-tab__filter-reset {
+  background: transparent;
+  border: none;
+  color: var(--color-accent, #88b4ff);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
 /* ---- offline machine banner ---- */
 
 .agents-tab__banner {
