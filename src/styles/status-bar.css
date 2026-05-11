@@ -69,6 +69,25 @@
   color: var(--warning, #d4a76a);
 }
 
+/* Inline link inside the fleet summary — "N need you" turns into a
+ * filter shortcut. Inherits color from the parent (.fleet or .alert
+ * variant) so the amber state stays amber while clickable. */
+.status-bar-fleet-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.status-bar-fleet-link:hover {
+  text-decoration-style: solid;
+}
+
 .status-bar-right .status-bar-item:first-child {
   border-left: 1px solid
     color-mix(in srgb, var(--border-subtle) 70%, transparent);
