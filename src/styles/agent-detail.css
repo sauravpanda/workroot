@@ -864,3 +864,95 @@
   color: var(--color-danger, #f87171);
   flex: 0 0 auto;
 }
+
+/* ---- live tmux pane mode (v0.4.22) ---- */
+
+.agent-detail__pane {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-secondary, #181818);
+  border: 1px solid var(--color-border, #2a2a2a);
+  border-radius: 4px;
+  margin: 6px 0;
+  overflow: hidden;
+}
+
+.agent-detail__pane-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary, #888);
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--color-border, #2a2a2a);
+  text-transform: uppercase;
+}
+
+.agent-detail__pane-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-success, #7ec699);
+  /* Subtle pulse so the user sees the pane is live, not a snapshot. */
+  animation: agent-detail__pane-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes agent-detail__pane-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.agent-detail__pane-body {
+  margin: 0;
+  padding: 8px 10px;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--app-msg-size, 13px);
+  line-height: 1.4;
+  color: var(--color-text, #d4d8de);
+  /* tmux capture lines are typically 80-200 chars and rely on a
+   * fixed-width font with no wrapping (otherwise box-drawing breaks).
+   * Horizontal scroll instead of word-wrap. */
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* ---- keypad row (visible only while in pane mode) ---- */
+
+.agent-detail__keypad {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 0;
+  flex: 0 0 auto;
+  border-top: 1px solid var(--color-border, #2a2a2a);
+}
+
+.agent-detail__keypad-key {
+  padding: 4px 10px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  background: var(--color-bg-secondary, #181818);
+  color: var(--color-text, #e4e4e4);
+  border: 1px solid var(--color-border, #2a2a2a);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.agent-detail__keypad-key:hover:not(:disabled) {
+  background: var(--color-bg-hover, #222);
+  border-color: var(--color-accent-muted, rgba(136, 180, 255, 0.4));
+}
+.agent-detail__keypad-key:active:not(:disabled) {
+  background: var(--color-accent-muted, rgba(136, 180, 255, 0.18));
+}
+.agent-detail__keypad-key:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
