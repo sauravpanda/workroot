@@ -210,6 +210,10 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
   // Counts per chip are computed from the unfiltered list so the user
   // can see "Done 12" even when looking at "Needs you 2".
   const [stateFilter, setStateFilter] = useState<StateFilter>("all");
+  // Keyboard cursor into the filtered agents list — j/k move it,
+  // Enter opens the agent under the cursor. -1 means "no cursor"
+  // (the user hasn't pressed j/k yet, or the list is empty). #466.
+  const [listCursor, setListCursor] = useState<number>(-1);
   // Zed-style "zoom the focused pane" — when set, only this pane is
   // visible inside the panes container (others stay mounted so polls
   // and scroll positions survive). The list pane stays put; only the
@@ -498,6 +502,69 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     [agents, stateFilter],
   );
 
+  // List navigation: j/k move the cursor through filteredAgents,
+  // Enter opens the agent under the cursor. Skipped when the user is
+  // typing in an input/textarea so it doesn't fight reply composition.
+  // #466 first slice.
+  useEffect(() => {
+    if (filteredAgents.length === 0) return;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (
+        t &&
+        (t.tagName === "TEXTAREA" ||
+          t.tagName === "INPUT" ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
+      // Ignore modifier-key combinations — those are reserved for
+      // ⌘P / ⌘⇧Z / ⌘W etc., not for list navigation.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "j" || e.key === "ArrowDown") {
+        e.preventDefault();
+        setListCursor((cur) =>
+          Math.min(filteredAgents.length - 1, (cur < 0 ? -1 : cur) + 1),
+        );
+      } else if (e.key === "k" || e.key === "ArrowUp") {
+        e.preventDefault();
+        setListCursor((cur) =>
+          cur < 0 ? filteredAgents.length - 1 : Math.max(0, cur - 1),
+        );
+      } else if (e.key === "Enter" && listCursor >= 0) {
+        const a = filteredAgents[listCursor];
+        if (a) {
+          e.preventDefault();
+          openAgent(a.machine_id, a.id);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [filteredAgents, listCursor, openAgent]);
+
+  // Keep the cursor in range as the filtered list churns (poll updates,
+  // filter changes). Clamp rather than reset so the cursor sticks
+  // visually near where the user left it.
+  useEffect(() => {
+    if (filteredAgents.length === 0) {
+      if (listCursor !== -1) setListCursor(-1);
+      return;
+    }
+    if (listCursor >= filteredAgents.length) {
+      setListCursor(filteredAgents.length - 1);
+    }
+  }, [filteredAgents, listCursor]);
+
+  // Scroll the cursor row into view whenever it moves.
+  useEffect(() => {
+    if (listCursor < 0) return;
+    const el = document.querySelector(".agents-tab__row--cursor");
+    if (el && typeof el.scrollIntoView === "function") {
+      el.scrollIntoView({ block: "nearest" });
+    }
+  }, [listCursor]);
+
   const list = (
     <>
       <div className="agents-tab__header">
@@ -642,8 +709,9 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
                 </button>
               </div>
             )}
-            {filteredAgents.map((a) => {
+            {filteredAgents.map((a, idx) => {
               const isOpen = openSet.has(`${a.machine_id}:${a.id}`);
+              const isCursor = idx === listCursor;
               const stateLabel = STATE_LABELS[a.state] ?? a.state;
               const activity = a.last_activity ?? a.task;
               const machineShort = shortMachineLabel(a.machine_label);
@@ -651,11 +719,13 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
               return (
                 <div
                   key={`${a.machine_id}:${a.id}`}
-                  className={
-                    isOpen
-                      ? "agents-tab__row agents-tab__row--selected"
-                      : "agents-tab__row"
-                  }
+                  className={[
+                    "agents-tab__row",
+                    isOpen ? "agents-tab__row--selected" : "",
+                    isCursor ? "agents-tab__row--cursor" : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                   onClick={() => openAgent(a.machine_id, a.id)}
                   role="row"
                   tabIndex={0}

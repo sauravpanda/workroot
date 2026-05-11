@@ -464,6 +464,15 @@
   background: rgba(96, 165, 250, 0.1);
 }
 
+/* Keyboard cursor (j/k navigation, #466). Distinct from --selected
+ * (which means "open in a pane"): the cursor is the *focus*, the
+ * thing Enter will open. Outline-style so it can stack on top of
+ * --selected without fighting backgrounds. */
+.agents-tab__row--cursor {
+  outline: 1px solid var(--color-accent, #88b4ff);
+  outline-offset: -1px;
+}
+
 /* state pill — mirrors detail-pane treatment */
 .agents-tab__state-pill {
   display: inline-block;
