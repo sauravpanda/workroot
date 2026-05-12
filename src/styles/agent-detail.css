@@ -875,6 +875,11 @@
   border-radius: 4px;
   margin: 6px 0;
   overflow: hidden;
+  /* Fill the available height of the events container — without this
+   * the pane sits at content height and leaves a big empty band
+   * between the LIVE PANE and the keypad. */
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .agent-detail__pane-header {
@@ -921,7 +926,11 @@
    * fixed-width font with no wrapping (otherwise box-drawing breaks).
    * Horizontal scroll instead of word-wrap. */
   white-space: pre;
-  overflow-x: auto;
+  /* Fills the rest of the pane vertically; scroll inside both axes
+   * so a tall capture or long lines don't push the keypad away. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
 /* ---- keypad row (visible only while in pane mode) ---- */
