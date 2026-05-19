@@ -503,6 +503,30 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
     [refresh],
   );
 
+  // Primary onboarding action from the empty state: register a machine
+  // at the conventional localhost helm-daemon address. If the daemon is
+  // running, polling kicks in within a cycle; if not, the user sees the
+  // offline-machine banner and can debug. #505.
+  const [connectingLocal, setConnectingLocal] = useState(false);
+  const connectLocal = useCallback(async () => {
+    setConnectingLocal(true);
+    try {
+      await invoke("add_helm_machine", {
+        label: "Local",
+        baseUrl: "http://127.0.0.1:8421",
+        apiToken: null,
+      });
+      refresh();
+    } catch {
+      // Likely a duplicate label or the IPC isn't available — fall
+      // back to opening the full Machines panel so the user can
+      // diagnose.
+      onOpenMachines();
+    } finally {
+      setConnectingLocal(false);
+    }
+  }, [refresh, onOpenMachines]);
+
   // Build a Set of "open" machineId:agentId so list rows can show whether
   // they're already in a pane.
   const openSet = useMemo(() => {
@@ -675,14 +699,24 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
           </p>
           <div className="agents-tab__empty-actions">
             <button
+              type="button"
               className="agents-tab__empty-cta agents-tab__empty-cta--primary"
-              onClick={onOpenMachines}
+              onClick={() => void connectLocal()}
+              disabled={connectingLocal}
+              title="Register http://127.0.0.1:8421 — start helm-daemon locally first"
             >
-              Add a machine
+              {connectingLocal ? "Connecting…" : "Connect local helm-daemon"}
             </button>
             <button
               type="button"
               className="agents-tab__empty-cta"
+              onClick={onOpenMachines}
+            >
+              Add machine…
+            </button>
+            <button
+              type="button"
+              className="agents-tab__empty-cta agents-tab__empty-cta--link"
               onClick={() => {
                 void openShell(
                   "https://github.com/sauravpanda/workroot#readme",

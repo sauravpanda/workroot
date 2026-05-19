@@ -172,9 +172,9 @@ export function HelmMachinesPanel({ onClose }: HelmMachinesPanelProps) {
         if (!open) onClose();
       }}
     >
-      <DialogContent className="helm-machines" aria-label="Helm Machines">
+      <DialogContent className="helm-machines" aria-label="Machines">
         <div className="helm-machines__header">
-          <h3 className="helm-machines__title">Helm Machines</h3>
+          <h3 className="helm-machines__title">Machines</h3>
           <p className="helm-machines__hint">
             Each row is one helm-daemon. Disabled rows are skipped when fetching
             agents.
