@@ -228,12 +228,20 @@ function AppContent({
 
   // Build commands from current app state
   const commands: Command[] = useMemo(() => {
+    // True when the user is currently on the Agents view (no project
+    // selected and not in settings). Used to demote "Go Home" since
+    // it's a no-op there. #509.
+    const onHome = !showSettings && !selectedWorktreePath;
+
     const cmds: Command[] = [
       {
         id: "nav:home",
         label: "Go Home",
         category: "Navigation",
         icon: "\u2302",
+        // Sink "Go Home" below other commands when already home \u2014
+        // priority 100 puts it past every default-0 command.
+        priority: onHome ? 100 : 0,
         action: () => {
           setShowSettings(false);
           setSelectedWorktreeId(null);
