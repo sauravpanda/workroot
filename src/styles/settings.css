@@ -3,11 +3,15 @@
    ========================================================== */
 
 .settings-tab {
-  padding: 2em;
-  max-width: 560px;
+  padding: 2.5em 2em 4em;
+  /* Centered content column — was max-width: 560px without margin:auto
+   * so the page hugged the left edge of a wide window. #506. */
+  max-width: 760px;
+  margin: 0 auto;
   overflow-y: auto;
   height: 100%;
   position: relative;
+  box-sizing: border-box;
 }
 
 /* Top-left so it reads as "back to where I came from" rather than
@@ -60,16 +64,23 @@
   font-size: 0.8em;
 }
 
-/* ── Sections ── */
+/* ── Sections ── #507 — each section is a card-ish panel with its
+ *   own border + background, so the page reads as grouped blocks
+ *   instead of one continuous form. The old <hr>-between-sections
+ *   pattern is gone (the dividers are now de-emphasized to 0). */
 
 .settings-section {
-  margin-bottom: 1.5em;
+  margin-bottom: 1.25em;
+  padding: 1.25em 1.5em;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: var(--radius-md, 6px);
 }
 
 .settings-section-title {
   font-size: 0.82em;
   font-weight: 600;
-  margin: 0 0 0.35em;
+  margin: 0 0 0.65em;
   color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -207,10 +218,10 @@
 
 /* ── Divider ── */
 
+/* Dividers are now redundant — sections are their own cards (#507).
+ * Keep the class so existing <hr>s don't 404, but render nothing. */
 .settings-divider {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 1.5em 0;
+  display: none;
 }
 
 /* ── Update Status ── */
