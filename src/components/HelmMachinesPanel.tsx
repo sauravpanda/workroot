@@ -187,9 +187,35 @@ export function HelmMachinesPanel({ onClose }: HelmMachinesPanelProps) {
           {loading ? (
             <p className="helm-machines__empty">Loading…</p>
           ) : machines.length === 0 ? (
-            <p className="helm-machines__empty">
-              No machines yet. Add one below or discover via Tailscale.
-            </p>
+            // Lighter empty row + inline quick actions instead of the
+            // big dashed block (#512).
+            <div className="helm-machines__empty-row">
+              <span className="helm-machines__empty-label">
+                No machines configured
+              </span>
+              <div className="helm-machines__empty-actions">
+                <button
+                  type="button"
+                  className="helm-machines__btn"
+                  onClick={() => {
+                    setNewLabel("Local");
+                    setNewBaseUrl("http://127.0.0.1:8421");
+                    setNewToken("");
+                  }}
+                  title="Pre-fill the form with the conventional local daemon address"
+                >
+                  Add local
+                </button>
+                <button
+                  type="button"
+                  className="helm-machines__btn"
+                  onClick={() => void discover()}
+                  disabled={discovering}
+                >
+                  {discovering ? "Probing…" : "Discover Tailscale"}
+                </button>
+              </div>
+            </div>
           ) : (
             machines.map((m) => (
               <div
@@ -285,21 +311,22 @@ export function HelmMachinesPanel({ onClose }: HelmMachinesPanelProps) {
         <div className="helm-machines__form">
           <input
             type="text"
-            placeholder="Label (e.g. Work MBP)"
+            placeholder="Label (e.g. Local, Work MBP)"
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
           />
           <input
             type="text"
-            placeholder="Base URL (e.g. http://10.0.0.1:8421)"
+            placeholder="http://127.0.0.1:8421 (or http://10.0.0.1:8421)"
             value={newBaseUrl}
             onChange={(e) => setNewBaseUrl(e.target.value)}
           />
           <input
             type="password"
-            placeholder="Bearer token (optional)"
+            placeholder="Bearer token — optional, leave blank for unauthenticated daemons"
             value={newToken}
             onChange={(e) => setNewToken(e.target.value)}
+            className="helm-machines__form-optional"
             style={{ gridColumn: "1 / -1" }}
           />
           <div className="helm-machines__form-row">
