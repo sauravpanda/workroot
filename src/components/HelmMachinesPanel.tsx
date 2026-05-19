@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Dialog, DialogContent } from "./ui/dialog";
+import { friendlyError } from "../lib/tauriErrors";
 import "../styles/helm-machines.css";
 
 interface HelmMachine {
@@ -56,7 +57,7 @@ export function HelmMachinesPanel({ onClose }: HelmMachinesPanelProps) {
       const list = await invoke<HelmMachine[]>("list_helm_machines");
       setMachines(list);
     } catch (e) {
-      setError(String(e));
+      setError(friendlyError(e));
     } finally {
       setLoading(false);
     }
@@ -84,7 +85,7 @@ export function HelmMachinesPanel({ onClose }: HelmMachinesPanelProps) {
       setNewToken("");
       await refresh();
     } catch (e) {
-      setError(String(e));
+      setError(friendlyError(e));
     } finally {
       setAdding(false);
     }
@@ -103,7 +104,7 @@ export function HelmMachinesPanel({ onClose }: HelmMachinesPanelProps) {
         });
         await refresh();
       } catch (e) {
-        setError(String(e));
+        setError(friendlyError(e));
       }
     },
     [refresh],
@@ -115,7 +116,7 @@ export function HelmMachinesPanel({ onClose }: HelmMachinesPanelProps) {
         await invoke<boolean>("remove_helm_machine", { id: m.id });
         await refresh();
       } catch (e) {
-        setError(String(e));
+        setError(friendlyError(e));
       }
     },
     [refresh],
@@ -130,7 +131,7 @@ export function HelmMachinesPanel({ onClose }: HelmMachinesPanelProps) {
       );
       setDiscovered(list);
     } catch (e) {
-      setDiscoverError(String(e));
+      setDiscoverError(friendlyError(e));
       setDiscovered([]);
     } finally {
       setDiscovering(false);
@@ -158,7 +159,7 @@ export function HelmMachinesPanel({ onClose }: HelmMachinesPanelProps) {
         );
         await refresh();
       } catch (e) {
-        setError(String(e));
+        setError(friendlyError(e));
       }
     },
     [refresh],

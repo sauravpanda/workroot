@@ -13,6 +13,7 @@ import type { AgentState } from "../lib/helm-api";
 import { AgentDetailPane } from "./AgentDetailPane";
 import { consumePendingOpen } from "../lib/openAgent";
 import { consumePendingFilter } from "../lib/agentFilter";
+import { publishAgentsView } from "../lib/agentsViewSnapshot";
 import "../styles/agents-tab.css";
 
 interface AgentsTabProps {
@@ -474,6 +475,17 @@ export function AgentsTab({ onOpenMachines }: AgentsTabProps) {
       setZoomedPaneId(null);
     }
   }, [panes, zoomedPaneId]);
+
+  // Publish pane/zoom state for the StatusBar so its keyboard hints
+  // stay honest — show "⌘⇧Z zoom" only when there's a pane to zoom,
+  // "Esc unzoom" only when something is currently zoomed. #501.
+  useEffect(() => {
+    publishAgentsView({
+      paneCount: panes.length,
+      zoomed: zoomedPaneId !== null,
+    });
+    return () => publishAgentsView({ paneCount: 0, zoomed: false });
+  }, [panes.length, zoomedPaneId]);
 
   const offlineMachines = useMemo(
     () => machines.filter((m) => m.error !== null),
