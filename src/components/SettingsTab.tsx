@@ -435,7 +435,7 @@ export function SettingsTab({
       <hr className="settings-divider" />
 
       <section className="settings-section">
-        <h3 className="settings-section-title">Helm Machines</h3>
+        <h3 className="settings-section-title">Machines</h3>
         <p className="settings-section-desc">
           Workroot connects to one or more helm-daemon machines (local or
           tailnet) to spawn and watch agents. Add, remove, or rotate tokens
@@ -447,7 +447,7 @@ export function SettingsTab({
           onClick={() => onOpenHelmMachines?.()}
           disabled={!onOpenHelmMachines}
         >
-          Manage helm machines
+          Manage machines
         </button>
       </section>
 

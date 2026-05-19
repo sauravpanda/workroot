@@ -256,7 +256,7 @@ function AppContent({
       },
       {
         id: "settings:helm-machines",
-        label: "Helm Machines",
+        label: "Machines",
         category: "Navigation",
         icon: "\u2756",
         action: () => openPanel("helmMachines"),

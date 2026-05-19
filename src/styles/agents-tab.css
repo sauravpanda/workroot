@@ -684,6 +684,28 @@
   background: var(--color-accent-muted, rgba(136, 180, 255, 0.14));
 }
 
+.agents-tab__empty-cta--primary:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+/* Tertiary "Read docs" — looks like a link, not a button, so the
+ * primary "Connect" reads as the clear next step (#505). */
+.agents-tab__empty-cta--link {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-text-secondary, #888);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+  padding: 6px 8px;
+}
+.agents-tab__empty-cta--link:hover {
+  background: transparent;
+  color: var(--color-text, #e4e4e4);
+  text-decoration-style: solid;
+}
+
 /* "helm spawn …" code line — copyable look. Inherits the mono +
  * surface bg from the rest of the design. */
 .agents-tab__empty-code {
