@@ -199,3 +199,44 @@
   border: 1px dashed var(--color-border, #2a2a2a);
   border-radius: 6px;
 }
+
+/* Lighter empty state — one row, label on the left, quick actions
+ * on the right. Replaces the dashed-border block for the
+ * no-machines-yet case (#512). */
+.helm-machines__empty-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--color-text-secondary, #888);
+  border: 1px solid var(--color-border, #2a2a2a);
+  border-radius: 6px;
+}
+
+.helm-machines__empty-label {
+  flex: 1 1 auto;
+}
+
+.helm-machines__empty-actions {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+/* Bearer-token row reads as optional rather than required: muted
+ * border, slightly faded background. The "optional" placeholder
+ * carries the same message. */
+.helm-machines__form-optional {
+  border-color: var(--color-border-subtle, #1f252c) !important;
+  background: transparent !important;
+  color: var(--color-text-secondary, #888) !important;
+}
+.helm-machines__form-optional::placeholder {
+  color: var(--color-text-muted, #5c5c66);
+}
+.helm-machines__form-optional:focus {
+  border-color: var(--color-accent, #88b4ff) !important;
+  color: var(--color-text, #e4e4e4) !important;
+}
