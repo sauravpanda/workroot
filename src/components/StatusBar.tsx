@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useFleetSnapshot } from "../hooks/useAllAgents";
 import { requestAgentFilter } from "../lib/agentFilter";
+import { useAgentsViewSnapshot } from "../lib/agentsViewSnapshot";
 import "../styles/status-bar.css";
 
 /* ------------------------------------------------------------------ */
@@ -87,6 +88,8 @@ export function StatusBar({
   isGitHubConnected,
 }: StatusBarProps) {
   const [time, setTime] = useState(() => formatTime(new Date()));
+  const agentsView = useAgentsViewSnapshot();
+  const { agents, machines } = useFleetSnapshot();
 
   useEffect(() => {
     const update = () => setTime(formatTime(new Date()));
@@ -112,9 +115,16 @@ export function StatusBar({
       {/* -- Left side -- */}
       <div className="status-bar-left">
         <FleetSummary />
-        <span className="status-bar-item">
-          {projectName ?? "No project selected"}
-        </span>
+        {projectName ? (
+          <span className="status-bar-item">{projectName}</span>
+        ) : machines.length > 0 ? (
+          // On the Agents view (no worktree selected), "No project
+          // selected" is stale/confusing. Show agent context instead.
+          // #503.
+          <span className="status-bar-item">
+            {agents.length} agent{agents.length === 1 ? "" : "s"}
+          </span>
+        ) : null}
         {branchName && (
           <span className="status-bar-item">
             <span className="status-bar-branch-icon">
@@ -150,28 +160,40 @@ export function StatusBar({
                 : "status-bar-dot--disconnected"
             }`}
           />
-          <span className="status-bar-connection">
-            {isGitHubConnected ? "Connected" : "Disconnected"}
+          <span
+            className="status-bar-connection"
+            title="GitHub authentication status"
+          >
+            GitHub: {isGitHubConnected ? "Connected" : "Disconnected"}
           </span>
         </span>
         <span className="status-bar-item">
           <span className="status-bar-time">{time}</span>
         </span>
         {/* Honest keymap hint \u2014 only the shortcuts that are actually
-         *  wired today (#467). Once the keyboard layer (#466) lands,
-         *  this becomes context-aware (list / pane / zoomed). */}
+         *  wired today (#467) AND apply to the current context (#501).
+         *  \u2318K palette is always shown; the rest are gated on whether
+         *  there's a pane to act on. */}
         <span
           className="status-bar-item status-bar-hints"
           title="Keyboard shortcuts"
         >
           <kbd className="status-bar-kbd">{"\u2318K"}</kbd>
           <span className="status-bar-hint-label">palette</span>
-          <span className="status-bar-hint-sep">\u00b7</span>
-          <kbd className="status-bar-kbd">{"\u2318\u21e7Z"}</kbd>
-          <span className="status-bar-hint-label">zoom</span>
-          <span className="status-bar-hint-sep">\u00b7</span>
-          <kbd className="status-bar-kbd">Esc</kbd>
-          <span className="status-bar-hint-label">unzoom</span>
+          {agentsView.paneCount > 0 && (
+            <>
+              <span className="status-bar-hint-sep">{"\u00b7"}</span>
+              <kbd className="status-bar-kbd">{"\u2318\u21e7Z"}</kbd>
+              <span className="status-bar-hint-label">zoom</span>
+            </>
+          )}
+          {agentsView.zoomed && (
+            <>
+              <span className="status-bar-hint-sep">{"\u00b7"}</span>
+              <kbd className="status-bar-kbd">Esc</kbd>
+              <span className="status-bar-hint-label">unzoom</span>
+            </>
+          )}
         </span>
       </div>
     </div>
