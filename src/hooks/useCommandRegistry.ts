@@ -8,6 +8,10 @@ export interface Command {
   icon?: string;
   action: () => void;
   enabled?: () => boolean;
+  /** Lower = ranks higher in empty-query results + ties. Defaults
+   *  to 0. Used by the App to demote commands that don't apply to
+   *  the current view (e.g. "Go Home" while already home). #509. */
+  priority?: number;
 }
 
 interface CommandRegistryState {
@@ -66,44 +70,63 @@ export function useCommandRegistry() {
     (query: string): Command[] => {
       const q = query.toLowerCase().trim();
       if (!q) {
-        // Return recent commands first, then all
+        // Return recent commands first, then all, sorted by priority
+        // (lower = higher) within each group.
+        const byPrio = (a: Command, b: Command) =>
+          (a.priority ?? 0) - (b.priority ?? 0);
         const recentCmds = state.recentIds
           .map((id) => state.commands.find((c) => c.id === id))
-          .filter((c): c is Command => c !== undefined);
-        const rest = state.commands.filter(
-          (c) => !state.recentIds.includes(c.id),
-        );
+          .filter((c): c is Command => c !== undefined)
+          .sort(byPrio);
+        const rest = state.commands
+          .filter((c) => !state.recentIds.includes(c.id))
+          .sort(byPrio);
         return [...recentCmds, ...rest].filter(
           (c) => !c.enabled || c.enabled(),
         );
       }
 
-      return state.commands
-        .filter((c) => {
-          if (c.enabled && !c.enabled()) return false;
-          const haystack = `${c.label} ${c.category} ${c.id}`.toLowerCase();
-          // Fuzzy: all query chars appear in order
-          let hi = 0;
-          for (const ch of q) {
-            const idx = haystack.indexOf(ch, hi);
-            if (idx === -1) return false;
-            hi = idx + 1;
-          }
-          return true;
-        })
-        .sort((a, b) => {
-          const aLabel = a.label.toLowerCase();
-          const bLabel = b.label.toLowerCase();
-          // Prefer starts-with matches
-          const aStarts = aLabel.startsWith(q) ? 0 : 1;
-          const bStarts = bLabel.startsWith(q) ? 0 : 1;
-          if (aStarts !== bStarts) return aStarts - bStarts;
-          // Then prefer contains
-          const aContains = aLabel.includes(q) ? 0 : 1;
-          const bContains = bLabel.includes(q) ? 0 : 1;
-          if (aContains !== bContains) return aContains - bContains;
-          return aLabel.localeCompare(bLabel);
-        });
+      // Pass 1: collect substring-only matches (label or category
+      // contains the query). These are unambiguous and stand alone.
+      // Pass 2: only fall back to scattered-fuzzy matches when pass 1
+      // returned nothing — keeps "Settings" from dragging in commands
+      // that only match because the letters appear in any order. #510.
+      const enabled = state.commands.filter((c) => !c.enabled || c.enabled());
+      const sub = enabled.filter((c) => {
+        const hay = `${c.label} ${c.category}`.toLowerCase();
+        return hay.includes(q);
+      });
+      const pool =
+        sub.length > 0
+          ? sub
+          : enabled.filter((c) => {
+              const haystack = `${c.label} ${c.category} ${c.id}`.toLowerCase();
+              let hi = 0;
+              for (const ch of q) {
+                const idx = haystack.indexOf(ch, hi);
+                if (idx === -1) return false;
+                hi = idx + 1;
+              }
+              return true;
+            });
+
+      return pool.sort((a, b) => {
+        const aLabel = a.label.toLowerCase();
+        const bLabel = b.label.toLowerCase();
+        // Prefer starts-with matches
+        const aStarts = aLabel.startsWith(q) ? 0 : 1;
+        const bStarts = bLabel.startsWith(q) ? 0 : 1;
+        if (aStarts !== bStarts) return aStarts - bStarts;
+        // Then prefer label-contains over category-only contains
+        const aContains = aLabel.includes(q) ? 0 : 1;
+        const bContains = bLabel.includes(q) ? 0 : 1;
+        if (aContains !== bContains) return aContains - bContains;
+        // Then priority (lower wins)
+        const aPrio = a.priority ?? 0;
+        const bPrio = b.priority ?? 0;
+        if (aPrio !== bPrio) return aPrio - bPrio;
+        return aLabel.localeCompare(bLabel);
+      });
     },
     [state.commands, state.recentIds],
   );

@@ -155,10 +155,20 @@
   outline: none;
 }
 
-.cmd-palette-item:hover,
-.cmd-palette-item-active {
+/* Hover gets a subtle muted background — non-committal preview that
+ * a click here will fire something. */
+.cmd-palette-item:hover {
   background-color: var(--accent-muted);
   color: var(--text-primary);
+}
+
+/* Active (keyboard cursor / will-fire-on-Enter) is unmistakable:
+ * solid accent fill with high-contrast text. Codex flagged the old
+ * muted-green treatment as reading like "disabled". #511. */
+.cmd-palette-item-active,
+.cmd-palette-item-active:hover {
+  background-color: var(--color-accent, var(--accent));
+  color: var(--color-bg, var(--bg-base));
 }
 
 .cmd-palette-item-icon {
